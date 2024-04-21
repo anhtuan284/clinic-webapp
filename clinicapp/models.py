@@ -1,4 +1,6 @@
 import datetime
+import hashlib
+
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Date, Time, DateTime, DECIMAL
 from clinicapp import app, db
 from sqlalchemy.orm import relationship
@@ -13,7 +15,7 @@ class Gender(Enum):
     FEMALE = 'female'
 
 
-class Role(Enum):
+class UserRole(Enum):
     ADMIN = 'admin'
     BENHNHAN = 'patient'
     BACSI = 'doctor'
@@ -23,14 +25,14 @@ class Role(Enum):
 class User(db.Model, UserMixin):
     id = Column(Integer, autoincrement=True, primary_key=True)
     ten = Column(String(100))
-    sdt = Column(String(14))
-    avatar = Column(String(100))
+    sdt = Column(String(14), default="0299234422")
+    avatar = Column(String(100), default="https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg")
     email = Column(String(100), unique=True)
-    dia_chi = Column(String(100))
-    username = Column(String(50), unique=True)
-    password = Column(String(50))
-    gioi_tinh = Column(EnumType(Gender), nullable=False)
-    role = Column(EnumType(Role), nullable=False)
+    dia_chi = Column(String(100), default="Địa chỉ")
+    username = Column(String(50), unique=True, nullable=False)
+    password = Column(String(50), nullable=False)
+    gioi_tinh = Column(EnumType(Gender), default=Gender.MALE)
+    role = Column(EnumType(UserRole), nullable=False)
 
     def __str__(self):
         return self.name
@@ -194,15 +196,15 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         new_user = User(
-            ten='Doctor Strange',
+            ten='Admin',
             sdt='0123456789',
-            avatar='doctor_avatar.jpg',
-            email='doctor@example.com',
-            dia_chi='Doctor Address',
-            username='doctor_username',
-            password='doctor_password',
-            gioi_tinh=Gender.MALE,  # Hoặc Gender.FEMALE
-            role=Role.BACSI
+            avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+            email='admin@example.com',
+            dia_chi='Admin Site',
+            username='admin',
+            password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
+            gioi_tinh=Gender.MALE,
+            role=UserRole.ADMIN,
         )
         db.session.add_all([new_user])
         db.session.commit()

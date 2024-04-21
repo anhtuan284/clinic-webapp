@@ -1,7 +1,7 @@
 import hashlib
 
 from clinicapp import db
-from clinicapp.models import User
+from clinicapp.models import User, UserRole
 
 
 def get_user_by_id(id):
@@ -16,6 +16,7 @@ def auth_user(username, password):
 
 def add_user(name, username, password, avatar):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-    u = User(name=name, username=username, password=password, avatar=avatar)
+    u = User(ten=name, username=username, password=password, avatar=avatar, role=UserRole.BENHNHAN)
     db.session.add(u)
     db.session.commit()
+
