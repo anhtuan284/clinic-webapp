@@ -1,0 +1,46 @@
+<nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">THT Clinic</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="collapsibleNavbar">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/">Trang chủ</a>
+                </li>
+<!--                {% for c in categories %}-->
+<!--                <li class="nav-item">-->
+<!--                    <a class="nav-link" href="/?category_id={{ c.id }}">{{ c.name }}</a>-->
+<!--                </li>-->
+<!--                {% endfor %}-->
+
+
+                {% if current_user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link text-info" href="/login">
+                        <img src="{{ current_user.avatar }}" width="25" class="rounded img-fluid"/> Chào {{
+                        current_user.username }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-info" href="/logout">&#128110; Đăng xuất</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link text-info" href="/login">&#128110; Đăng nhập</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-success" href="/register">&#128110; Đăng ký</a>
+                </li>
+                {% endif %}
+
+
+            </ul>
+            <form class="d-flex" method="get" action="/">
+                <input class="form-control me-2" name="q" type="text" placeholder="Nhập từ khóa...">
+                <button class="btn btn-primary" type="submit">Tìm</button>
+            </form>
+        </div>
+    </div>
+</nav>
