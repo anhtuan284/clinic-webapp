@@ -2,6 +2,7 @@ import hashlib
 
 from clinicapp import db
 from clinicapp.models import User, UserRole
+from clinicapp.utils import hash_password, verify_password
 
 
 def get_user_by_id(id):
@@ -9,14 +10,15 @@ def get_user_by_id(id):
 
 
 def auth_user(username, password):
-    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-    return User.query.filter(User.username.__eq__(username.strip()),
-                             User.password.__eq__(password)).first()
+    user = User.query.filter_by(username=username.strip()).first()
+    if user and verify_password(password.strip(), user.password):
+        return user
+    return None
 
 
 def add_user(name, username, password, avatar):
-    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-    u = User(ten=name, username=username, password=password, avatar=avatar, role=UserRole.BENHNHAN)
+    hashed_password = hash_password(password.strip())
+    u = User(ten=name, username=username, password=hashed_password, avatar=avatar, role=UserRole.BENHNHAN)
     db.session.add(u)
     db.session.commit()
 
