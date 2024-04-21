@@ -2,7 +2,7 @@ import datetime
 import hashlib
 
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Date, Time, DateTime, DECIMAL
-from clinicapp import app, db
+from clinicapp import app, db, utils
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin
 from enum import Enum
@@ -30,7 +30,7 @@ class User(db.Model, UserMixin):
     email = Column(String(100), unique=True)
     dia_chi = Column(String(100), default="Địa chỉ")
     username = Column(String(50), unique=True, nullable=False)
-    password = Column(String(50), nullable=False)
+    password = Column(String(120), nullable=False)
     gioi_tinh = Column(EnumType(Gender), default=Gender.MALE)
     role = Column(EnumType(UserRole), nullable=False)
 
@@ -202,7 +202,7 @@ if __name__ == '__main__':
             email='admin@example.com',
             dia_chi='Admin Site',
             username='admin',
-            password=str(hashlib.md5('123'.encode('utf-8')).hexdigest()),
+            password=str(utils.hash_password("123")),
             gioi_tinh=Gender.MALE,
             role=UserRole.ADMIN,
         )
