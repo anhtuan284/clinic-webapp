@@ -196,18 +196,18 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         new_user = User(
-            ten='Admin',
-            sdt='0123456789',
+            ten='benh nhan',
+            sdt='0905952379',
             avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
-            email='admin@example.com',
+            email='2151013029huy@ou.edu.vn',
             dia_chi='Admin Site',
-            username='admin',
+            username='patient1',
             password=str(utils.hash_password("123")),
             gioi_tinh=Gender.MALE,
-            role=UserRole.ADMIN,
+            role=UserRole.BENHNHAN,
         )
         db.session.add_all([new_user])
         db.session.commit()
-        new_doctor = Doctor(id=new_user.id)
-        db.session.add_all([new_doctor])
+        new_patient = Patient(id=new_user.id)
+        db.session.add_all([new_patient])
         db.session.commit()

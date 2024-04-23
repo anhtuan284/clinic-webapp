@@ -1,10 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends 'layout/base.html' %}
+
+{% block title %}Đăng ký lịch hẹn{% endblock %}
+
+{% block content %}
+{% if err_msg %}
+<div class="alert alert-danger">{{ err_msg }}</div>
+{% endif %}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form method="post" action="/book_appointment">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-center mb-4">Đăng ký lịch hẹn</h5>
+                        <div class="mb-3">
+                            <label for="datepicker" class="form-label">Chọn ngày</label>
+                            <input type="date" id="datepicker" name="appointment_date" class="form-control" placeholder="Chọn ngày">
+                        </div>
+                        <div class="mb-3">
+                            <p class="mb-2">Phương thức thanh toán:</p>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payDirect" value="direct">
+                                <label class="form-check-label" for="payDirect">Thanh toán trực tiếp</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payClinic" value="clinic">
+                                <label class="form-check-label" for="payClinic">Thanh toán tại phòng khám</label>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Đăng ký</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
