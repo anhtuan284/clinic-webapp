@@ -14,12 +14,12 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Build Docker image
-      run: docker build -t clinic-flask .
+      run: docker build -t anhtuan284/clinic-flask .
 
     - name: Push Docker image to Docker Hub
       run: |
         echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-        docker push clinic-flask
+        docker push anhtuan284/clinic-flask
 
   deploy:
     runs-on: ubuntu-latest
@@ -31,5 +31,5 @@ jobs:
 
     - name: Deploy to production
       run: |
-        docker pull clinic-flask
-        docker run -d -p 5000:5000 clinic-flask
+        docker pull anhtuan284/clinic-flask
+        docker run -d -p 5000:5000 anhtuan284/clinic-flask
