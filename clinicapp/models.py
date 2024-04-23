@@ -17,50 +17,51 @@ class Gender(Enum):
 
 class UserRole(Enum):
     ADMIN = 'admin'
-    BENHNHAN = 'patient'
-    BACSI = 'doctor'
-    YTA = 'nurse'
+    PATIENT = 'patient'
+    DOCTOR = 'doctor'
+    NURSE = 'nurse'
+    CASHIER = 'cashier'
 
 
 class User(db.Model, UserMixin):
     id = Column(Integer, autoincrement=True, primary_key=True)
-    ten = Column(String(100))
-    sdt = Column(String(14), default="0299234422")
+    name = Column(String(100))
+    phone = Column(String(14), default="0299234422")
     avatar = Column(String(100), default="https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg")
     email = Column(String(100), unique=True)
-    dia_chi = Column(String(100), default="Địa chỉ")
+    address = Column(String(100), default="Địa chỉ")
     username = Column(String(50), unique=True, nullable=False)
     password = Column(String(120), nullable=False)
-    gioi_tinh = Column(EnumType(Gender), default=Gender.MALE)
+    gender = Column(EnumType(Gender), default=Gender.MALE)
     role = Column(EnumType(UserRole), nullable=False)
 
     def __str__(self):
-        return self.name
+        return self.username
 
 
 class Admin(db.Model):
     id = Column(Integer, ForeignKey(User.id), primary_key=True)
 
-    quyDinhs = relationship('QuyDinh', backref='admin', lazy=True)
+    policies = relationship('Policy', backref='admin', lazy=True)
 
 
 class Doctor(db.Model):
     id = Column(Integer, ForeignKey(User.id), primary_key=True)
 
-    phieuKhams = relationship("PhieuKham", backref="doctor", lazy=True)
+    prescriptions = relationship("Prescription", backref="doctor", lazy=True)
 
 
 class Nurse(db.Model):
     id = Column(Integer, ForeignKey(User.id), primary_key=True)
 
-    dsNgayKhams = relationship('DanhSachNgayKham', backref="nurse", lazy=True)
+    appointment_lists = relationship('AppointmentList', backref="nurse", lazy=True)
 
 
 class Patient(db.Model):
     id = Column(Integer, ForeignKey(User.id), primary_key=True)
-    phieuKhams = relationship("PhieuKham", backref="patient", lazy=True)
 
-    lichKhams = relationship('LichKham', backref='patient', lazy=True)
+    prescriptions = relationship("Prescription", backref="patient", lazy=True)
+    appointments = relationship('Appointment', backref='patient', lazy=True)
 
 
 class BaseModel(db.Model):
@@ -69,145 +70,107 @@ class BaseModel(db.Model):
     updated_date = Column(DateTime, default=func.now(), onupdate=func.now())
 
 
-class QuyDinh(db.Model):
+class Policy(db.Model):
     id = Column(Integer, autoincrement=True, primary_key=True)
-    ten = Column(String(100))
-    gia_tri = Column(String(100), nullable=False)
+    name = Column(String(100))
+    value = Column(String(100), nullable=False)
 
     admin_id = Column(Integer, ForeignKey(Admin.id), nullable=False)
 
 
-class DanhSachNgayKham(BaseModel):
+class AppointmentList(BaseModel):
     id = Column(Integer, autoincrement=True, primary_key=True)
-    ngay_kham = Column(Date, unique=True)
-    cac_lich_kham = relationship('LichKham', backref='danh_sach_kham', lazy=True)
+    scheduled_date = Column(Date, unique=True)
 
-    yta_id = Column(Integer, ForeignKey(Nurse.id), nullable=False)
+    appointments = relationship('Appointment', backref='appointment_list', lazy=True)
+    nurse_id = Column(Integer, ForeignKey(Nurse.id), nullable=False)
 
     def __str__(self):
-        return f"Danh sách khám ngày {self.ngay_kham}"
+        return f"Appointments List {self.scheduled_date}"
 
 
-class LichKham(BaseModel):
+class Appointment(BaseModel):
     id = Column(Integer, autoincrement=True, primary_key=True)
-    ngay_kham = Column(Date)
-    gio_kham = Column(Time)
-    xac_nhan = Column(Boolean, default=False)
-    thanh_toan = Column(Boolean, default=False)
-    trang_thai = Column(Boolean, default=False)
+    scheduled_date = Column(Date)
+    scheduled_hour = Column(Time)
+    is_confirm = Column(Boolean, default=False)
+    is_paid = Column(Boolean, default=False)
+    status = Column(Boolean, default=False)
 
-    danhSachKham_id = Column(Integer, ForeignKey(DanhSachNgayKham.id), nullable=False)
-    benhnhan_id = Column(Integer, ForeignKey(Patient.id), nullable=False)
-
+    appointment_list_id = Column(Integer, ForeignKey(AppointmentList.id), nullable=False)
+    patient_id = Column(Integer, ForeignKey(Patient.id), nullable=False)
 
     def __str__(self):
-        return f"Lịch khám ngày {self.ngay_kham}, giờ {self.gio_kham}, trạng thái {self.trang_thai}"
+        return f"Lịch khám ngày {self.scheduled_date}, giờ {self.scheduled_hour}, trạng thái {self.status}"
 
 
-# class PhieuKham(BaseModel):
-#     __tablename__ = 'PhieuKham'
-#     id = Column(Integer, autoincrement=True, primary_key=True)
-#     ngay_kham = Column(Date, default=lambda: datetime.now().date())
-#     gio_kham = Column(Time, default=lambda: datetime.now().time())
-#     trieu_chung = Column(String(1000))
-#     chuan_doan = Column(String(1000))
-#     bacsi_id = Column(Integer, ForeignKey('Doctor.id'), nullable=False)
-#     benhnhan_id = Column(Integer, ForeignKey('Patient.id'), nullable=False)
-#     lichkham = relationship("LichKham", back_populates="phieukham")
-#
-#
-#     bacsi = relationship('Doctor', backref='phieukham_bacsi')
-#     benhnhan = relationship('Patient', backref='phieukham_benhnhan')
-#     thuoc_phieukham = relationship("Thuoc", secondary="ThuocChiDinh")
-#
-#     def __str__(self):
-#         return f"Phieu khám ngày {self.ngay_kham}, giờ {self.gio_kham}, triệu chứng {self.trieu_chung}, chuẩn đoán {self.chuan_doan}"
-
-
-class PhieuKham(BaseModel):
+class Prescription(db.Model):
     id = Column(Integer, autoincrement=True, primary_key=True)
-    ngay_kham = Column(Date, default=lambda: datetime.now().date())
-    gio_kham = Column(Time, default=lambda: datetime.now().time())
-    trieu_chung = Column(String(1000))
-    chuan_doan = Column(String(1000))
-    bacsi_id = Column(Integer, ForeignKey(Doctor.id), nullable=False)
-    benhnhan_id = Column(Integer, ForeignKey(Patient.id), nullable=False)
-    lichKham_id = Column(Integer, ForeignKey(LichKham.id), nullable=False)
+    date = Column(Date, default=lambda: datetime.now().date())
+    symtoms = Column(String(1000))
+    diagnosis = Column(String(1000))
+    doctor_id = Column(Integer, ForeignKey(Doctor.id), nullable=False)
+    patient_id = Column(Integer, ForeignKey(Patient.id), nullable=False)
+    appointment_id = Column(Integer, ForeignKey(Appointment.id), nullable=False)
 
     def __str__(self):
-        return f"Phieu khám ngày {self.ngay_km}, giờ {self.gio_kham}, triệu chứng {self.trieu_chung}, chuẩn đoán {self.chuan_doan}"
+        return f"Phieu khám ngày {self.ngay_km}, giờ {self.gio_kham}, triệu chứng {self.symtoms}, chuẩn đoán {self.diagnosis}"
 
 
-class Thuoc(BaseModel):
+class Medicine(BaseModel):
     id = Column(Integer, autoincrement=True, primary_key=True)
-    gia = Column(DECIMAL(10, 2))
     name = Column(String(100))
-    cach_dung = Column(String(50))
-    han_su_dung = Column(Date)
+    price = Column(DECIMAL(10, 2))
+    usage = Column(String(50))
+    exp = Column(Date)
 
-    thuochidinh = relationship("ThuocChiDinh", backref='thuoc', lazy=True)
-
+    medicine_details = relationship("MedicineDetail", backref='medicine', lazy=True)
+    medicine_category = relationship("MedicineCategory", backref='medicine', lazy=True)
     def __str__(self):
-        return f"Thuoc tên {self.name}, cách dùng {self.cach_dung}, giá {self.gia}"
+        return f"Thuoc {self.name}"
 
 
-class DonVi(db.Model):
+class Unit(db.Model):
     id = Column(Integer, autoincrement=True, primary_key=True)
-    ten = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False)
 
-    thuoc = relationship("ThuocChiDinh", backref="donvi", lazy=True)
-
-
-class ThuocChiDinh(db.Model):
-    so_luong = Column(Integer)
-    cach_dung = Column(String(100))
-
-    phieukham_id = Column(Integer, ForeignKey(PhieuKham.id), primary_key=True)
-    thuoc_id = Column(Integer, ForeignKey(Thuoc.id), primary_key=True)
-    donVi_id = Column(Integer, ForeignKey(DonVi.id), nullable=False)
+    medicine_details = relationship("MedicineDetail", backref="donvi", lazy=True)
 
 
-class HoaDon(BaseModel):
-    ngay_kham = Column(Date, unique=True)
-    tien_kham = Column(DECIMAL(10, 2))
-    tien_thuoc = Column(DECIMAL(10, 2))
-    tong_tien = Column(DECIMAL(11, 2))
+class MedicineDetail(db.Model):
+    quantity = Column(Integer)
+    usage = Column(String(100))
 
-    phieuKham_id = Column(Integer, ForeignKey(PhieuKham.id), primary_key=True)
+    prescription_id = Column(Integer, ForeignKey(Prescription.id), primary_key=True)
+    medicine_id = Column(Integer, ForeignKey(Medicine.id), primary_key=True)
+    unit_id = Column(Integer, ForeignKey(Unit.id), nullable=False)
+
+
+class Bill(BaseModel):
+    service_price = Column(DECIMAL(10, 2))
+    medicine_price = Column(DECIMAL(10, 2))
+    total = Column(DECIMAL(11, 2))
+
+    prescription_id = Column(Integer, ForeignKey(Prescription.id), primary_key=True)
 
     def __str__(self):
-        return f"Hóa đơn phiếu khám {self.phieuKham_id.id}"
+        return f"Hóa đơn phiếu khám {self.prescription_id.id}"
 
 
-class DanhMuc(BaseModel):
+class Category(BaseModel):
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String(100))
 
 
-class DanhMucThuoc(BaseModel):
-    danhmuc_id = Column(Integer, ForeignKey(DanhMuc.id), nullable=False, primary_key=True)
-    thuoc_id = Column(Integer, ForeignKey(Thuoc.id), primary_key=True, nullable=False)
+class MedicineCategory(BaseModel):
+    category_id = Column(Integer, ForeignKey(Category.id), nullable=False, primary_key=True)
+    medicine_id = Column(Integer, ForeignKey(Medicine.id), primary_key=True, nullable=False)
 
     def __str__(self):
-        return f"Danh mục {self.danhmuc_id} - Thuốc {self.thuoc_id}"
+        return f"Danh mục {self.category_id} - Thuốc {self.medicine_id}"
 
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        new_user = User(
-            ten='benh nhan',
-            sdt='0905952379',
-            avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
-            email='2151013029huy@ou.edu.vn',
-            dia_chi='Admin Site',
-            username='patient1',
-            password=str(utils.hash_password("123")),
-            gioi_tinh=Gender.MALE,
-            role=UserRole.BENHNHAN,
-        )
-        db.session.add_all([new_user])
-        db.session.commit()
-        new_patient = Patient(id=new_user.id)
-        db.session.add_all([new_patient])
-        db.session.commit()
+
