@@ -1,0 +1,76 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+<h1 class="text-center text-info mt-1">THÊM THUỐC</h1>
+<form method="post" action="/admin/thuocview/thuocs/">
+    {%if thuoc%}
+    <div class="form-group mb-3 mt-3">
+        <label for="id">Id</label>
+        <input type="number" class="form-control" id="id" name="id" value="{{thuoc.id}}" readonly>
+    </div>
+    {%endif%}
+
+    <div class="form-group mb-3 mt-3">
+        <label for="gia">Giá</label>
+        <input type="number" class="form-control" id="gia" name="gia"
+               {%if thuoc%}value="{{thuoc.price}}"{%endif%}
+               required>
+    </div>
+
+    <div class="form-group mt-3 mb-3">
+        <label for="name">Tên</label>
+        <input type="text" class="form-control" id="name" name="name"
+               {%if thuoc%}value="{{thuoc.name}}"{%endif%}
+               required>
+    </div>
+
+    <div class="form-group mt-3 mb-3">
+        <label for="cach_dung">Cách dùng</label>
+        <input type="text" class="form-control" id="cach_dung" name="cach_dung"
+               {%if thuoc%}value="{{thuoc.usage}}"{%endif%}
+        required>
+    </div>
+
+    <div class="form-group mt-3 mb-3">
+        <label for="han_su_dung">Hạn sử dụng</label>
+        <input type="date" class="form-control" id="han_su_dung" name="han_su_dung"
+               {%if thuoc%}value="{{thuoc.exp}}" {%endif%}
+               required>
+    </div>
+
+    <div class="form-group mt-3 mb-3">
+        <label for="ds_danh_muc">Danh mục:</label>
+        <select class="form-control" id="ds_danh_muc" name="ds_danh_muc" multiple>
+            {%if thuoc%}
+            {%for o_dm in danhmucs%}
+                {%if danhmucscurrentthuoc|length > 0%}
+                    {%for t, i_dm, dmc in danhmucscurrentthuoc%}
+                        {%if o_dm.id == dmc.category_id%}
+                        <option value="{{o_dm.id}}" selected>{{o_dm.name}}</option>
+                        {%else%}
+                        <option value="{{o_dm.id}}" >{{o_dm.name}}</option>
+                        {%endif%}
+                    {%endfor%}
+                {%else%}
+                    <option value="{{o_dm.id}}" >{{o_dm.name}}</option>
+                {%endif%}
+            {%endfor%}
+            {%else%}
+            {%for o_dm in danhmucs%}
+                <option value="{{o_dm.id}}" >{{o_dm.name}}</option>
+            {%endfor%}
+            {%endif%}
+        </select>
+    </div>
+
+    <div class="form-floating mt-3 mb-3">
+        <button class="btn btn-success" type="submit">
+            {%if thuoc%}
+                Cập nhật lại thuốc
+            {%else%}
+                Thêm mới
+            {%endif%}
+        </button>
+    </div>
+</form>
+{% endblock %}

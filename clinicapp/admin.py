@@ -2,10 +2,14 @@ import bcrypt
 from flask_admin import Admin, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import BaseView
+
+from clinicapp.dao import *
+
 from clinicapp.models import UserRole, User, Doctor, Nurse, Patient, Policy, Medicine, Unit, MedicineCategory
 from clinicapp import app, db, utils
+
 from flask_login import logout_user, current_user
-from flask import redirect
+from flask import redirect, request
 
 
 class AuthenticatedView(ModelView):
@@ -116,7 +120,92 @@ class LogoutView(BaseView):
         return current_user.is_authenticated
 
 
+class ThuocView(BaseView):
+    @expose('/')
+    def index(self):
+        gia_bat_dau = request.args.get('gia_bat_dau')
+        gia_ket_thuc = request.args.get('gia_ket_thuc')
+        han_dung_bat_dau = request.args.get('han_dung_bat_dau')
+        han_dung_ket_thuc = request.args.get('han_dung_ket_thuc')
+        name = request.args.get('name')
+        danhmuc_id = request.args.get('danhmuc_id')
+
+        return self.render(
+            'admin/thuoc.html',
+            thuocs=get_medicines(
+                price_bat_dau=gia_bat_dau,
+                price_ket_thuc=gia_ket_thuc,
+                han_dung_bat_dau=han_dung_bat_dau,
+                han_dung_ket_thuc=han_dung_ket_thuc,
+                name=name,
+                category_id=danhmuc_id
+            ),
+            danhmucs=get_categorys(),
+            danhmucthuocs=get_category_medicines()
+        )
+
+    @expose('/thuocs/', methods=['get', 'post'])
+    def add_thuoc(self):
+        if request.method.__eq__('POST'):
+            id = request.form.get('id')
+            gia = request.form.get('gia')
+            name = request.form.get('name')
+            cach_dung = request.form.get('cach_dung')
+            han_su_dung = request.form.get('han_su_dung')
+            ds_danh_muc = request.form.getlist('ds_danh_muc')
+
+            thuocMoiId = add_or_update_medicine(
+                id=id,
+                price=gia,
+                name=name,
+                usage=cach_dung,
+                exp=han_su_dung
+            )
+
+            delete_all_category_medicine_by_medicine_id(thuocMoiId)
+            for dm in ds_danh_muc:
+                add_category_medicine(category_id=int(dm), medicine_id=thuocMoiId)
+
+        return self.render('admin/them_thuoc.html', danhmucs=get_categorys())
+
+    @expose('/thuocs/<id>', methods=['get', 'post'])
+    def update_thuoc(self, id):
+        thuoc = get_medicine_by_id(id)
+
+        if request.method.__eq__('POST'):
+            delete_medicine_by_id(id)
+            return redirect('/admin/thuocview/')
+        else:
+            return self.render(
+                'admin/them_thuoc.html',
+                danhmucs=get_categorys(),
+                thuoc=thuoc,
+                danhmucscurrentthuoc=get_categorys_current_medicine(id)
+            )
+
+    def is_accessible(self):
+        return current_user.is_authenticated
+
+
+class MyDanhMucView(BaseView):
+    @expose('/')
+    def index(self):
+        return self.render('admin/danh_muc.html', danhmucs=get_categorys())
+
+    def is_accessible(self):
+        return current_user.is_authenticated
+
+
+class MyCategoryView(ModelView):
+    column_list = ['id', 'name']
+
+    def is_accessible(self):
+        return current_user.is_authenticated
+
+
 admin = Admin(app, name='Clinic Website', template_mode='bootstrap4')
+admin.add_view(MyCategoryView(Category, db.session))
+admin.add_view(ThuocView(name="Thuốc"))
 admin.add_view(StatsView(name='Thống kê'))
 admin.add_view(MyUserView(User, db.session))
 admin.add_view(DoctorAdminView(Doctor, db.session, name="Bác sĩ"))

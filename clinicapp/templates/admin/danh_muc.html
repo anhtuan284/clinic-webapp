@@ -1,0 +1,25 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+<h1 class="text-center text-info mt-1">QUẢN LÝ DANH MỤC THUỐC</h1>
+<div>
+    <a class="btn btn-success" href="#">Thêm danh mục</a>
+</div>
+<table class="table table-striped mt-1">
+    <tr>
+        <th>Id</th>
+        <th>Tên</th>
+        <th></th>
+    </tr>
+    {%for dm in danhmucs|reverse%}
+        <tr>
+            <td>{{dm.id}}</td>
+            <td>{{dm.name}}</td>
+            <td>
+                <a class="btn btn-info" href="#">Cập nhật</a>
+                <a class="btn btn-danger" href="#">Xoá</a>
+            </td>
+        </tr>
+    {%endfor%}
+</table>
+{% endblock %}
