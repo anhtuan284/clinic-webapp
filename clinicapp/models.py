@@ -25,15 +25,17 @@ class UserRole(Enum):
 
 class User(db.Model, UserMixin):
     id = Column(Integer, autoincrement=True, primary_key=True)
-    name = Column(String(100))
-    phone = Column(String(14), default="0299234422")
-    avatar = Column(String(100), default="https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg")
-    email = Column(String(100), unique=True)
-    address = Column(String(100), default="Địa chỉ")
     username = Column(String(50), unique=True, nullable=False)
     password = Column(String(120), nullable=False)
-    gender = Column(EnumType(Gender), default=Gender.MALE)
     role = Column(EnumType(UserRole), nullable=False)
+    name = Column(String(100))
+    cid = Column(String(12), unique=True, index=True)
+    dob = Column(Date, default=datetime.date.today)
+    phone = Column(String(14), default="0299234422")
+    email = Column(String(100), unique=True)
+    gender = Column(EnumType(Gender))
+    address = Column(String(100), default="Địa chỉ")
+    avatar = Column(String(100), default="https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg")
 
     def __str__(self):
         return self.username
@@ -181,6 +183,7 @@ if __name__ == '__main__':
             address='Admin Site',
             username='admin',
             password=str(utils.hash_password("123")),
+            cid='092884828872',
             gender=Gender.MALE,
             role=UserRole.ADMIN,
         )
