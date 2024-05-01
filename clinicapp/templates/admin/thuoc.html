@@ -1,0 +1,84 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+<h1 class="text-center text-info mt-1">QUẢN LÝ THUỐC</h1>
+<form class="container" method="get" action="/admin/thuocview">
+    <div class="d-flex container flex-row justify-content-between">
+        <div class="form-group mb-3 mt-3">
+            <label for="gia_bat_dau"><b>Giá bắt đầu</b></label>
+            <input class="form-control me-2" id="gia_bat_dau" name="gia_bat_dau" type="number">
+        </div>
+        <div class="form-group mb-3 mt-3">
+            <label for="gia_ket_thuc"><b>Giá bắt kết thúc</b></label>
+            <input class="form-control me-2" id="gia_ket_thuc" name="gia_ket_thuc" type="number">
+        </div>
+        <div class="form-group mb-3 mt-3">
+            <label for="han_dung_bat_dau"><b>Hạn dùng bắt đầu</b></label>
+            <input class="form-control me-2" id="han_dung_bat_dau" name="han_dung_bat_dau" type="date">
+        </div>
+        <div class="form-group mb-3 mt-3">
+            <label for="han_dung_ket_thuc"><b>Hạn dùng kết thúc</b></label>
+            <input class="form-control me-2" id="han_dung_ket_thuc" name="han_dung_ket_thuc" type="date">
+        </div>
+        <div class="form-group mb-3 mt-3">
+            <label for="ten"><b>Tên thuốc</b></label>
+            <input class="form-control me-2" id="ten" name="name" type="text" placeholder="Nhập tên thuốc">
+        </div>
+    </div>
+    <nav class="navbar navbar-expand-md bg-light navbar-light mb-2">
+        <!-- Navbar links -->
+        <div class="collapse navbar-collapse" id="collapsibleNavbar">
+            <ul class="navbar-nav container flex-row justify-content-between">
+                {%for dm in danhmucs%}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/thuocview/?danhmuc_id={{dm.id}}"><b>{{dm.name}}</b></a>
+                    </li>
+                {%endfor%}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="d-flex container flex-row justify-content-between">
+        <a class="btn btn-success" href="/admin/thuocview/thuocs/">Thêm thuốc</a>
+        <button class="btn btn-primary" type="submit">Tìm</button>
+    </div>
+</form>
+
+<table class="table table-striped mt-1">
+    <tr>
+        <th>Id</th>
+        <th>Tên</th>
+        <th>Loại Thuốc</th>
+        <th>Giá</th>
+        <th>Cách Dùng</th>
+        <th>Hạn Sử Dụng</th>
+        <th></th>
+    </tr>
+    {%for t in thuocs|reverse%}
+        <tr>
+            <td>{{t.id}}</td>
+            <td>{{t.name}}</td>
+            <td>
+                {%for dmt in danhmucthuocs%}
+                    {%if dmt.medicine_id == t.id%}
+                        {%for dm in danhmucs%}
+                            {%if dm.id == dmt.category_id%}
+                                <a>{{dm.name}}; </a>
+                            {%endif%}
+                        {%endfor%}
+                    {%endif%}
+                {%endfor%}
+            </td>
+            <td>{{t.price}} VNĐ</td>
+            <td>{{t.usage}}</td>
+            <td>{{t.exp}}</td>
+            <td>
+                <a class="btn btn-info" href="/admin/thuocview/thuocs/{{t.id}}">Cập nhật</a>
+                <form method="post" action="/admin/thuocview/thuocs/{{t.id}}">
+                    <button class="btn btn-danger" type="submit">Xoá</button>
+                </form>
+            </td>
+        </tr>
+    {%endfor%}
+</table>
+{% endblock %}
