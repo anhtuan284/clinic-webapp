@@ -3,5 +3,104 @@
 {% block title %}Tạo phiếu khám{% endblock %}
 
 {% block content %}
+<form action="/prescription/create" method="POST">
+    {{ form.csrf_token }}
+    <p>{{form.hidden_tag()}}</p>
+    <div class="row">
+        <div class="col-md-6 shadow">
+            <h2 class="text-center">Bệnh nhân</h2>
+            <div class="row my-2">
+                <div class="col-md-6">
+                    {{ form.patient_id.label(class="form-label fw-bold") }}
+                    {{ form.patient_id(class="form-control", id="patient_id") }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.name.label(class="form-label fw-bold") }}
+                    {{ form.name(class="form-control", id="patient-name") }}
+                </div>
+            </div>
+            <div class="mb-3 my-2">
+                {{ form.symptoms.label(class="form-label fw-bold") }}
+                {{ form.symptoms(class="form-control", id="symptoms") }}
+            </div>
+            <div class="mb-3 my-2">
+                {{ form.diagnosis.label(class="form-label fw-bold") }}
+                {{ form.diagnosis(class="form-control", id="dianosis") }}
+            </div>
+            <div class="mb-3 my-2">
+                {{ form.advice.label(class="form-label fw-bold") }}
+                {{ form.advice(class="form-control", id="name") }}
+            </div>
+        </div>
+        <div class="col-md-6 shadow bg-light">
+            <div class="mb-3">
+                <h2 class="text-center">Thêm thuốc</h2>
+                <div class="row">
+                    <div class="col-md-6 my-2">
+                        {{ form.medicine_type.label(class="form-label fw-bold") }}
+                        <select id="selected-medicine_type" name="medicine_type" class="form-select">
+                            <option value="">Tất cả</option>
+                            {% for c in cats %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 my-2">
+                        {{ form.medicine_name.label(class="form-label fw-bold") }}
+                        <select id="selected-medicine" name="medicine_name" class="form-select">
+                            <option value="0">Không</option>
+                            {% for m in medicines %}
+                            <option value="{{ m.id }}">{{ m.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 my-2">
+                        {{ form.unit.label(class="form-label fw-bold") }}
+                        <select id="selected-unit" name="unit" class="form-select">
+                            {% for u in units %}
+                            <option value="{{ u.id }}">{{ u.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 my-2">
+                        {{ form.quantity.label(class="form-label fw-bold") }}
+                        {{ form.quantity(class="form-control") }}
+                    </div>
+                    <div class="col-md-12 my-2">
+                        {{ form.usage.label(class="form-label fw-bold") }}
+                        {{ form.usage(class="form-control") }}
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center my-5">
+                    <input type="button" class="btn btn-primary align-self-center px-4" onclick="add()" value="Thêm thuốc"></input>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row my-5 px-2 py-2 shadow-lg">
+        <h3 class="text-center my-3">Toa Thuốc</h3>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>STT</th>
+                <th>Thuốc</th>
+                <th>Đơn Vị</th>
+                <th>Số lượng</th>
+                <th>Cách dùng</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody id="table-medicines">
+
+            </tbody>
+        </table>
+    </div>
+    <div class="mb-3 d-flex justify-content-center">
+        <input class="btn btn-danger mx-2" type="button" value="Hủy lập phiếu khám" onclick="cancelCreatePres()"/>
+        {{ form.submit(class="btn btn-primary") }}
+    </div>
+</form>
+
+<script src="../static/js/prescription.js"></script>
 
 {% endblock %}
