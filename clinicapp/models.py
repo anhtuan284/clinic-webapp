@@ -25,15 +25,17 @@ class UserRole(Enum):
 
 class User(db.Model, UserMixin):
     id = Column(Integer, autoincrement=True, primary_key=True)
-    name = Column(String(100))
-    phone = Column(String(14), default="0299234422")
-    avatar = Column(String(100), default="https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg")
-    email = Column(String(100), unique=True)
-    address = Column(String(100), default="Địa chỉ")
     username = Column(String(50), unique=True, nullable=False)
     password = Column(String(120), nullable=False)
-    gender = Column(EnumType(Gender), default=Gender.MALE)
     role = Column(EnumType(UserRole), nullable=False)
+    name = Column(String(100))
+    cid = Column(String(12), unique=True, index=True)
+    dob = Column(Date, default=datetime.date.today)
+    phone = Column(String(14), default="0299234422")
+    email = Column(String(100), unique=True)
+    gender = Column(EnumType(Gender))
+    address = Column(String(100), default="Địa chỉ")
+    avatar = Column(String(100), default="https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg")
 
     def __str__(self):
         return self.username
@@ -97,7 +99,7 @@ class Appointment(BaseModel):
     is_paid = Column(Boolean, default=False)
     status = Column(Boolean, default=False)
 
-    appointment_list_id = Column(Integer, ForeignKey(AppointmentList.id), nullable=False)
+    appointment_list_id = Column(Integer, ForeignKey(AppointmentList.id), nullable=True)
     patient_id = Column(Integer, ForeignKey(Patient.id), nullable=False)
 
     def __str__(self):
@@ -126,6 +128,7 @@ class Medicine(BaseModel):
 
     medicine_details = relationship("MedicineDetail", backref='medicine', lazy=True)
     medicine_category = relationship("MedicineCategory", backref='medicine', lazy=True)
+
     def __str__(self):
         return f"Thuoc {self.name}"
 
@@ -171,21 +174,55 @@ class MedicineCategory(BaseModel):
 
 
 if __name__ == '__main__':
-    with app.app_context():
+    with app.app_context()        :
         db.create_all()
-        new_user = User(
-            name='Admin',
-            phone='0123456789',
-            avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
-            email='admin@example.com',
-            address='Admin Site',
-            username='admin',
-            password=str(utils.hash_password("123")),
-            gender=Gender.MALE,
-            role=UserRole.ADMIN,
-        )
-        db.session.add_all([new_user])
-        db.session.commit()
-        new_doctor = Doctor(id=new_user.id)
-        db.session.add_all([new_doctor])
-        db.session.commit()
+# <<<<<<< appoinment
+#         # new_user = User(
+#         #     name='benh nhan',
+#         #     phone='0905952379',
+#         #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+#         #     email='2151013029huy@ou.edu.vn',
+#         #     address='patient Site',
+#         #     username='patient1',
+#         #     password=str(utils.hash_password("123")),
+#         #     gender=Gender.MALE,
+#         #     role=UserRole.PATIENT,
+#         # )
+#         # db.session.add_all([new_user])
+#         # db.session.commit()
+#         # new_doctor = Patient(id=new_user.id)
+#         # db.session.add_all([new_doctor])
+#         # db.session.commit()
+#         # new_appointment_list = AppointmentList(
+#         #     scheduled_date=datetime.date(2024, 4, 25),  # Ngày đặt cuộc hẹn
+#         #     nurse_id=1  # ID của y tá (Nurse)
+#         # )
+#         #
+#         # # Thêm đối tượng mới vào session và lưu xuống cơ sở dữ liệu
+#         # db.session.add(new_appointment_list)
+#         # db.session.commit()
+#         new_appointment = Appointment(
+#             scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#             scheduled_hour=datetime.time(10, 30),  # Giờ đặt cuộc hẹn
+#             is_confirm=False,  # Trạng thái xác nhận
+#             is_paid=False,  # Trạng thái thanh toán
+#             status=False,  # Trạng thái cuộc hẹn
+#             appointment_list_id= None,  # ID của danh sách đặt hẹn
+#             patient_id=2  # ID của bệnh nhân
+# =======
+#         new_user = User(
+#             name='Admin',
+#             phone='0123456789',
+#             avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+#             email='admin@example.com',
+#             address='Admin Site',
+#             username='admin',
+#             password=str(utils.hash_password("123")),
+#             cid='092884828872',
+#             gender=Gender.MALE,
+#             role=UserRole.ADMIN,
+# >>>>>>> main
+#         )
+
+#         db.session.add(new_appointment)
+#         db.session.commit()
