@@ -3,7 +3,8 @@ import hashlib
 from sqlalchemy.orm import sessionmaker
 
 from clinicapp import db
-from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory, Unit, Prescription, MedicineDetail
+from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory, Appointment, Unit, Prescription, MedicineDetail
+
 from clinicapp.utils import hash_password, verify_password
 
 
@@ -24,6 +25,32 @@ def add_user(name, username, password, avatar):
     db.session.add(u)
     db.session.commit()
 
+
+def get_quantity_appointment_by_date(date):
+    quantity = Appointment.query.filter_by(scheduled_date=date, is_confirm=False).count()
+    return quantity
+
+
+def get_list_scheduled_hours_by_date_no_confirm(date):
+    appointments = Appointment.query.filter_by(scheduled_date=date).with_entities(Appointment.scheduled_hour).all()
+    scheduled_hours = [appointment.scheduled_hour for appointment in appointments]
+    # print(scheduled_hours)
+    return scheduled_hours
+
+
+def get_list_scheduled_hours_by_date_confirm(date):
+    appointments = Appointment.query.filter_by(scheduled_date=date, is_confirm=True).with_entities(
+        Appointment.scheduled_hour).all()
+    scheduled_hours = [appointment.scheduled_hour for appointment in appointments]
+    # print(scheduled_hours)
+    return scheduled_hours
+
+
+def add_appointment(scheduled_date, scheduled_hour, is_confirm, is_paid, status, patient_id):
+    appoinment = Appointment(scheduled_date=scheduled_date, scheduled_hour=scheduled_hour, is_confirm=is_confirm,
+                             is_paid=is_paid, status=status, patient_id=patient_id)
+    db.session.add(appoinment)
+    db.session.commit()
 
 def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None, category_id=None):
     medicines = Medicine.query
@@ -131,7 +158,7 @@ def get_categorys_current_medicine(id):
     print(categorymedicine)
     return categorymedicine
 
-
+  
 def get_units():
     return db.session.query(Unit).all()
 
@@ -157,3 +184,4 @@ def create_medical_form(doctor_id, patient_id, date, diagnosis, symptoms, usages
         medicine_detail = MedicineDetail(medicine_id=medicine_id, unit_id=unit, quantity=quantity, usage=usage, prescription_id=new_pres.id)
         db.session.add(medicine_detail)
     db.session.commit()
+
