@@ -3,7 +3,7 @@ import hashlib
 from sqlalchemy.orm import sessionmaker
 
 from clinicapp import db
-from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory
+from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory, Unit, Prescription, MedicineDetail
 from clinicapp.utils import hash_password, verify_password
 
 
@@ -25,7 +25,7 @@ def add_user(name, username, password, avatar):
     db.session.commit()
 
 
-def get_medicines(price_bat_dau, price_ket_thuc, han_dung_bat_dau, han_dung_ket_thuc, name, category_id):
+def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None, category_id=None):
     medicines = Medicine.query
 
     if category_id:
@@ -94,7 +94,7 @@ def add_or_update_medicine(id, price, name, usage, exp):
 
 
 def get_categorys():
-    return Category.query.all()
+    return db.session.query(Category).all()
 
 
 def get_category_medicines():
@@ -130,3 +130,30 @@ def get_categorys_current_medicine(id):
 
     print(categorymedicine)
     return categorymedicine
+
+
+def get_units():
+    return db.session.query(Unit).all()
+
+
+def update_list_appointment(patient_id):
+    return None
+
+
+def create_medical_form(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, units):
+    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id, doctor_id=doctor_id)
+    db.session.add(new_pres)
+    db.session.commit()
+    print(usages)
+    print(quantities)
+    print(medicines)
+    print(units)
+    print(new_pres.id)
+    for i in range(len(medicines)):
+        medicine_id = medicines[i]
+        quantity = quantities[i]
+        usage = usages[i]
+        unit = units[i]
+        medicine_detail = MedicineDetail(medicine_id=medicine_id, unit_id=unit, quantity=quantity, usage=usage, prescription_id=new_pres.id)
+        db.session.add(medicine_detail)
+    db.session.commit()

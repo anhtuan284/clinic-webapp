@@ -1,8 +1,13 @@
 from wtforms.fields import StringField, SubmitField, PasswordField, SelectField, DateField, FileField, EmailField
 from flask_wtf import FlaskForm
-from wtforms.validators import InputRequired, Length, NumberRange, Regexp
+from wtforms.fields.form import FormField
+from wtforms.fields.list import FieldList
+from wtforms.fields.numeric import IntegerField
+from wtforms.fields.simple import TextAreaField, HiddenField
+from wtforms.validators import InputRequired, Length, NumberRange, Regexp, DataRequired
 
-from clinicapp.models import Gender
+from clinicapp import dao
+from clinicapp.models import Gender, MedicineCategory
 
 
 class LoginForm(FlaskForm):
@@ -21,3 +26,46 @@ class RegisterUser(FlaskForm):
     email = EmailField("Email: ")
     phone = StringField("Số điện thoại: ", validators=[Length(max=11)])
     submit = SubmitField("Thêm")
+
+
+# class MedicineForm(FlaskForm):
+#     medicine_id = HiddenField()
+#     medicine_name = StringField("Thuốc")
+#     dosage = StringField("Cách dùng")
+#     quantity = IntegerField("Số lượng", default=1)
+#     unit = SelectField("Đơn vị", coerce=int)
+#     delete_medicine = SubmitField("Xóa thuốc")
+#
+#     def __init__(self, *args, **kwargs):
+#         super(MedicineForm, self).__init__(*args, **kwargs)
+#         self.unit.choices = [(unit.id, unit.name) for unit in dao.get_units()]
+
+
+class PrescriptionForm(FlaskForm):
+    patient_id = IntegerField("Mã bệnh nhân", validators=[DataRequired(), Regexp('^[0-9]*$', message="Mã BN chỉ chứa số")])
+    name = StringField("Họ tên", validators=[DataRequired()])
+    diagnosis = TextAreaField("Chẩn đoán")
+    advice = TextAreaField("Lời dặn")
+    symptoms = StringField("Triệu chứng")
+
+    # medicines = FieldList(FormField(MedicineForm), min_entries=0)
+    usage = TextAreaField("Cách dùng")
+    quantity = IntegerField("Số lượng", default=1)
+    unit = SelectField("Đơn vị", coerce=int)
+    medicine_type = SelectField("Loại thuốc", choices=[], coerce=int)
+    medicine_name = SelectField("Tên thuốc", choices=[], coerce=int)
+    # add_medicine = SubmitField("Thêm")
+
+    submit = SubmitField("Tạo phiếu khám")
+
+    def validate(self, extra_validators=None):
+        if super().validate(extra_validators):
+            if self.add_medicine.data:
+                if not self.medicine_name:
+                    self.medicine_name.errors.append("Thuốc không được bỏ trống.")
+                    return False
+            elif self.submit.data:
+                if not self.diagnosis.data:
+                    self.diagnosis.errors.append("Chưa đưa ra chẩn đoán cho bệnh nhân.")
+                    return False
+        return True

@@ -1,10 +1,13 @@
+from datetime import datetime
+
 import cloudinary.uploader
-from flask import request, redirect, render_template
-from flask_login import login_user, logout_user
+from flask import request, redirect, render_template, url_for
+from flask_login import login_user, logout_user, login_required, current_user
 
 from clinicapp import app, dao, login
-from clinicapp.decorators import loggedin
-from clinicapp.models import UserRole
+from clinicapp.decorators import loggedin, roles_required
+from clinicapp.forms import PrescriptionForm
+from clinicapp.models import UserRole, Unit
 
 
 @app.route('/')
@@ -72,6 +75,38 @@ def register_user():
             err_msg = 'Mật khẩu không khớp!'
 
     return render_template('auth/register.html', err_msg=err_msg)
+
+
+@app.route('/prescription', methods=['GET', 'POST'])
+@login_required
+@roles_required([UserRole.DOCTOR])
+def prescription():
+    form = PrescriptionForm()
+    categories = dao.get_categorys()
+    medicines = dao.get_medicines()
+    units = dao.get_units()
+    if form.validate_on_submit():
+        print("Create Success")
+    return render_template('doctor/createprescription.html', form=form, medicines=medicines, cats=categories, units=units)
+
+
+@app.route('/prescription/create', methods=['POST'])
+def create_prescription():
+    doctor_id = current_user.id
+    date = datetime.today().strftime('%Y-%m-%d')
+    patient_id = request.form.get('patient_id')
+    symptoms = request.form.get('symptoms')
+    diagnosis = request.form.get('diagnosis')
+    usages = request.form.getlist('list-usage')
+    units = request.form.getlist('list-unit')
+    quantities = request.form.getlist('list-quantity')
+    medicines = request.form.getlist('list-medicine_id')
+    dao.update_list_appointment(patient_id)
+    dao.create_medical_form(doctor_id=doctor_id, patient_id=patient_id, date=date, diagnosis=diagnosis,
+                            symptoms=symptoms, usages=usages, quantities=quantities, medicines=medicines, units=units)
+    # flash("Lập phiếu khám thành công!", 'success')
+    print("Create Presciption Successfully!")
+    return redirect(url_for('prescription'))
 
 
 @login.user_loader
