@@ -1,0 +1,34 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Thanh Toán{% endblock %}
+
+{% block content %}
+<h1 class="text text-center text-info">THANH TOÁN</h1>
+<form class="d-flex" method="get" action="/payment">
+    <input class="form-control me-2" name="q" value="" type="date" placeholder="Nhập ngày của danh sách">
+    <button class="btn btn-primary" type="submit">Tìm</button>
+</form>
+<table class="table">
+    <tr class="table-row">
+        <th>Id</th>
+        <th>Date</th>
+        <th>Symptoms</th>
+        <th>Doctor</th>
+        <th>Patient</th>
+    </tr>
+    {%if prescriptions%}
+        {%for P, A, AL in prescriptions%}
+            <tr class="table-row">
+                <th>{{P.id}}</th>
+                <th>{{AL.scheduled_date}}</th>
+                <th>{{P.symptoms}}</th>
+                <th>{{P.doctor_id}}</th>
+                <th>{{P.patient_id}}</th>
+
+            </tr>
+        {%endfor%}
+    {%endif%}
+</table>
+
+
+{% endblock %}

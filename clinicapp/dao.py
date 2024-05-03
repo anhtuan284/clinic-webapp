@@ -3,7 +3,8 @@ import hashlib
 from sqlalchemy.orm import sessionmaker
 
 from clinicapp import db
-from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory, Appointment, Unit, Prescription, MedicineDetail
+from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory, Appointment, Unit, Prescription, \
+    MedicineDetail, AppointmentList
 
 from clinicapp.utils import hash_password, verify_password
 
@@ -184,4 +185,14 @@ def create_medical_form(doctor_id, patient_id, date, diagnosis, symptoms, usages
         medicine_detail = MedicineDetail(medicine_id=medicine_id, unit_id=unit, quantity=quantity, usage=usage, prescription_id=new_pres.id)
         db.session.add(medicine_detail)
     db.session.commit()
+
+
+def get_prescriptions_by_scheduled_date(date):
+    prescriptions = db.session.query(Prescription, Appointment, AppointmentList, User) \
+        .filter(Prescription.appointment_id == Appointment.id) \
+        .filter(Appointment.appointment_list_id == AppointmentList.id) \
+        .filter(AppointmentList.scheduled_date==date) \
+        .all()
+
+    return prescriptions
 

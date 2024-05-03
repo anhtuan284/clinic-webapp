@@ -10,7 +10,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
-    get_list_scheduled_hours_by_date_confirm
+    get_list_scheduled_hours_by_date_confirm, get_prescriptions_by_scheduled_date
 from clinicapp.decorators import loggedin, roles_required
 from clinicapp.models import UserRole, Unit
 from clinicapp.forms import PrescriptionForm
@@ -319,6 +319,15 @@ def process_payment():
 
     else:
         return jsonify({'error': 'Invalid request method'}), 405
+
+
+@app.route('/payment', methods=['GET'])
+def pay():
+    q = request.args.get('q')
+    prescriptions = None
+    if q:
+        prescriptions = get_prescriptions_by_scheduled_date(date=q)
+    return render_template('cashier/payment.html', prescriptions=prescriptions)
 
 
 if __name__ == '__main__':
