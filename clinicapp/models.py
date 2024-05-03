@@ -1,8 +1,7 @@
 import datetime
-import hashlib
 
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Date, Time, DateTime, DECIMAL
-from clinicapp import app, db, utils
+from clinicapp import app, db
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin
 from enum import Enum
@@ -174,33 +173,38 @@ class MedicineCategory(BaseModel):
 
 
 if __name__ == '__main__':
-    with app.app_context()        :
-        db.create_all()
-# <<<<<<< appoinment
-#         # new_user = User(
-#         #     name='benh nhan',
-#         #     phone='0905952379',
-#         #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
-#         #     email='2151013029huy@ou.edu.vn',
-#         #     address='patient Site',
-#         #     username='patient1',
-#         #     password=str(utils.hash_password("123")),
-#         #     gender=Gender.MALE,
-#         #     role=UserRole.PATIENT,
-#         # )
-#         # db.session.add_all([new_user])
-#         # db.session.commit()
-#         # new_doctor = Patient(id=new_user.id)
-#         # db.session.add_all([new_doctor])
-#         # db.session.commit()
-#         # new_appointment_list = AppointmentList(
-#         #     scheduled_date=datetime.date(2024, 4, 25),  # Ngày đặt cuộc hẹn
-#         #     nurse_id=1  # ID của y tá (Nurse)
-#         # )
-#         #
-#         # # Thêm đối tượng mới vào session và lưu xuống cơ sở dữ liệu
-#         # db.session.add(new_appointment_list)
-#         # db.session.commit()
+    with app.app_context():
+        pass
+        # db.create_all()
+# # <<<<<<< appoinment
+#         new_user = User(
+#             name='benh nhan',
+#             phone='0905952379',
+#             avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+#             email='2151013029huy@ou.edu.vn',
+#             address='patient Site',
+#             username='patient1',
+#             password=str(utils.hash_password("123")),
+#             gender=Gender.MALE,
+#             role=UserRole.PATIENT,
+#         )
+#         db.session.add_all([new_user])
+#         db.session.commit()
+#
+#         new_doctor = Patient(id=new_user.id)
+#         db.session.add_all([new_doctor])
+#         db.session.commit()
+
+#         new_appointment_list = AppointmentList(
+#             scheduled_date=datetime.date(2024, 4, 25),  # Ngày đặt cuộc hẹn
+#             nurse_id=1  # ID của y tá (Nurse)
+#         )
+# #         #
+#
+# #         # # Thêm đối tượng mới vào session và lưu xuống cơ sở dữ liệu
+#         db.session.add(new_appointment_list)
+#         db.session.commit()
+#
 #         new_appointment = Appointment(
 #             scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
 #             scheduled_hour=datetime.time(10, 30),  # Giờ đặt cuộc hẹn
@@ -209,20 +213,7 @@ if __name__ == '__main__':
 #             status=False,  # Trạng thái cuộc hẹn
 #             appointment_list_id= None,  # ID của danh sách đặt hẹn
 #             patient_id=2  # ID của bệnh nhân
-# =======
-#         new_user = User(
-#             name='Admin',
-#             phone='0123456789',
-#             avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
-#             email='admin@example.com',
-#             address='Admin Site',
-#             username='admin',
-#             password=str(utils.hash_password("123")),
-#             cid='092884828872',
-#             gender=Gender.MALE,
-#             role=UserRole.ADMIN,
-# >>>>>>> main
 #         )
-
+#
 #         db.session.add(new_appointment)
 #         db.session.commit()
