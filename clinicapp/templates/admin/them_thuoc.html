@@ -46,9 +46,9 @@
                 {%if danhmucscurrentthuoc|length > 0%}
                     {%for t, i_dm, dmc in danhmucscurrentthuoc%}
                         {%if o_dm.id == dmc.category_id%}
-                        <option value="{{o_dm.id}}" selected>{{o_dm.name}}</option>
+                        <option value="{{o_dm.id}}" id="{{o_dm.id}}" selected>{{o_dm.name}}</option>
                         {%else%}
-                        <option value="{{o_dm.id}}" >{{o_dm.name}}</option>
+                        <option value="{{o_dm.id}}">{{o_dm.name}}</option>
                         {%endif%}
                     {%endfor%}
                 {%else%}

@@ -1,8 +1,7 @@
 import datetime
-import hashlib
 
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Date, Time, DateTime, DECIMAL
-from clinicapp import app, db, utils
+from clinicapp import app, db
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin
 from enum import Enum
@@ -577,3 +576,4 @@ if __name__ == '__main__':
 
         ])
         db.session.commit()
+
