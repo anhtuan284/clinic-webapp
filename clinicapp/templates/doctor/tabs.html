@@ -1,0 +1,22 @@
+{%macro tabs(registration, active_tab='examination')%}
+<ul class="nav nav-tabs d-flex justify-content-between py-2">
+    <div class="nav-item d-flex">
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'examination' %} active {% endif %}" aria-current="page"
+                href='{{url_for("medical-examination.index", mid=registration.id)}}'>Khám
+                bệnh</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'history' %} active {% endif %}"
+                href='{{url_for("disease-history.index", mid=registration.id)}}'>Lịch sử
+                bệnh</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'searching' %} active {% endif %}"
+                href='{{url_for("search-medicines.index", mid=registration.id)}}'>Tra cứu
+                thuốc</a>
+        </li>
+    </div>
+</ul>
+
+{%endmacro%}

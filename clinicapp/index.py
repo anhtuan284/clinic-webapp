@@ -6,14 +6,15 @@ import requests
 from datetime import date
 import cloudinary.uploader
 from flask import request, redirect, render_template, jsonify, url_for, current_app, flash, session
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, login_required, current_user
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
     TIENKHAM, SOLUONGKHAM
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
     get_list_scheduled_hours_by_date_confirm, get_value_policy
-from clinicapp.decorators import loggedin
-from clinicapp.models import UserRole
+from clinicapp.decorators import loggedin, roles_required
+from clinicapp.models import UserRole, Unit
+from clinicapp.forms import PrescriptionForm
 from clinicapp.vnpay import vnpay
 
 
@@ -82,6 +83,38 @@ def register_user():
             err_msg = 'Mật khẩu không khớp!'
 
     return render_template('auth/register.html', err_msg=err_msg)
+
+
+@app.route('/prescription', methods=['GET', 'POST'])
+@login_required
+@roles_required([UserRole.DOCTOR])
+def prescription():
+    form = PrescriptionForm()
+    categories = dao.get_categorys()
+    medicines = dao.get_medicines()
+    units = dao.get_units()
+    if form.validate_on_submit():
+        print("Create Success")
+    return render_template('doctor/createprescription.html', form=form, medicines=medicines, cats=categories, units=units)
+
+
+@app.route('/prescription/create', methods=['POST'])
+def create_prescription():
+    doctor_id = current_user.id
+    date = datetime.today().strftime('%Y-%m-%d')
+    patient_id = request.form.get('patient_id')
+    symptoms = request.form.get('symptoms')
+    diagnosis = request.form.get('diagnosis')
+    usages = request.form.getlist('list-usage')
+    units = request.form.getlist('list-unit')
+    quantities = request.form.getlist('list-quantity')
+    medicines = request.form.getlist('list-medicine_id')
+    dao.update_list_appointment(patient_id)
+    dao.create_medical_form(doctor_id=doctor_id, patient_id=patient_id, date=date, diagnosis=diagnosis,
+                            symptoms=symptoms, usages=usages, quantities=quantities, medicines=medicines, units=units)
+    # flash("Lập phiếu khám thành công!", 'success')
+    print("Create Presciption Successfully!")
+    return redirect(url_for('prescription'))
 
 
 @login.user_loader
