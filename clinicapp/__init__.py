@@ -5,11 +5,12 @@ from flask_login import LoginManager
 from flask_babel import Babel
 
 import cloudinary
+
 app = Flask(__name__)
 
-
 app.secret_key = '^%^&%^(*^^^&&*^(*^^&$$&^'
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/clinicdb?charset=utf8mb4" % quote('Baopro123')
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/clinicdb?charset=utf8mb4" % quote(
+    'Baopro123')
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app.config["PAGE_SIZE"] = 8
 
@@ -24,3 +25,6 @@ VNPAY_PAYMENT_URL = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'  # get 
 VNPAY_API_URL = 'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction'
 VNPAY_TMN_CODE = 'F9GSCV1D'  # Website ID in VNPAY System, get from config
 VNPAY_HASH_SECRET_KEY = 'JUXOOOXYAUTGHZIWOZVOLQCICSTVEACX'  # Secret key for create checksum,get from config
+
+TIENKHAM = 1
+SOLUONGKHAM = 2

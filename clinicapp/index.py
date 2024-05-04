@@ -5,12 +5,13 @@ import uuid
 import requests
 from datetime import date
 import cloudinary.uploader
-from flask import request, redirect, render_template, jsonify, url_for, current_app, flash
+from flask import request, redirect, render_template, jsonify, url_for, current_app, flash, session
 from flask_login import login_user, logout_user, current_user
 
-from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE
+from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
+    TIENKHAM, SOLUONGKHAM
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
-    get_list_scheduled_hours_by_date_confirm
+    get_list_scheduled_hours_by_date_confirm, get_value_policy
 from clinicapp.decorators import loggedin
 from clinicapp.models import UserRole
 from clinicapp.vnpay import vnpay
@@ -99,40 +100,16 @@ def book():
     return render_template('/appoinment/patient_create_appoinment.html')
 
 
-# @app.route('/patient/book-appointment', methods=['POST'])
-# def patient_book_appointment():
-#     pay_method = request.form.get('payment_method')
-#     if pay_method == 'direct':
-#         pass
-#     elif pay_method == 'clinic':
-#         scheduled_date = request.form.get('appointment_date')
-#         scheduled_minutes = int(request.form.get('appointment_time'))
-#         scheduled_hour = scheduled_minutes // 60
-#         scheduled_minute = scheduled_minutes % 60
-#
-#         # Chuyển đổi scheduled_hour và scheduled_minute thành số nguyên
-#         scheduled_hour = int(scheduled_hour)
-#         scheduled_minute = int(scheduled_minute)
-#
-#         scheduled_time = datetime.time(scheduled_hour, scheduled_minute)
-#
-#         print(scheduled_date)
-#         print(scheduled_time)
-#         print(current_user.id)
-#
-#         dao.add_appointment(scheduled_date=scheduled_date,
-#                             scheduled_hour=scheduled_time,
-#                             is_confirm=False,
-#                             is_paid=False,
-#                             status=False,
-#                             patient_id=current_user.id)
-#         return redirect('/login')
+
 @app.route('/patient/book-appointment', methods=['POST'])
 def patient_book_appointment():
     pay_method = request.form.get('payment_method')
+
     if pay_method == 'direct':
+        session['appointment_date'] = request.form.get('appointment_date')
+        session['appointment_time'] = request.form.get('appointment_time')
         order_type = "billpayment"
-        amount = 200000
+        amount = int(get_value_policy(TIENKHAM))
         order_desc = f"Thanh toán viện phí cho bệnh nhân {current_user.name}, với số tiền {amount} VND"
         language = "vn"
         ipaddr = request.remote_addr
@@ -143,7 +120,7 @@ def patient_book_appointment():
         vnp.requestData["vnp_TmnCode"] = VNPAY_TMN_CODE
         vnp.requestData["vnp_Amount"] = amount * 100
         vnp.requestData["vnp_CurrCode"] = "VND"
-        vnp.requestData["vnp_TxnRef"] = current_user.id + 1010111011
+        vnp.requestData["vnp_TxnRef"] = current_user.id + 1010131111211111
         vnp.requestData["vnp_OrderInfo"] = order_desc
         vnp.requestData["vnp_OrderType"] = order_type
         vnp.requestData["vnp_Locale"] = language
@@ -180,7 +157,9 @@ def check_appointment_date():
         return jsonify({'status': 'invalid_date'})
     quantity = get_quantity_appointment_by_date(date)
     # print(quantity)
-    if quantity < 10:
+    policy = int(get_value_policy(SOLUONGKHAM))
+    # print(policy)
+    if quantity < policy:
         return jsonify({'status': 'available'})
     else:
         return jsonify({'status': 'unavailable'})
@@ -203,7 +182,6 @@ def get_scheduled_hour_confirm():
     print(formatted_hours)
     return jsonify(formatted_hours)
 
-
 @app.route('/payment-return', methods=['GET'])
 def payment_return():
     inputData = request.args
@@ -213,16 +191,26 @@ def payment_return():
 
     # Kiểm tra tính toàn vẹn của dữ liệu
     if vnp_ResponseCode == "00":
-        # Cập nhật trạng thái giao dịch và hóa đơn
+        # Lấy thông tin lịch hẹn từ request và thông tin người dùng hiện tại
 
-        print("thanh cong roi ne")
-        # Hiển thị thông báo thành công và chuyển hướng về trang đăng nhập
-        flash("Thanh toán hóa đơn thành công. Vui lòng đăng nhập lại.", category="success")
-        return redirect('/patient/book')
+        appointment_date = session.pop('appointment_date', None)
+        appointment_time = int(session.pop('appointment_time', None))
+        scheduled_h = appointment_time // 60
+        scheduled_m = appointment_time % 60
+        # Lưu thông tin lịch hẹn vào cơ sở dữ liệu
+        dao.add_appointment(scheduled_date=appointment_date,
+                            scheduled_hour=datetime.time(scheduled_h, scheduled_m),
+                            is_confirm=True,
+                            is_paid=True,
+                            status=False,
+                            patient_id=current_user.id)
+        # Hiển thị thông báo thành công và chuyển hướng về trang đặt lịch hẹn
+        flash("Thanh toán hóa đơn thành công. Lịch hẹn của bạn đã được tạo.", category="success")
+        return redirect('/')
     else:
         # Xử lý trường hợp lỗi từ VNPAY
         flash("Có lỗi xảy ra từ VNPAY. Mã lỗi: {}".format(vnp_ResponseCode), category="danger")
-        return redirect('/patient/book')
+        return redirect('/')
 
 
 @app.route('/process-payment', methods=['POST'])
@@ -231,7 +219,7 @@ def process_payment():
         # Nhận thông tin thanh toán từ yêu cầu POST
         payment_data = request.get_json()
         # amount = payment_data.get('amount')
-        amount = 100000
+        amount = 10000000
 
         # Tạo orderId và requestId
         order_id = str(uuid.uuid4())

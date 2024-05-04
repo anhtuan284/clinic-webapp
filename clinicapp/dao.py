@@ -3,7 +3,7 @@ import hashlib
 from sqlalchemy.orm import sessionmaker
 
 from clinicapp import db
-from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory, Appointment
+from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory, Appointment, Policy
 
 from clinicapp.utils import hash_password, verify_password
 
@@ -24,7 +24,6 @@ def add_user(name, username, password, avatar):
     u = User(ten=name, username=username, password=hashed_password, avatar=avatar, role=UserRole.PATIENT)
     db.session.add(u)
     db.session.commit()
-
 
 
 def get_quantity_appointment_by_date(date):
@@ -52,6 +51,7 @@ def add_appointment(scheduled_date, scheduled_hour, is_confirm, is_paid, status,
                              is_paid=is_paid, status=status, patient_id=patient_id)
     db.session.add(appoinment)
     db.session.commit()
+
 
 def get_medicines(price_bat_dau, price_ket_thuc, han_dung_bat_dau, han_dung_ket_thuc, name, category_id):
     medicines = Medicine.query
@@ -156,6 +156,12 @@ def get_categorys_current_medicine(id):
         .filter(Medicine.id == id) \
         .all()
 
-    print(categorymedicine)
     return categorymedicine
 
+
+def get_value_policy(id):
+    policy = Policy.query.get(id)
+    if policy:
+        return policy.value
+    else:
+        return None
