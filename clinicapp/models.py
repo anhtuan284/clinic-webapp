@@ -35,7 +35,8 @@ class User(db.Model, UserMixin):
     email = Column(String(100), unique=True)
     gender = Column(EnumType(Gender))
     address = Column(String(100), default="Địa chỉ")
-    avatar = Column(String(100), default="https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg")
+    avatar = Column(String(100),
+                    default="https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg")
 
     def __str__(self):
         return self.username
@@ -83,7 +84,7 @@ class Policy(db.Model):
     name = Column(String(100))
     value = Column(String(100), nullable=False)
 
-    admin_id = Column(Integer, ForeignKey(Admin.id), nullable=False)
+    admin_id = Column(Integer, ForeignKey(Admin.id), default=1, nullable=False)
 
 
 class AppointmentList(BaseModel):
@@ -183,6 +184,66 @@ class MedicineCategory(BaseModel):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        # new_user = User(
+        #     name='benh nhan',
+        #     phone='0905952379',
+        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+        #     email='2151013029huy@ou.edu.vn',
+        #     address='patient Site',
+        #     username='patient1',
+        #     password=str(utils.hash_password("123")),
+        #     gender=Gender.MALE,
+        #     cid='066203000228',
+        #     role=UserRole.PATIENT,
+        # )
+        # db.session.add_all([new_user])
+        # db.session.commit()
+        # new_doctor = Patient(id=new_user.id)
+        # db.session.add_all([new_doctor])
+        # db.session.commit()
+        new_user = User(
+            name='ADMIN',
+            phone='0905952379',
+            avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+            email='voquochuy3006@gmail.com',
+            address='admin Site',
+            username='admin1',
+            password=str(utils.hash_password("123")),
+            gender=Gender.MALE,
+            cid='066203000227',
+            role=UserRole.ADMIN,
+        )
+        db.session.add_all([new_user])
+        db.session.commit()
+        new_doctor = Admin(id=new_user.id)
+        db.session.add_all([new_doctor])
+        db.session.commit()
+        # new_user = User(
+        #     name='y ta',
+        #     phone='0905952379',
+        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+        #     email='baoempro2003@gmail.com',
+        #     address='nurse Site',
+        #     username='nurse1',
+        #     password=str(utils.hash_password("123")),
+        #     gender=Gender.MALE,
+        #     cid='066203000229',
+        #     role=UserRole.NURSE,
+        # )
+        # db.session.add_all([new_user])
+        # db.session.commit()
+        # new_doctor = Nurse(id=new_user.id)
+        # db.session.add_all([new_doctor])
+        # db.session.commit()
+#         new_appointment_list = AppointmentList(
+#             scheduled_date=datetime.date(2024, 5, 10),  # Ngày đặt cuộc hẹn
+#             nurse_id=3  # ID của y tá (Nurse)
+#         )
+#
+# #         # # Thêm đối tượng mới vào session và lưu xuống cơ sở dữ liệu
+#         db.session.add(new_appointment_list)
+#         db.session.commit()
+=======
 #         new_user1 = User(
 #             name='Admin',
 #             phone='0123456789',
@@ -270,12 +331,23 @@ if __name__ == '__main__':
 #         # db.session.commit()
 #         new_appointment = Appointment(
 #             scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
-#             scheduled_hour=datetime.time(10, 30),  # Giờ đặt cuộc hẹn
+#             scheduled_hour=datetime.time(10, 30),  # Giờ đặt cuộc     hẹn
 #             is_confirm=False,  # Trạng thái xác nhận
 #             is_paid=False,  # Trạng thái thanh toán
 #             status=False,  # Trạng thái cuộc hẹn
 #             appointment_list_id= None,  # ID của danh sách đặt hẹn
 #             patient_id=2  # ID của bệnh nhân
+# =======
+#         new_user = User(
+# name='Admin',
+# phone='0123456789',
+# avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+# email='admin@example.com',
+# address='Admin Site',
+# username='admin',
+# password=str(utils.hash_password("123")),
+# gender=Gender.MALE,
+# role=UserRole.ADMIN,)
 #         )
 
 #         db.session.add(new_appointment)
