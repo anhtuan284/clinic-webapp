@@ -10,7 +10,8 @@ from flask_login import login_user, logout_user, login_required, current_user
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
-    get_list_scheduled_hours_by_date_confirm, get_prescriptions_by_scheduled_date
+    get_list_scheduled_hours_by_date_confirm, get_prescriptions_by_scheduled_date, get_prescription_by_id, \
+    get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id
 from clinicapp.decorators import loggedin, roles_required
 from clinicapp.models import UserRole, Unit
 from clinicapp.forms import PrescriptionForm
@@ -94,7 +95,8 @@ def prescription():
     units = dao.get_units()
     if form.validate_on_submit():
         print("Create Success")
-    return render_template('doctor/createprescription.html', form=form, medicines=medicines, cats=categories, units=units)
+    return render_template('doctor/createprescription.html', form=form, medicines=medicines, cats=categories,
+                           units=units)
 
 
 @app.route('/prescription/create', methods=['POST'])
@@ -328,6 +330,21 @@ def pay():
     if q:
         prescriptions = get_prescriptions_by_scheduled_date(date=q)
     return render_template('cashier/payment.html', prescriptions=prescriptions)
+
+
+@app.route('/bill/<prescription_id>', methods=['GET', 'POST'])
+def do_bill(prescription_id):
+    current_prescription = get_prescription_by_id(prescription_id)
+    current_patient = get_patient_by_prescription_id(prescription_id)
+    current_medicines = get_medicines_by_prescription_id(prescription_id)
+    # medicine_price = get_medicine_price_by_prescription_id(prescription_id)
+
+    return render_template('cashier/bill.html',
+                           prescription=current_prescription,
+                           medicines=current_medicines,
+                           patient=current_patient,
+                           # medicine_price=medicine_price
+                           )
 
 
 if __name__ == '__main__':

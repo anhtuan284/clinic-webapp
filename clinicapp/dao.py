@@ -1,10 +1,11 @@
 import hashlib
 
+from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker
 
 from clinicapp import db
 from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory, Appointment, Unit, Prescription, \
-    MedicineDetail, AppointmentList
+    MedicineDetail, AppointmentList, Patient, Doctor, MedicineUnit
 
 from clinicapp.utils import hash_password, verify_password
 
@@ -53,7 +54,9 @@ def add_appointment(scheduled_date, scheduled_hour, is_confirm, is_paid, status,
     db.session.add(appoinment)
     db.session.commit()
 
-def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None, category_id=None):
+
+def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None,
+                  category_id=None):
     medicines = Medicine.query
 
     if category_id:
@@ -159,7 +162,7 @@ def get_categorys_current_medicine(id):
     print(categorymedicine)
     return categorymedicine
 
-  
+
 def get_units():
     return db.session.query(Unit).all()
 
@@ -169,7 +172,8 @@ def update_list_appointment(patient_id):
 
 
 def create_medical_form(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, units):
-    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id, doctor_id=doctor_id)
+    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id,
+                            doctor_id=doctor_id)
     db.session.add(new_pres)
     db.session.commit()
     print(usages)
@@ -182,17 +186,64 @@ def create_medical_form(doctor_id, patient_id, date, diagnosis, symptoms, usages
         quantity = quantities[i]
         usage = usages[i]
         unit = units[i]
-        medicine_detail = MedicineDetail(medicine_id=medicine_id, unit_id=unit, quantity=quantity, usage=usage, prescription_id=new_pres.id)
+        medicine_detail = MedicineDetail(medicine_id=medicine_id, unit_id=unit, quantity=quantity, usage=usage,
+                                         prescription_id=new_pres.id)
         db.session.add(medicine_detail)
     db.session.commit()
 
 
 def get_prescriptions_by_scheduled_date(date):
-    prescriptions = db.session.query(Prescription, Appointment, AppointmentList, User) \
+    prescriptions = db.session.query(Prescription, Appointment, AppointmentList) \
         .filter(Prescription.appointment_id == Appointment.id) \
         .filter(Appointment.appointment_list_id == AppointmentList.id) \
-        .filter(AppointmentList.scheduled_date==date) \
+        .filter(AppointmentList.scheduled_date == date) \
         .all()
 
     return prescriptions
 
+
+def get_prescription_by_id(prescription_id):
+    prescription = Prescription.query.get(prescription_id)
+
+    return prescription
+
+
+def get_patient_by_prescription_id(prescription_id):
+    patient = User.query.get(get_prescription_by_id(prescription_id).patient_id)
+
+    return patient
+
+
+def get_medicines_by_prescription_id(prescription_id):
+    medicines = db.session.query(MedicineDetail, Medicine, MedicineUnit, Unit) \
+        .filter(MedicineDetail.medicine_unit_id == MedicineUnit.id) \
+        .filter(MedicineUnit.medicine_id == Medicine.id) \
+        .filter(MedicineUnit.unit_id == Unit.id) \
+        .all()
+
+    return medicines
+
+
+def get_unit_by_name(name):
+    return Unit.query.filter_by(name='vỉ').all()[0]
+
+
+def get_medicine_price_by_prescription_id(prescription_id):
+    medicines_by_prescription_id = db.session.query(MedicineDetail, Medicine) \
+        .filter(MedicineDetail.medicine_id == Medicine.id) \
+        .filter(MedicineDetail.prescription_id == prescription_id)
+
+    price_by_blister = db.session.query(func.sum(MedicineDetail.quantity * 10 * Medicine.price)) \
+        .filter(MedicineDetail.unit_id == get_unit_by_name('vỉ').id).all()
+
+    print(float(str(price_by_blister[0][0])))
+
+    # price_by_vien = medicines_by_prescription_id \
+    #     .filter(MedicineDetail.unit.name__eq__("viên")) \
+    #     .sum(MedicineDetail.quantity * Medicine.price)
+    #
+    # price_by_chai = medicines_by_prescription_id \
+    #     .filter(MedicineDetail.unit.name__eq__("chai")) \
+    #     .sum(MedicineDetail.quantity * 40 * Medicine.price)
+
+    return price_by_blister

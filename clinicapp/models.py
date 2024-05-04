@@ -1,7 +1,7 @@
 import datetime
 
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Date, Time, DateTime, DECIMAL
-from clinicapp import app, db
+from clinicapp import app, db, utils
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin
 from enum import Enum
@@ -34,7 +34,8 @@ class User(db.Model, UserMixin):
     email = Column(String(100), unique=True)
     gender = Column(EnumType(Gender))
     address = Column(String(100), default="Địa chỉ")
-    avatar = Column(String(100), default="https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg")
+    avatar = Column(String(100),
+                    default="https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg")
 
     def __str__(self):
         return self.username
@@ -119,9 +120,10 @@ class Prescription(db.Model):
     doctor_id = Column(Integer, ForeignKey(Doctor.id), nullable=False)
     patient_id = Column(Integer, ForeignKey(Patient.id), nullable=False)
     appointment_id = Column(Integer, ForeignKey(Appointment.id))
+    medicine_details = relationship("MedicineDetail", backref='prescription', lazy=True)
 
     def __str__(self):
-        return f"Phieu khám ngày {self.ngay_km}, giờ {self.gio_kham}, triệu chứng {self.symtoms}, chuẩn đoán {self.diagnosis}"
+        return f"Phieu khám ngày {self.date}, triệu chứng {self.symptoms}, chuẩn đoán {self.diagnosis}"
 
 
 class Medicine(BaseModel):
@@ -133,6 +135,7 @@ class Medicine(BaseModel):
 
     medicine_details = relationship("MedicineDetail", backref='medicine', lazy=True)
     medicine_category = relationship("MedicineCategory", backref='medicine', lazy=True)
+    medicine_units = relationship("MedicineUnit", backref='medicine', lazy=True)
 
     def __str__(self):
         return f"Thuoc {self.name}"
@@ -142,7 +145,16 @@ class Unit(db.Model):
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String(100), nullable=False)
 
-    medicine_details = relationship("MedicineDetail", backref="donvi", lazy=True)
+    medicine_units = relationship("MedicineUnit", backref='unit', lazy=True)
+
+
+class MedicineUnit(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    unit_id = Column(Integer, ForeignKey(Unit.id))
+    medicine_id = Column(Integer, ForeignKey(Medicine.id))
+    medicine_details = relationship("MedicineDetail", backref='medicine_unit', lazy=True)
+
+    quantity = Column(Integer)
 
 
 class MedicineDetail(db.Model):
@@ -151,7 +163,7 @@ class MedicineDetail(db.Model):
 
     prescription_id = Column(Integer, ForeignKey(Prescription.id), primary_key=True)
     medicine_id = Column(Integer, ForeignKey(Medicine.id), primary_key=True)
-    unit_id = Column(Integer, ForeignKey(Unit.id), nullable=False)
+    medicine_unit_id = Column(Integer, ForeignKey(MedicineUnit.id))
 
 
 class Bill(BaseModel):
@@ -201,7 +213,7 @@ if __name__ == '__main__':
         #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
         #     email='docter@example.com',
         #     address='Clinic',
-        #     username='doctor',
+        #     username='doctorstrange',
         #     password=str(utils.hash_password("123")),
         #     cid='092884828872',
         #     gender=Gender.MALE,
@@ -219,12 +231,12 @@ if __name__ == '__main__':
         #     gender=Gender.MALE,
         #     role=UserRole.PATIENT,
         # )
-        # db.session.add_all([ new_user3])
+        # db.session.add_all([ new_user2, new_user3])
         # db.session.commit()
-        # # new_doctor = Doctor(id=new_user2.id)
-        # # new_admin = Admin(id=new_user1.id)
+        # new_doctor2 = Doctor(id=8)
+        # new_admin = Admin(id=new_user1.id)
         # new_patient = Patient(id=new_user3.id)
-        # db.session.add_all([ new_patient])
+        # db.session.add_all([ new_doctor2])
         # db.session.commit()
 
         # danh_muc_1 = Category(name="Giảm đau")
@@ -257,10 +269,7 @@ if __name__ == '__main__':
         # db.session.add_all([cat_med1, cat_med2, cat_med3, cat_med4])
         # db.session.commit()
 
-
-
-
-# APPOINTMENT CỦA HUY
+        # APPOINTMENT CỦA HUY
 #         new_user5 = User(
 #             name='Quốc Tuấn',
 #             phone='0123456789',
@@ -285,11 +294,277 @@ if __name__ == '__main__':
 #             gender=Gender.MALE,
 #             role=UserRole.PATIENT,
 #         )
+#         db.session.add_all([new_user5, new_user6])
+#         db.session.commit()
 
+# new_user4 = User(
+#     name='Thao Van',
+#     phone='0123456789',
+#     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+#     email='cashier@example.com',
+#     address='Clinic',
+#     username='cashier',
+#     password=str(utils.hash_password("123")),
+#     cid='6854651894',
+#     gender=Gender.FEMALE,
+#     role=UserRole.CASHIER,
+# )
+# db.session.add(new_user4)
+# db.session.commit()
+# new_cashier = Cashier(id=3)
+# db.session.add(new_cashier)
+# db.session.commit()
 
-        # db.session.add_all([new_user5, new_user6])
-        # db.session.commit()
-        # new_user4 = User(
+# new_user5 = User(
+#     name='Luu Danh',
+#     phone='0123456789',
+#     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+#     email='cashier123@example.com',
+#     address='Clinic',
+#     username='nurse',
+#     password=str(utils.hash_password("123")),
+#     cid='23498423189',
+#     gender=Gender.MALE,
+#     role=UserRole.NURSE,
+# )
+# db.session.add(new_user5)
+# db.session.commit()
+# new_nurse = Nurse(id=new_user5.id)
+# db.session.add(new_nurse)
+# db.session.commit()
+
+# new_appointment_list = AppointmentList(
+#     scheduled_date=datetime.date(2024, 4, 25),  # Ngày đặt cuộc hẹn
+#     nurse_id=7  # ID của y tá (Nurse)
+# )
+#
+# db.session.add(new_appointment_list)
+# db.session.commit()
+
+# new_appointment = Appointment(
+#     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#     scheduled_hour=datetime.time(15, 30),  # Giờ đặt cuộc hẹn
+#     is_confirm=False,  # Trạng thái xác nhận
+#     is_paid=False,  # Trạng thái thanh toán
+#     status=True,  # Trạng thái cuộc hẹn
+#     appointment_list_id=2,  # ID của danh sách đặt hẹn
+#     patient_id=1  # ID của bệnh nhân
+# )
+# new_appointment2 = Appointment(
+#     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#     scheduled_hour=datetime.time(16, 30),  # Giờ đặt cuộc hẹn
+#     is_confirm=False,  # Trạng thái xác nhận
+#     is_paid=False,  # Trạng thái thanh toán
+#     status=True,  # Trạng thái cuộc hẹn
+#     appointment_list_id=2,  # ID của danh sách đặt hẹn
+#     patient_id=1  # ID của bệnh nhân
+# )
+# new_appointment3 = Appointment(
+#     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#     scheduled_hour=datetime.time(8, 30),  # Giờ đặt cuộc hẹn
+#     is_confirm=False,  # Trạng thái xác nhận
+#     is_paid=False,  # Trạng thái thanh toán
+#     status=True,  # Trạng thái cuộc hẹn
+#     appointment_list_id=2,  # ID của danh sách đặt hẹn
+#     patient_id=1  # ID của bệnh nhân
+# )
+# new_appointment4 = Appointment(
+#     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#     scheduled_hour=datetime.time(9, 30),  # Giờ đặt cuộc hẹn
+#     is_confirm=False,  # Trạng thái xác nhận
+#     is_paid=False,  # Trạng thái thanh toán
+#     status=True,  # Trạng thái cuộc hẹn
+#     appointment_list_id=2,  # ID của danh sách đặt hẹn
+#     patient_id=1  # ID của bệnh nhân
+# )
+# new_appointment5 = Appointment(
+#     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#     scheduled_hour=datetime.time(11, 30),  # Giờ đặt cuộc hẹn
+#     is_confirm=False,  # Trạng thái xác nhận
+#     is_paid=False,  # Trạng thái thanh toán
+#     status=True,  # Trạng thái cuộc hẹn
+#     appointment_list_id=2,  # ID của danh sách đặt hẹn
+#     patient_id=1  # ID của bệnh nhân
+# )
+# db.session.add_all([
+#     new_appointment,
+#     new_appointment2,
+#     new_appointment3,
+#     new_appointment4,
+#     new_appointment5
+# ])
+# db.session.commit()
+
+# new_appointment_list = AppointmentList(
+#     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#     nurse_id=7  # ID của y tá (Nurse)
+# )
+#
+# db.session.add(new_appointment_list)
+# db.session.commit()
+#
+# new_appointment = Appointment(
+#     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#     scheduled_hour=datetime.time(15, 30),  # Giờ đặt cuộc hẹn
+#     is_confirm=False,  # Trạng thái xác nhận
+#     is_paid=False,  # Trạng thái thanh toán
+#     status=True,  # Trạng thái cuộc hẹn
+#     appointment_list_id=new_appointment_list.id,  # ID của danh sách đặt hẹn
+#     patient_id=5  # ID của bệnh nhân
+# )
+# new_appointment2 = Appointment(
+#     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#     scheduled_hour=datetime.time(16, 30),  # Giờ đặt cuộc hẹn
+#     is_confirm=False,  # Trạng thái xác nhận
+#     is_paid=False,  # Trạng thái thanh toán
+#     status=True,  # Trạng thái cuộc hẹn
+#     appointment_list_id=new_appointment_list.id,  # ID của danh sách đặt hẹn
+#     patient_id=5  # ID của bệnh nhân
+# )
+# new_appointment3 = Appointment(
+#     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#     scheduled_hour=datetime.time(8, 30),  # Giờ đặt cuộc hẹn
+#     is_confirm=False,  # Trạng thái xác nhận
+#     is_paid=False,  # Trạng thái thanh toán
+#     status=True,  # Trạng thái cuộc hẹn
+#     appointment_list_id=new_appointment_list.id,  # ID của danh sách đặt hẹn
+#     patient_id=5  # ID của bệnh nhân
+# )
+# new_appointment4 = Appointment(
+#     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#     scheduled_hour=datetime.time(9, 30),  # Giờ đặt cuộc hẹn
+#     is_confirm=False,  # Trạng thái xác nhận
+#     is_paid=False,  # Trạng thái thanh toán
+#     status=True,  # Trạng thái cuộc hẹn
+#     appointment_list_id=new_appointment_list.id,  # ID của danh sách đặt hẹn
+#     patient_id=5  # ID của bệnh nhân
+# )
+# new_appointment5 = Appointment(
+#     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#     scheduled_hour=datetime.time(11, 30),  # Giờ đặt cuộc hẹn
+#     is_confirm=False,  # Trạng thái xác nhận
+#     is_paid=False,  # Trạng thái thanh toán
+#     status=True,  # Trạng thái cuộc hẹn
+#     appointment_list_id=new_appointment_list.id,  # ID của danh sách đặt hẹn
+#     patient_id=5  # ID của bệnh nhân
+# )
+#
+# db.session.add_all([
+#     new_appointment,
+#     new_appointment2,
+#     new_appointment3,
+#     new_appointment4,
+#     new_appointment5
+# ])
+# db.session.commit()
+
+# new_prescription2 = Prescription(
+#     date=datetime.date(2024, 4, 25),
+#     symptoms="Ho sổ mũi nhiều đờm",
+#     diagnosis='Cảm cúm',
+#     doctor_id=8,
+#     patient_id=1,
+#     appointment_id=2
+#
+# )
+# new_prescription3 = Prescription(
+#     date=datetime.date(2024, 4, 25),
+#     symptoms="Ho sổ mũi nhiều đờm",
+#     diagnosis='Cảm cúm',
+#     doctor_id=8,
+#     patient_id=1,
+#     appointment_id=3
+#
+# )
+# new_prescription4 = Prescription(
+#     date=datetime.date(2024, 4, 25),
+#     symptoms="Ho sổ mũi nhiều đờm",
+#     diagnosis='Cảm cúm',
+#     doctor_id=8,
+#     patient_id=1,
+#     appointment_id=4
+#
+# )
+# new_prescription5 = Prescription(
+#     date=datetime.date(2024, 4, 25),
+#     symptoms="Ho sổ mũi nhiều đờm",
+#     diagnosis='Cảm cúm',
+#     doctor_id=8,
+#     patient_id=1,
+#     appointment_id=5
+#
+# )
+# new_prescription6 = Prescription(
+#     date=datetime.date(2024, 4, 25),
+#     symptoms="Ho sổ mũi nhiều đờm",
+#     diagnosis='Cảm cúm',
+#     doctor_id=8,
+#     patient_id=1,
+#     appointment_id=6
+#
+# )
+# new_prescription7 = Prescription(
+#     date=datetime.date(2024, 4, 25),
+#     symptoms="Ho sổ mũi nhiều đờm",
+#     diagnosis='Cảm cúm',
+#     doctor_id=8,
+#     patient_id=5,
+#     appointment_id=7
+#
+# )
+# new_prescription8 = Prescription(
+#     date=datetime.date(2024, 4, 25),
+#     symptoms="Ho sổ mũi nhiều đờm",
+#     diagnosis='Cảm cúm',
+#     doctor_id=8,
+#     patient_id=6,
+#     appointment_id=8
+#
+# )
+# new_prescription9 = Prescription(
+#     date=datetime.date(2024, 4, 25),
+#     symptoms="Ho sổ mũi nhiều đờm",
+#     diagnosis='Cảm cúm',
+#     doctor_id=8,
+#     patient_id=6,
+#     appointment_id=9
+#
+# )
+# new_prescription10 = Prescription(
+#     date=datetime.date(2024, 4, 25),
+#     symptoms="Ho sổ mũi nhiều đờm",
+#     diagnosis='Cảm cúm',
+#     doctor_id=8,
+#     patient_id=5,
+#     appointment_id=10
+#
+# )
+# new_prescription11 = Prescription(
+#     date=datetime.date(2024, 4, 25),
+#     symptoms="Ho sổ mũi nhiều đờm",
+#     diagnosis='Cảm cúm',
+#     doctor_id=8,
+#     patient_id=6,
+#     appointment_id=11
+#
+# )
+# db.session.add_all([
+#     new_prescription2,
+#     new_prescription3,
+#     new_prescription4,
+#     new_prescription5,
+#     new_prescription6,
+#     new_prescription7,
+#     new_prescription8,
+#     new_prescription9,
+#     new_prescription10,
+#     new_prescription11,
+#
+# ])
+# db.session.commit()
+
+    #SETUP DB LAI TU DAU
+        # cashier = User(
         #     name='Thao Van',
         #     phone='0123456789',
         #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
@@ -301,119 +576,146 @@ if __name__ == '__main__':
         #     gender=Gender.FEMALE,
         #     role=UserRole.CASHIER,
         # )
-        # db.session.add(new_user4)
+        # db.session.add(cashier)
         # db.session.commit()
-        # new_cashier = Cashier(id=new_user4.id)
+        # new_cashier = Cashier(id=cashier.id)
         # db.session.add(new_cashier)
+        # db.session.commit()
+        #
+        # quoctuan = User(
+        #     name='Quốc Tuấn',
+        #     phone='0123456789',
+        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+        #     email='patient2@example.com',
+        #     address='Clinic',
+        #     username='patient2',
+        #     password=str(utils.hash_password("123")),
+        #     cid='2654894321',
+        #     gender=Gender.MALE,
+        #     role=UserRole.PATIENT,
+        # )
+        # anhtuan = User(
+        #     name='Anh Tuấn',
+        #     phone='0123456789',
+        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+        #     email='patient3@example.com',
+        #     address='Clinic',
+        #     username='patient3',
+        #     password=str(utils.hash_password("123")),
+        #     cid='32589441528',
+        #     gender=Gender.MALE,
+        #     role=UserRole.PATIENT,
+        # )
+        # db.session.add_all([quoctuan, anhtuan])
+        # db.session.commit()
+        # new_quoctuan = Patient(id=quoctuan.id)
+        # new_anhtuan = Patient(id=anhtuan.id)
+        # db.session.add_all([new_quoctuan, new_anhtuan])
+        # db.session.commit()
+        #
+        # doctor = User(
+        #     name='Doctor Strange',
+        #     phone='0123456789',
+        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+        #     email='docter@example.com',
+        #     address='Clinic',
+        #     username='doctorstrange',
+        #     password=str(utils.hash_password("123")),
+        #     cid='092884828872',
+        #     gender=Gender.MALE,
+        #     role=UserRole.DOCTOR,
+        # )
+        # db.session.add_all([doctor])
+        # db.session.commit()
+        # new_doctor = Doctor(id=doctor.id)
+        # db.session.add_all([new_doctor])
+        # db.session.commit()
+        # luudanh = User(
+        #     name='Luu Danh',
+        #     phone='0123456789',
+        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+        #     email='cashier123@example.com',
+        #     address='Clinic',
+        #     username='nurse',
+        #     password=str(utils.hash_password("123")),
+        #     cid='23498423189',
+        #     gender=Gender.MALE,
+        #     role=UserRole.NURSE,
+        # )
+        # db.session.add(luudanh)
+        # db.session.commit()
+        # new_nurse = Nurse(id=luudanh.id)
+        # db.session.add(new_nurse)
+        # db.session.commit()
+        # thuocho = Category(
+        #     name='Thuốc Ho'
+        # )
+        # thuoccam = Category(
+        #     name='Thuốc Cảm'
+        # )
+        # thucphamchucnang = Category(
+        #     name='Thực Phẩm Chức Năng'
+        # )
+        # thuocgiamdau = Category(
+        #     name='Thuốc Giảm Đau'
+        # )
+        # db.session.add_all([thuocgiamdau, thuocho, thuoccam])
+        # db.session.add_all([thucphamchucnang])
+        # db.session.commit()
+        # Tạo các loại thuốc (medicine)
+        # thuoc_1 = Medicine(name="Panadol", price=10000, usage="Uống sau bữa ăn", exp=datetime.date(2025, 12, 31))
+        # thuoc_2 = Medicine(name="Zinc", price=20000, usage="Uống trước khi ngủ", exp=datetime.date(2024, 6, 30))
+        # thuoc_3 = Medicine(name="Vitamin C", price=30000, usage="Uống trước khi ngủ", exp=datetime.date(2024, 6, 30))
+
+        # db.session.add_all([thuoc_1, thuoc_2, thuoc_3])
+        # db.session.commit()
+        # cat_med1 = MedicineCategory(category_id=3, medicine_id=1)
+        # cat_med2 = MedicineCategory(category_id=1, medicine_id=1)
+        # cat_med3 = MedicineCategory(category_id=4, medicine_id=2)
+        # cat_med4 = MedicineCategory(category_id=4, medicine_id=3)
+        #
+        # db.session.add_all([cat_med1, cat_med2, cat_med3, cat_med4])
+        # db.session.commit()
+
+        # unit1 = Unit(name='vỉ')
+        # unit2 = Unit(name='chai')
+        # unit3 = Unit(name='viên')
+        # db.session.add_all([unit1, unit2, unit3])
+        # db.session.commit()
+
+        # medicine_unit1 = MedicineUnit(
+        #     unit_id=1,
+        #     medicine_id=1,
+        #     quantity=10
+        # )
+        # medicine_unit2 = MedicineUnit(
+        #     unit_id=3,
+        #     medicine_id=1,
+        #     quantity=1
+        # )
+        # medicine_unit3 = MedicineUnit(
+        #     unit_id=2,
+        #     medicine_id=2,
+        #     quantity=30
+        # )
+        # medicine_unit4 = MedicineUnit(
+        #     unit_id=1,
+        #     medicine_id=2,
+        #     quantity=8
+        # )
+        # medicine_unit5 = MedicineUnit(
+        #     unit_id=1,
+        #     medicine_id=2,
+        #     quantity=14
+        # )
+        # db.session.add_all([medicine_unit5, medicine_unit4, medicine_unit3, medicine_unit1, medicine_unit2])
         # db.session.commit()
 
         # new_appointment_list = AppointmentList(
         #     scheduled_date=datetime.date(2024, 4, 25),  # Ngày đặt cuộc hẹn
-        #     nurse_id=8  # ID của y tá (Nurse)
+        #     nurse_id=5  # ID của y tá (Nurse)
         # )
         #
-        # # Thêm đối tượng mới vào session và lưu xuống cơ sở dữ liệu
-        # db.session.add(new_appointment_list)
-        # db.session.commit()
-
-        # new_appointment = Appointment(
-        #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
-        #     scheduled_hour=datetime.time(10, 30),  # Giờ đặt cuộc hẹn
-        #     is_confirm=False,  # Trạng thái xác nhận
-        #     is_paid=False,  # Trạng thái thanh toán
-        #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id= 3,  # ID của danh sách đặt hẹn
-        #     patient_id=3  # ID của bệnh nhân
-        # )
-        # new_appointment2 = Appointment(
-        #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
-        #     scheduled_hour=datetime.time(10, 30),  # Giờ đặt cuộc hẹn
-        #     is_confirm=False,  # Trạng thái xác nhận
-        #     is_paid=False,  # Trạng thái thanh toán
-        #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=3,  # ID của danh sách đặt hẹn
-        #     patient_id=3  # ID của bệnh nhân
-        # )
-        # new_appointment3 = Appointment(
-        #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
-        #     scheduled_hour=datetime.time(10, 30),  # Giờ đặt cuộc hẹn
-        #     is_confirm=False,  # Trạng thái xác nhận
-        #     is_paid=False,  # Trạng thái thanh toán
-        #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=3,  # ID của danh sách đặt hẹn
-        #     patient_id=3  # ID của bệnh nhân
-        # )
-        # new_appointment4 = Appointment(
-        #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
-        #     scheduled_hour=datetime.time(10, 30),  # Giờ đặt cuộc hẹn
-        #     is_confirm=False,  # Trạng thái xác nhận
-        #     is_paid=False,  # Trạng thái thanh toán
-        #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=3,  # ID của danh sách đặt hẹn
-        #     patient_id=3  # ID của bệnh nhân
-        # )
-        # new_appointment5 = Appointment(
-        #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
-        #     scheduled_hour=datetime.time(10, 30),  # Giờ đặt cuộc hẹn
-        #     is_confirm=False,  # Trạng thái xác nhận
-        #     is_paid=False,  # Trạng thái thanh toán
-        #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=3,  # ID của danh sách đặt hẹn
-        #     patient_id=3  # ID của bệnh nhân
-        # )
-
-        # new_appointment = Appointment(
-        #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
-        #     scheduled_hour=datetime.time(15, 30),  # Giờ đặt cuộc hẹn
-        #     is_confirm=False,  # Trạng thái xác nhận
-        #     is_paid=False,  # Trạng thái thanh toán
-        #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=3,  # ID của danh sách đặt hẹn
-        #     patient_id=11  # ID của bệnh nhân
-        # )
-        # new_appointment2 = Appointment(
-        #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
-        #     scheduled_hour=datetime.time(16, 30),  # Giờ đặt cuộc hẹn
-        #     is_confirm=False,  # Trạng thái xác nhận
-        #     is_paid=False,  # Trạng thái thanh toán
-        #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=3,  # ID của danh sách đặt hẹn
-        #     patient_id=11  # ID của bệnh nhân
-        # )
-        # new_appointment3 = Appointment(
-        #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
-        #     scheduled_hour=datetime.time(8, 30),  # Giờ đặt cuộc hẹn
-        #     is_confirm=False,  # Trạng thái xác nhận
-        #     is_paid=False,  # Trạng thái thanh toán
-        #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=3,  # ID của danh sách đặt hẹn
-        #     patient_id=11  # ID của bệnh nhân
-        # )
-        # new_appointment4 = Appointment(
-        #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
-        #     scheduled_hour=datetime.time(9, 30),  # Giờ đặt cuộc hẹn
-        #     is_confirm=False,  # Trạng thái xác nhận
-        #     is_paid=False,  # Trạng thái thanh toán
-        #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=3,  # ID của danh sách đặt hẹn
-        #     patient_id=11  # ID của bệnh nhân
-        # )
-        # new_appointment5 = Appointment(
-        #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
-        #     scheduled_hour=datetime.time(11, 30),  # Giờ đặt cuộc hẹn
-        #     is_confirm=False,  # Trạng thái xác nhận
-        #     is_paid=False,  # Trạng thái thanh toán
-        #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=3,  # ID của danh sách đặt hẹn
-        #     patient_id=11  # ID của bệnh nhân
-        # )
-
-        # new_appointment_list = AppointmentList(
-        #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
-        #     nurse_id=8  # ID của y tá (Nurse)
-        # )
-        #
-        # # Thêm đối tượng mới vào session và lưu xuống cơ sở dữ liệu
         # db.session.add(new_appointment_list)
         # db.session.commit()
 
@@ -423,8 +725,8 @@ if __name__ == '__main__':
         #     is_confirm=False,  # Trạng thái xác nhận
         #     is_paid=False,  # Trạng thái thanh toán
         #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=4,  # ID của danh sách đặt hẹn
-        #     patient_id=11  # ID của bệnh nhân
+        #     appointment_list_id=1,  # ID của danh sách đặt hẹn
+        #     patient_id=2  # ID của bệnh nhân
         # )
         # new_appointment2 = Appointment(
         #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
@@ -432,8 +734,8 @@ if __name__ == '__main__':
         #     is_confirm=False,  # Trạng thái xác nhận
         #     is_paid=False,  # Trạng thái thanh toán
         #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=4,  # ID của danh sách đặt hẹn
-        #     patient_id=11  # ID của bệnh nhân
+        #     appointment_list_id=1,  # ID của danh sách đặt hẹn
+        #     patient_id=2  # ID của bệnh nhân
         # )
         # new_appointment3 = Appointment(
         #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
@@ -441,8 +743,8 @@ if __name__ == '__main__':
         #     is_confirm=False,  # Trạng thái xác nhận
         #     is_paid=False,  # Trạng thái thanh toán
         #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=4,  # ID của danh sách đặt hẹn
-        #     patient_id=11  # ID của bệnh nhân
+        #     appointment_list_id=1,  # ID của danh sách đặt hẹn
+        #     patient_id=2  # ID của bệnh nhân
         # )
         # new_appointment4 = Appointment(
         #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
@@ -450,8 +752,8 @@ if __name__ == '__main__':
         #     is_confirm=False,  # Trạng thái xác nhận
         #     is_paid=False,  # Trạng thái thanh toán
         #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=4,  # ID của danh sách đặt hẹn
-        #     patient_id=11  # ID của bệnh nhân
+        #     appointment_list_id=1,  # ID của danh sách đặt hẹn
+        #     patient_id=2  # ID của bệnh nhân
         # )
         # new_appointment5 = Appointment(
         #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
@@ -459,8 +761,8 @@ if __name__ == '__main__':
         #     is_confirm=False,  # Trạng thái xác nhận
         #     is_paid=False,  # Trạng thái thanh toán
         #     status=True,  # Trạng thái cuộc hẹn
-        #     appointment_list_id=4,  # ID của danh sách đặt hẹn
-        #     patient_id=11  # ID của bệnh nhân
+        #     appointment_list_id=1,  # ID của danh sách đặt hẹn
+        #     patient_id=2  # ID của bệnh nhân
         # )
         #
         # db.session.add_all([
@@ -472,108 +774,47 @@ if __name__ == '__main__':
         # ])
         # db.session.commit()
 
-        new_prescription6 = Prescription(
-            date=datetime.date(2024, 4, 30),
-            symptoms="Ho sổ mũi nhiều đờm",
-            diagnosis='Cảm cúm',
-            doctor_id=2,
-            patient_id=11,
-            appointment_id=6
+        # new_prescription2 = Prescription(
+        #     date=datetime.date(2024, 4, 30),
+        #     symptoms="Ho sổ mũi nhiều đờm",
+        #     diagnosis='Cảm cúm',
+        #     doctor_id=4,
+        #     patient_id=2,
+        #     appointment_id=2
+        #
+        # )
+        # new_prescription3 = Prescription(
+        #     date=datetime.date(2024, 4, 30),
+        #     symptoms="Ho sổ mũi nhiều đờm",
+        #     diagnosis='Cảm cúm',
+        #     doctor_id=4,
+        #     patient_id=2,
+        #     appointment_id=1
+        #
+        # )
+        # db.session.add_all([new_prescription3, new_prescription2])
+        # db.session.commit()
 
-        )
-        new_prescription7 = Prescription(
-            date=datetime.date(2024, 4, 30),
-            symptoms="Ho sổ mũi nhiều đờm",
-            diagnosis='Cảm cúm',
-            doctor_id=2,
-            patient_id=11,
-            appointment_id=7
-
-        )
-        new_prescription8 = Prescription(
-            date=datetime.date(2024, 4, 30),
-            symptoms="Ho sổ mũi nhiều đờm",
-            diagnosis='Cảm cúm',
-            doctor_id=2,
-            patient_id=11,
-            appointment_id=8
-
-        )
-        new_prescription9 = Prescription(
-            date=datetime.date(2024, 4, 30),
-            symptoms="Ho sổ mũi nhiều đờm",
-            diagnosis='Cảm cúm',
-            doctor_id=2,
-            patient_id=11,
-            appointment_id=9
-
-        )
-        new_prescription10 = Prescription(
-            date=datetime.date(2024, 4, 30),
-            symptoms="Ho sổ mũi nhiều đờm",
-            diagnosis='Cảm cúm',
-            doctor_id=2,
-            patient_id=11,
-            appointment_id=10
-
-        )
-        new_prescription11 = Prescription(
-            date=datetime.date(2024, 4, 30),
-            symptoms="Ho sổ mũi nhiều đờm",
-            diagnosis='Cảm cúm',
-            doctor_id=2,
-            patient_id=11,
-            appointment_id=11
-
-        )
-        new_prescription12 = Prescription(
-            date=datetime.date(2024, 4, 30),
-            symptoms="Ho sổ mũi nhiều đờm",
-            diagnosis='Cảm cúm',
-            doctor_id=2,
-            patient_id=11,
-            appointment_id=12
-
-        )
-        new_prescription13 = Prescription(
-            date=datetime.date(2024, 4, 30),
-            symptoms="Ho sổ mũi nhiều đờm",
-            diagnosis='Cảm cúm',
-            doctor_id=2,
-            patient_id=11,
-            appointment_id=13
-
-        )
-        new_prescription14 = Prescription(
-            date=datetime.date(2024, 4, 30),
-            symptoms="Ho sổ mũi nhiều đờm",
-            diagnosis='Cảm cúm',
-            doctor_id=2,
-            patient_id=11,
-            appointment_id=14
-
-        )
-        new_prescription15 = Prescription(
-            date=datetime.date(2024, 4, 30),
-            symptoms="Ho sổ mũi nhiều đờm",
-            diagnosis='Cảm cúm',
-            doctor_id=2,
-            patient_id=11,
-            appointment_id=15
-
-        )
-        db.session.add_all([
-            new_prescription6,
-            new_prescription7,
-            new_prescription8,
-            new_prescription9,
-            new_prescription10,
-            new_prescription11,
-            new_prescription12,
-            new_prescription13,
-            new_prescription14,
-            new_prescription15,
-
-        ])
-        db.session.commit()
-
+        # medicine_detail = MedicineDetail(
+        #     quantity=2,
+        #     usage="2 lần/ngày, sáng chiều",
+        #     prescription_id=1,
+        #     medicine_id=1,
+        #     medicine_unit_id=1
+        # )
+        # medicine_detail2 = MedicineDetail(
+        #     quantity=2,
+        #     usage="2 lần/ngày, sáng chiều",
+        #     prescription_id=1,
+        #     medicine_id=3,
+        #     medicine_unit_id=1
+        # )
+        # medicine_detail3 = MedicineDetail(
+        #     quantity=1,
+        #     usage="2 lần/ngày, sáng chiều",
+        #     prescription_id=1,
+        #     medicine_id=2,
+        #     medicine_unit_id=2
+        # )
+        # db.session.add_all([medicine_detail2, medicine_detail, medicine_detail3])
+        # db.session.commit()
