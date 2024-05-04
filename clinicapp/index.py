@@ -6,6 +6,7 @@ import requests
 from datetime import date
 import cloudinary.uploader
 from flask import request, redirect, render_template, jsonify, url_for, current_app, flash, session
+from flask_cors import cross_origin
 from flask_login import login_user, logout_user, login_required, current_user
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
@@ -85,12 +86,28 @@ def register_user():
     return render_template('auth/register.html', err_msg=err_msg)
 
 
+@app.route('/api/patient/<int:patient_cid>', methods=['GET'])
+@cross_origin()
+def get_patient_info(patient_cid):
+    patient = dao.get_patient_info(patient_cid=patient_cid)
+    if patient:
+        patient_info = {
+            'id': patient.id,
+            'name': patient.name,
+            'phone': patient.phone,
+            'email': patient.email,
+        }
+        return jsonify(patient_info)
+    else:
+        return jsonify({'error': 'Không tìm thấy bệnh nhân'}), 404
+
+
 @app.route('/prescription', methods=['GET', 'POST'])
 @login_required
 @roles_required([UserRole.DOCTOR])
 def prescription():
     form = PrescriptionForm()
-    categories = dao.get_categorys()
+    categories = dao.get_categories()
     medicines = dao.get_medicines()
     units = dao.get_units()
     if form.validate_on_submit():
@@ -101,7 +118,7 @@ def prescription():
 @app.route('/prescription/create', methods=['POST'])
 def create_prescription():
     doctor_id = current_user.id
-    date = datetime.today().strftime('%Y-%m-%d')
+    date = datetime.date.today().strftime('%Y-%m-%d')
     patient_id = request.form.get('patient_id')
     symptoms = request.form.get('symptoms')
     diagnosis = request.form.get('diagnosis')
@@ -110,12 +127,23 @@ def create_prescription():
     quantities = request.form.getlist('list-quantity')
     medicines = request.form.getlist('list-medicine_id')
     dao.update_list_appointment(patient_id)
-    dao.create_medical_form(doctor_id=doctor_id, patient_id=patient_id, date=date, diagnosis=diagnosis,
+    dao.create_prescription(doctor_id=doctor_id, patient_id=patient_id, date=date, diagnosis=diagnosis,
                             symptoms=symptoms, usages=usages, quantities=quantities, medicines=medicines, units=units)
     # flash("Lập phiếu khám thành công!", 'success')
     print("Create Presciption Successfully!")
     return redirect(url_for('prescription'))
 
+
+@app.route('/api/medicines/category/<int:category_id>')
+def get_medicines_by_category(category_id):
+    medicines = dao.get_medicine_by_category(category_id)
+    medicines_json = [{'id': medicine.id,
+                       'name': medicine.name,
+                       'price': medicine.price,
+                       'usage': medicine.usage,
+                       'exp': medicine.exp
+                       } for medicine in medicines]
+    return jsonify(medicines_json)
 
 @login.user_loader
 def load_user(user_id):
@@ -131,7 +159,6 @@ def book():
         current_user.id
         return 0
     return render_template('/appoinment/patient_create_appoinment.html')
-
 
 
 @app.route('/patient/book-appointment', methods=['POST'])
@@ -314,3 +341,4 @@ if __name__ == '__main__':
         from clinicapp import admin
 
         app.run(debug=True)
+
