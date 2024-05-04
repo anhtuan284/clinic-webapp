@@ -140,7 +140,7 @@ class ThuocView(BaseView):
                 name=name,
                 category_id=danhmuc_id
             ),
-            danhmucs=get_categorys(),
+            danhmucs=get_categories(),
             danhmucthuocs=get_category_medicines()
         )
 
@@ -166,7 +166,7 @@ class ThuocView(BaseView):
             for dm in ds_danh_muc:
                 add_category_medicine(category_id=int(dm), medicine_id=thuocMoiId)
 
-        return self.render('admin/them_thuoc.html', danhmucs=get_categorys())
+        return self.render('admin/them_thuoc.html', danhmucs=get_categories())
 
     @expose('/thuocs/<id>', methods=['get', 'post'])
     def update_thuoc(self, id):
@@ -178,9 +178,9 @@ class ThuocView(BaseView):
         else:
             return self.render(
                 'admin/them_thuoc.html',
-                danhmucs=get_categorys(),
+                danhmucs=get_categories(),
                 thuoc=thuoc,
-                danhmucscurrentthuoc=get_categorys_current_medicine(id)
+                danhmucscurrentthuoc=get_categories_current_medicine(id)
             )
 
     def is_accessible(self):
@@ -190,7 +190,7 @@ class ThuocView(BaseView):
 class MyDanhMucView(BaseView):
     @expose('/')
     def index(self):
-        return self.render('admin/danh_muc.html', danhmucs=get_categorys())
+        return self.render('admin/danh_muc.html', danhmucs=get_categories())
 
     def is_accessible(self):
         return current_user.is_authenticated

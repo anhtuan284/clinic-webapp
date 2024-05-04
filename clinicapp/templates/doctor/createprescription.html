@@ -11,12 +11,13 @@
             <h2 class="text-center">Bệnh nhân</h2>
             <div class="row my-2">
                 <div class="col-md-6">
-                    {{ form.patient_id.label(class="form-label fw-bold") }}
-                    {{ form.patient_id(class="form-control", id="patient_id") }}
+                    {{ form.patient_cid.label(class="form-label fw-bold") }}
+                    {{ form.patient_cid(class="form-control", onblur="fetchPatientInfo()")}}
+                    <input id="patient_id" name="patient_id" hidden/>
                 </div>
                 <div class="col-md-6">
                     {{ form.name.label(class="form-label fw-bold") }}
-                    {{ form.name(class="form-control", id="patient-name") }}
+                    {{ form.name(class="form-control", id="patient-name", readonly=True, disable=True) }}
                 </div>
             </div>
             <div class="mb-3 my-2">
@@ -38,7 +39,7 @@
                 <div class="row">
                     <div class="col-md-6 my-2">
                         {{ form.medicine_type.label(class="form-label fw-bold") }}
-                        <select id="selected-medicine_type" name="medicine_type" class="form-select">
+                        <select id="selected-medicine_type" name="medicine_type" class="form-select" onchange="fetchMedicinesByCategory(this.value)">
                             <option value="">Tất cả</option>
                             {% for c in cats %}
                             <option value="{{ c.id }}">{{ c.name }}</option>
@@ -65,6 +66,7 @@
                     <div class="col-md-6 my-2">
                         {{ form.quantity.label(class="form-label fw-bold") }}
                         {{ form.quantity(class="form-control") }}
+<!--                        <input type="range" id="quantity" class="form-control" min="1" max="50"/>-->
                     </div>
                     <div class="col-md-12 my-2">
                         {{ form.usage.label(class="form-label fw-bold") }}
