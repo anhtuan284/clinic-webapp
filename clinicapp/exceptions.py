@@ -1,0 +1,2 @@
+class BillAlreadyExists(Exception):
+    pass

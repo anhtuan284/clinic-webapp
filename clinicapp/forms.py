@@ -42,15 +42,15 @@ class RegisterUser(FlaskForm):
 
 
 class PrescriptionForm(FlaskForm):
-    patient_id = IntegerField("Mã bệnh nhân", validators=[DataRequired(), Regexp('^[0-9]*$', message="Mã BN chỉ chứa số")])
+    patient_cid = IntegerField("CCCD bệnh nhân", validators=[DataRequired(), Length(min=9, max=12), Regexp('^[0-9]*$', message="CCCD chỉ chứa số")])
     name = StringField("Họ tên", validators=[DataRequired()])
-    diagnosis = TextAreaField("Chẩn đoán")
+    diagnosis = TextAreaField("Chẩn đoán", validators=[DataRequired()])
     advice = TextAreaField("Lời dặn")
-    symptoms = StringField("Triệu chứng")
+    symptoms = StringField("Triệu chứng", validators=[DataRequired()])
 
     # medicines = FieldList(FormField(MedicineForm), min_entries=0)
     usage = TextAreaField("Cách dùng")
-    quantity = IntegerField("Số lượng", default=1)
+    quantity = IntegerField("Số lượng", default=1, validators=[NumberRange(min=1, max=50)])
     unit = SelectField("Đơn vị", coerce=int)
     medicine_type = SelectField("Loại thuốc", choices=[], coerce=int)
     medicine_name = SelectField("Tên thuốc", choices=[], coerce=int)
