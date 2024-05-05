@@ -12,8 +12,10 @@ from flask_login import login_user, logout_user, login_required, current_user
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
     TIENKHAM, SOLUONGKHAM
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
-    get_list_scheduled_hours_by_date_confirm, get_value_policy
-from clinicapp.decorators import loggedin, roles_required
+    get_list_scheduled_hours_by_date_confirm, get_prescriptions_by_scheduled_date, get_prescription_by_id, \
+    get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
+    get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, get_value_policy
+from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin
 from clinicapp.models import UserRole, Unit
 from clinicapp.forms import PrescriptionForm
 from clinicapp.vnpay import vnpay
@@ -112,7 +114,8 @@ def prescription():
     units = dao.get_units()
     if form.validate_on_submit():
         print("Create Success")
-    return render_template('doctor/createprescription.html', form=form, medicines=medicines, cats=categories, units=units)
+    return render_template('doctor/createprescription.html', form=form, medicines=medicines, cats=categories,
+                           units=units)
 
 
 @app.route('/prescription/create', methods=['POST'])
@@ -334,6 +337,79 @@ def process_payment():
 
     else:
         return jsonify({'error': 'Invalid request method'}), 405
+
+
+@app.route('/payment', methods=['GET'])
+@cashiernotloggedin
+def pay():
+    q = request.args.get('q') or session.get('date')
+    prescriptions = None
+    if q:
+        prescriptions = get_prescriptions_by_scheduled_date(date=q)
+        session['date'] = q
+
+    return render_template('cashier/payment.html',
+                           prescriptions=prescriptions,
+                           date=session['date'] if session.get('date') else None
+                           )
+
+
+@app.route('/bills/<prescription_id>', methods=['GET', 'POST'])
+@cashiernotloggedin
+def do_bill(prescription_id):
+    global error, created
+    current_prescription = get_prescription_by_id(prescription_id)
+    current_patient = get_patient_by_prescription_id(prescription_id)
+    current_medicines = get_medicines_by_prescription_id(prescription_id)
+    medicine_price = get_medicine_price_by_prescription_id(prescription_id)
+
+    # cai nay khi nao thong nhat policy xong thi replace value khac
+    service_price = 100000
+    total = medicine_price
+    is_paid = get_is_paid_by_prescription_id(prescription_id)
+
+    if not is_paid:
+        total += service_price
+
+    if request.method.__eq__('POST'):
+        try:
+            if len(get_bill_by_prescription_id(prescription_id)) > 0:
+                raise Exception("Bill này có rồi!!!")
+
+            create_bill(
+                service_price=service_price,
+                medicine_price=medicine_price,
+                total=total,
+                cashier_id=current_user.id,
+                prescription_id=prescription_id
+            )
+
+            error = None
+            created = True
+        except Exception as e:
+            error = str(e)
+            created = False
+        finally:
+            return redirect(url_for('do_bill',
+                                    prescription_id=prescription_id,
+                                    error=error,
+                                    created=created
+                                    ))
+
+    q_error = request.args.get('error')
+    q_created = request.args.get('created')
+
+    return render_template('cashier/bill.html',
+                           prescription=current_prescription,
+                           medicines=current_medicines,
+                           patient=current_patient,
+                           medicine_price=medicine_price,
+                           service_price=service_price,
+                           is_paid=is_paid,
+                           total=total,
+                           error=q_error,
+                           created=q_created
+                           )
 
 
 if __name__ == '__main__':
