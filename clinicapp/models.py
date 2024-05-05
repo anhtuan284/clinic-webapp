@@ -191,9 +191,23 @@ class MedicineCategory(BaseModel):
         return f"Danh mục {self.category_id} - Thuốc {self.medicine_id}"
 
 
+class HistoryOnlinePayment(BaseModel):
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    amount = Column(DECIMAL(11, 2))
+    response_code = Column(String(300))
+    gateway_name = Column(String(100))
+    patient_id = Column(Integer, ForeignKey(Patient.id), nullable=False)
+    paid = Column(Boolean, default=False)
+
+
 if __name__ == '__main__':
     with app.app_context():
-        pass
+
+        db.create_all()
+        # order = HistoryOnlinePayment(amount=200000, response_code="aadasdasdasdas", gateway_name="vnpay", patient_id=1)
+        # db.session.add(order)
+        # db.session.commit()
+
         # db.create_all()
         # new_user1 = User(
         #     name='Admin',
@@ -273,8 +287,9 @@ if __name__ == '__main__':
 #         new_user5 = User(
 #             name='Quốc Tuấn',
 #         db.create_all()
+
         # new_user = User(
-        #     name='benh nhan',
+        #     name='benh nhan',s
         #     phone='0905952379',
         #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
         #     email='2151013029huy@ou.edu.vn',
@@ -332,6 +347,21 @@ if __name__ == '__main__':
 # #         # # Thêm đối tượng mới vào session và lưu xuống cơ sở dữ liệu
 #         db.session.add(new_appointment_list)
 #         db.session.commit()
+
+#         new_user1 = User(
+#             name='Admin',
+#             phone='0123456789',
+#             avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+#             email='admin@example.com',
+#             address='Admin Site',
+#             username='admin',
+#             password=str(utils.hash_password("123")),
+#             cid='092884828822',
+#             gender=Gender.MALE,
+#             role=UserRole.ADMIN,
+#         )
+#         new_user2 = User(
+#             name='Doctor Strange',
 
 #             phone='0123456789',
 #             avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
@@ -391,7 +421,6 @@ if __name__ == '__main__':
 
 #         db.session.add_all([cat_med1, cat_med2, cat_med3, cat_med4])
 #         db.session.commit()
-
 
 
 # APPOINTMENT CỦA HUY
