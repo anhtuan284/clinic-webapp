@@ -1,13 +1,10 @@
 import hashlib
 
-
 from sqlalchemy import func, desc
 from sqlalchemy.orm import sessionmaker
 
 from clinicapp import db
 from clinicapp.models import *
-
-
 
 from clinicapp.utils import hash_password, verify_password
 
@@ -23,10 +20,24 @@ def auth_user(username, password):
     return None
 
 
-def add_user(name, username, password, avatar):
+def add_user(name, username, password, avatar, email, phone, address, cid, gender):
     hashed_password = hash_password(password.strip())
-    u = User(ten=name, username=username, password=hashed_password, avatar=avatar, role=UserRole.PATIENT)
+    u = User(
+        username=username,
+        password=hashed_password,
+        role=UserRole.PATIENT,
+        name=name,
+        cid=cid,
+        phone=phone,
+        email=email,
+        gender=gender,
+        address=address,
+        avatar=avatar
+    )
     db.session.add(u)
+    db.session.commit()
+    new_patient = Patient(id=u.id)
+    db.session.add(new_patient)
     db.session.commit()
 
 
@@ -57,10 +68,8 @@ def add_appointment(scheduled_date, scheduled_hour, is_confirm, is_paid, status,
     db.session.commit()
 
 
-
-def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None, category_id=None):
-
-
+def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None,
+                  category_id=None):
     medicines = Medicine.query
 
     if category_id:
@@ -91,7 +100,8 @@ def get_medicine_by_id(id):
 
 
 def get_medicine_by_category(category_id):
-    medicines = db.session.query(Medicine).join(Medicine.medicine_category).filter(MedicineCategory.category_id == category_id).all()
+    medicines = db.session.query(Medicine).join(Medicine.medicine_category).filter(
+        MedicineCategory.category_id == category_id).all()
 
     return medicines
 
@@ -102,7 +112,7 @@ def delete_medicine_by_id(id):
     db.session.commit()
 
 
-def add_or_update_medicine(id, price, name, usage, exp):
+def add_or_update_medicine(id: object, price: object, name: object, usage: object, exp: object) -> object:
     if id:
         medicine = get_medicine_by_id(id)
         medicine.price = price
@@ -152,13 +162,10 @@ def add_category_medicine(category_id, medicine_id):
     db.session.commit()
 
 
-def get_categories_current_medicine(id):
-    categorymedicine = db.session.query(Medicine, Category, MedicineCategory) \
-        .filter(Medicine.id == MedicineCategory.medicine_id, MedicineCategory.category_id == Category.id) \
-        .filter(Medicine.id == id) \
-        .all()
+def get_categories_by_medicine_id(id):
+    categories = Category.query.join(Category.medicine_category).filter_by(medicine_id=id).all()
 
-    return categorymedicine
+    return categories
 
 
 def get_value_policy(id):
@@ -177,13 +184,9 @@ def update_list_appointment(patient_id):
     return None
 
 
-
-def create_medical_form(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, units):
-    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id,
-                            doctor_id=doctor_i
-
 def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, units):
-    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id, doctor_id=doctor_id)
+    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id,
+                            doctor_id=doctor_id)
 
     db.session.add(new_pres)
     db.session.commit()
@@ -198,9 +201,9 @@ def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages
     db.session.commit()
 
 
-
 def create_order_payment(amount, gateway, patient_id, paid, response_code):
-    order = HistoryOnlinePayment(amount=amount, gateway_name=gateway, patient_id=patient_id, paid=paid, response_code=response_code)
+    order = HistoryOnlinePayment(amount=amount, gateway_name=gateway, patient_id=patient_id, paid=paid,
+                                 response_code=response_code)
     db.session.add(order)
     db.session.commit()
 
@@ -211,7 +214,8 @@ def get_quantity_history_payment():
         return latest_record.id
     else:
         return 1
-                            
+
+
 def get_prescriptions_by_scheduled_date(date):
     prescriptions = db.session.query(Prescription, Appointment, AppointmentList) \
         .filter(Prescription.appointment_id == Appointment.id) \
@@ -282,10 +286,9 @@ def create_bill(service_price, medicine_price, total, cashier_id, prescription_i
 def get_bill_by_prescription_id(prescription_id):
     return Bill.query.filter_by(prescription_id=prescription_id).all()
 
+
 def get_patient_info(patient_cid=None):
     if patient_cid:
         patient = db.session.query(User).filter_by(cid=patient_cid).first()
         return patient
     return None
-
-

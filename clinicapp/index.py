@@ -2,22 +2,23 @@ import datetime
 import hashlib
 import hmac
 import uuid
-import requests
-from datetime import date
+
 import cloudinary.uploader
-from flask import request, redirect, render_template, jsonify, url_for, current_app, flash, session
+import requests
+from flask import request, redirect, render_template, jsonify, url_for, session
 from flask_cors import cross_origin
 from flask_login import login_user, logout_user, login_required, current_user
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
-    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint
+    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, admin
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
-    get_list_scheduled_hours_by_date_confirm, get_prescriptions_by_scheduled_date, get_prescription_by_id, \
+    get_prescriptions_by_scheduled_date, get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
-    get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, get_value_policy
+    get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, \
+    get_value_policy
 from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin
-from clinicapp.models import UserRole, Unit
 from clinicapp.forms import PrescriptionForm
+from clinicapp.models import UserRole, Gender
 from clinicapp.vnpay import vnpay
 
 
@@ -76,10 +77,22 @@ def register_user():
                 res = cloudinary.uploader.upload(avatar)
                 avatar_path = res['secure_url']
 
+            gender = None
+            if request.form.get('gender') == 'male':
+                gender=Gender.MALE
+            else:
+                gender=Gender.FEMALE
+
             dao.add_user(name=request.form.get('name'),
                          username=request.form.get('username'),
                          password=password,
-                         avatar=avatar_path)
+                         avatar=avatar_path,
+                         email=request.form.get('email'),
+                         phone=request.form.get('phone'),
+                         address=request.form.get('address'),
+                         cid=request.form.get('cid'),
+                         gender=gender
+                         )
 
             return redirect('/login')
         else:
@@ -90,6 +103,7 @@ def register_user():
 
 @app.route('/api/patient/<int:patient_cid>', methods=['GET'])
 @cross_origin()
+@roles_required([UserRole.DOCTOR])
 def get_patient_info(patient_cid):
     patient = dao.get_patient_info(patient_cid=patient_cid)
     if patient:
@@ -119,6 +133,7 @@ def prescription():
 
 
 @app.route('/prescription/create', methods=['POST'])
+@roles_required([UserRole.DOCTOR])
 def create_prescription():
     doctor_id = current_user.id
     date = datetime.date.today().strftime('%Y-%m-%d')
@@ -148,6 +163,7 @@ def get_medicines_by_category(category_id):
                        } for medicine in medicines]
     return jsonify(medicines_json)
 
+
 @login.user_loader
 def load_user(user_id):
     return dao.get_user_by_id(user_id)
@@ -155,6 +171,7 @@ def load_user(user_id):
 
 # luc dau tinh lam load form = result nhung fail
 @app.route('/patient/book', methods=['GET'])
+@roles_required([UserRole.PATIENT])
 def book():
     err_msg = None
     if request.method == 'GET':
@@ -200,7 +217,9 @@ def process_vnpay(amount, patient):
     vnpay_payment_url = vnp.get_payment_url(VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY)
     return vnpay_payment_url
 
+
 @app.route('/patient/book-appointment', methods=['POST'])
+@roles_required([UserRole.PATIENT])
 def patient_book_appointment():
     pay_method = request.form.get('payment_method')
     gateway = request.form.get('way')
@@ -423,6 +442,13 @@ def do_bill(prescription_id):
                 prescription_id=prescription_id
             )
 
+            if not session.get('paid_list'):
+                session['paid_list'] = []
+
+            paid_list = session['paid_list']
+            paid_list.append(prescription_id)
+            session['paid_list'] = paid_list
+
             error = None
             created = True
         except Exception as e:
@@ -454,4 +480,3 @@ def do_bill(prescription_id):
 if __name__ == '__main__':
     with app.app_context():
         app.run(debug=True)
-
