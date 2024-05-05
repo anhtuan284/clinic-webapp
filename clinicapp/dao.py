@@ -1,11 +1,12 @@
 import hashlib
 
-from sqlalchemy import func
+
+from sqlalchemy import func, desc
 from sqlalchemy.orm import sessionmaker
 
 from clinicapp import db
-from clinicapp.models import (User, UserRole, Medicine, Category, MedicineCategory, Appointment, Unit, Prescription,
-                              MedicineDetail, AppointmentList, Patient, Doctor, MedicineUnit, Bill, Policy)
+from clinicapp.models import *
+
 
 
 from clinicapp.utils import hash_password, verify_password
@@ -56,7 +57,9 @@ def add_appointment(scheduled_date, scheduled_hour, is_confirm, is_paid, status,
     db.session.commit()
 
 
+
 def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None, category_id=None):
+
 
     medicines = Medicine.query
 
@@ -177,10 +180,11 @@ def update_list_appointment(patient_id):
 
 def create_medical_form(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, units):
     new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id,
-                            doctor_id=doctor_id)
+                            doctor_id=doctor_i
 
 def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, units):
     new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id, doctor_id=doctor_id)
+
     db.session.add(new_pres)
     db.session.commit()
     for i in range(len(medicines)):
@@ -193,6 +197,21 @@ def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages
         db.session.add(medicine_detail)
     db.session.commit()
 
+
+
+def create_order_payment(amount, gateway, patient_id, paid, response_code):
+    order = HistoryOnlinePayment(amount=amount, gateway_name=gateway, patient_id=patient_id, paid=paid, response_code=response_code)
+    db.session.add(order)
+    db.session.commit()
+
+
+def get_quantity_history_payment():
+    latest_record = HistoryOnlinePayment.query.order_by(desc(HistoryOnlinePayment.id)).first()
+    if latest_record.id:
+        return latest_record.id
+    else:
+        return 1
+                            
 def get_prescriptions_by_scheduled_date(date):
     prescriptions = db.session.query(Prescription, Appointment, AppointmentList) \
         .filter(Prescription.appointment_id == Appointment.id) \
@@ -268,4 +287,5 @@ def get_patient_info(patient_cid=None):
         patient = db.session.query(User).filter_by(cid=patient_cid).first()
         return patient
     return None
+
 

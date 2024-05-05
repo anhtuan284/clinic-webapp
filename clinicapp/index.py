@@ -10,7 +10,7 @@ from flask_cors import cross_origin
 from flask_login import login_user, logout_user, login_required, current_user
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
-    TIENKHAM, SOLUONGKHAM
+    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
     get_list_scheduled_hours_by_date_confirm, get_prescriptions_by_scheduled_date, get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
@@ -157,42 +157,65 @@ def load_user(user_id):
 @app.route('/patient/book', methods=['GET'])
 def book():
     err_msg = None
-    if request.method.__eq__('POST'):
-        date = request.args.get('date')
-        current_user.id
-        return 0
-    return render_template('/appoinment/patient_create_appoinment.html')
+    if request.method == 'GET':
+        date = session.pop('appointment_date', None)
+        appointment_time = session.pop('appointment_time', None)
+        payment_method_id = session.pop('payment_method_id', None)
+        print(current_user.role.value)
+        print(date)
+        print(appointment_time)
+        print(payment_method_id)
 
+        if date is not None and appointment_time is not None:
+            appointment_date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+            return render_template('/appoinment/patient_create_appoinment.html', appointment_date=appointment_date,
+                                   appointment_time=appointment_time, payment_method_id=payment_method_id)
+        else:
+            appointment_date = datetime.datetime.now().date()
+    return render_template('/appoinment/patient_create_appoinment.html', appointment_date=appointment_date)
+
+
+def process_vnpay(amount, patient):
+    order_type = "billpayment"
+    order_desc = f"Thanh toán viện phí cho bệnh nhân {patient.name}, với số tiền {int(amount)} VND"
+    print(patient.name)
+    print(patient.id)
+    print(amount)
+    print(int(dao.get_quantity_history_payment()))
+    language = "vn"
+    ipaddr = request.remote_addr
+    vnp = vnpay()
+    vnp.requestData["vnp_Version"] = "2.1.0"
+    vnp.requestData["vnp_Command"] = "pay"
+    vnp.requestData["vnp_TmnCode"] = VNPAY_TMN_CODE
+    vnp.requestData["vnp_Amount"] = int(amount) * 100
+    vnp.requestData["vnp_CurrCode"] = "VND"
+    vnp.requestData["vnp_TxnRef"] = patient.id + int(dao.get_quantity_history_payment())
+    vnp.requestData["vnp_OrderInfo"] = order_desc
+    vnp.requestData["vnp_OrderType"] = order_type
+    vnp.requestData["vnp_Locale"] = language
+    vnp.requestData["vnp_CreateDate"] = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    vnp.requestData["vnp_IpAddr"] = ipaddr
+    vnp.requestData["vnp_ReturnUrl"] = VNPAY_RETURN_URL
+    vnpay_payment_url = vnp.get_payment_url(VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY)
+    return vnpay_payment_url
 
 @app.route('/patient/book-appointment', methods=['POST'])
 def patient_book_appointment():
     pay_method = request.form.get('payment_method')
-
+    gateway = request.form.get('way')
     if pay_method == 'direct':
         session['appointment_date'] = request.form.get('appointment_date')
         session['appointment_time'] = request.form.get('appointment_time')
-        order_type = "billpayment"
-        amount = int(get_value_policy(TIENKHAM))
-        order_desc = f"Thanh toán viện phí cho bệnh nhân {current_user.name}, với số tiền {amount} VND"
-        language = "vn"
-        ipaddr = request.remote_addr
+        session['payment_method'] = pay_method
+        session['way'] = gateway
+        amount = get_value_policy(TIENKHAM)
 
-        vnp = vnpay()
-        vnp.requestData["vnp_Version"] = "2.1.0"
-        vnp.requestData["vnp_Command"] = "pay"
-        vnp.requestData["vnp_TmnCode"] = VNPAY_TMN_CODE
-        vnp.requestData["vnp_Amount"] = amount * 100
-        vnp.requestData["vnp_CurrCode"] = "VND"
-        vnp.requestData["vnp_TxnRef"] = current_user.id + 1010131111211111
-        vnp.requestData["vnp_OrderInfo"] = order_desc
-        vnp.requestData["vnp_OrderType"] = order_type
-        vnp.requestData["vnp_Locale"] = language
-        vnp.requestData["vnp_CreateDate"] = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        vnp.requestData["vnp_IpAddr"] = ipaddr
-        vnp.requestData["vnp_ReturnUrl"] = VNPAY_RETURN_URL
+        if gateway == 'vnpay':
+            return redirect(process_vnpay(amount, current_user))
+        elif gateway == 'momo':
+            return redirect(process_momo(amount))
 
-        vnpay_payment_url = vnp.get_payment_url(VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY)
-        return redirect(vnpay_payment_url)
     elif pay_method == 'clinic':
         scheduled_date = request.form.get('appointment_date')
         scheduled_minutes = int(request.form.get('appointment_time'))
@@ -208,6 +231,67 @@ def patient_book_appointment():
                             is_paid=False,
                             status=False,
                             patient_id=current_user.id)
+        return redirect('/')
+
+
+def create_appoinment_done_payment():
+    appointment_date = session.pop('appointment_date', None)
+    appointment_time = int(session.pop('appointment_time', None))
+    scheduled_h = appointment_time // 60
+    scheduled_m = appointment_time % 60
+    dao.add_appointment(scheduled_date=appointment_date,
+                        scheduled_hour=datetime.time(scheduled_h, scheduled_m),
+                        is_confirm=True,
+                        is_paid=True,
+                        status=False,
+                        patient_id=current_user.id)
+
+
+@app.route('/payment_return_vnpay', methods=['GET'])
+def payment_return():
+    inputData = request.args
+    vnp = vnpay()
+    vnp.responseData = inputData.to_dict()
+    vnp_ResponseCode = inputData["vnp_ResponseCode"]
+
+    # Kiểm tra tính toàn vẹn của dữ liệu
+    if vnp_ResponseCode == "00":
+        # Lấy thông tin lịch hẹn từ request và thông tin người dùng hiện tại
+        if current_user.role.value == 'patient':
+            create_appoinment_done_payment()
+            amount = get_value_policy(TIENKHAM)
+            trans_code = inputData["vnp_BankTranNo"]
+            dao.create_order_payment(amount=amount, gateway='vnpay', patient_id=current_user.id, paid=True,
+                                     response_code=trans_code)
+            return redirect('/')
+        elif current_user.role.value == 'nurse':
+            pass
+    else:
+        # Xử lý trường hợp lỗi từ VNPAY
+        return redirect('/')
+
+
+@app.route('/payment_return_momo', methods=['GET'])
+def payment_return_momo():
+    inputData = request.args
+    resultCode = str(inputData["resultCode"])
+    print(resultCode)
+    # Kiểm tra tính toàn vẹn của dữ liệu
+    if resultCode == "0":
+        # Lấy thông tin lịch hẹn từ request và thông tin người dùng hiện tại
+        if current_user.role.value == 'patient':
+            create_appoinment_done_payment()
+            amount = get_value_policy(TIENKHAM)
+            trans_code = inputData["transId"]
+            print(trans_code)
+            dao.create_order_payment(amount=amount, gateway='momo', patient_id=current_user.id, paid=True,
+                                     response_code=trans_code)
+            # create_appoinment_done_payment()
+            return redirect('/')
+        elif current_user.role.value == 'nurse':
+            pass
+    else:
+        # Xử lý trường hợp lỗi từ VNPAY
         return redirect('/')
 
 
@@ -245,98 +329,53 @@ def get_scheduled_hour_confirm():
     print(formatted_hours)
     return jsonify(formatted_hours)
 
-@app.route('/payment-return', methods=['GET'])
-def payment_return():
-    inputData = request.args
-    vnp = vnpay()
-    vnp.responseData = inputData.to_dict()
-    vnp_ResponseCode = inputData["vnp_ResponseCode"]
 
-    # Kiểm tra tính toàn vẹn của dữ liệu
-    if vnp_ResponseCode == "00":
-        # Lấy thông tin lịch hẹn từ request và thông tin người dùng hiện tại
+def process_momo(amount):
+    if current_user.role.value == 'patient':
+        order_info = "Thanh toan phi kham benh"
+    elif current_user.role.value == 'nurse':
+        order_info = "Thanh toan hoa don kham benh"
+    # Tạo orderId và requestId
+    order_id = str(uuid.uuid4())
+    request_id = str(uuid.uuid4())
+    # Tạo chuỗi chữ ký
+    raw_signature = "accessKey=" + access_key + "&amount=" + str(amount) + "&extraData=" + "" \
+                    + "&ipnUrl=" + ipn_url + "&orderId=" + order_id + "&orderInfo=" + order_info \
+                    + "&partnerCode=MOMO" + "&redirectUrl=" + redirect_url + "&requestId=" + request_id \
+                    + "&requestType=captureWallet"
+    h = hmac.new(bytes(secret_key, 'ascii'), bytes(raw_signature, 'ascii'), hashlib.sha256)
+    signature = h.hexdigest()
 
-        appointment_date = session.pop('appointment_date', None)
-        appointment_time = int(session.pop('appointment_time', None))
-        scheduled_h = appointment_time // 60
-        scheduled_m = appointment_time % 60
-        # Lưu thông tin lịch hẹn vào cơ sở dữ liệu
-        dao.add_appointment(scheduled_date=appointment_date,
-                            scheduled_hour=datetime.time(scheduled_h, scheduled_m),
-                            is_confirm=True,
-                            is_paid=True,
-                            status=False,
-                            patient_id=current_user.id)
-        # Hiển thị thông báo thành công và chuyển hướng về trang đặt lịch hẹn
-        flash("Thanh toán hóa đơn thành công. Lịch hẹn của bạn đã được tạo.", category="success")
-        return redirect('/')
-    else:
-        # Xử lý trường hợp lỗi từ VNPAY
-        flash("Có lỗi xảy ra từ VNPAY. Mã lỗi: {}".format(vnp_ResponseCode), category="danger")
-        return redirect('/')
-
-
-@app.route('/process-payment', methods=['POST'])
-def process_payment():
-    if request.method == 'POST':
-        # Nhận thông tin thanh toán từ yêu cầu POST
-        payment_data = request.get_json()
-        # amount = payment_data.get('amount')
-        amount = 10000000
-
-        # Tạo orderId và requestId
-        order_id = str(uuid.uuid4())
-        request_id = str(uuid.uuid4())
-
-        # Cấu hình thông tin MoMo
-        endpoint = "https://test-payment.momo.vn/v2/gateway/api/create"
-        access_key = "F8BBA842ECF85"
-        secret_key = "K951B6PE1waDMi640xX08PD3vg6EkVlz"
-        order_info = "Thanh chi phi kham benh"
-        redirect_url = "/"  # Thay đổi URL redirect tại đây
-        ipn_url = "https://your-ipn-url.com"  # Thay đổi URL IPN tại đây
-
-        # Tạo chuỗi chữ ký
-        raw_signature = "accessKey=" + access_key + "&amount=" + str(amount) + "&extraData=" + "" \
-                        + "&ipnUrl=" + ipn_url + "&orderId=" + order_id + "&orderInfo=" + order_info \
-                        + "&partnerCode=MOMO" + "&redirectUrl=" + redirect_url + "&requestId=" + request_id \
-                        + "&requestType=captureWallet"
-        h = hmac.new(bytes(secret_key, 'ascii'), bytes(raw_signature, 'ascii'), hashlib.sha256)
-        signature = h.hexdigest()
-
-        # Tạo dữ liệu gửi đến MoMo
-        data = {
-            'partnerCode': 'MOMO',
-            'partnerName': 'Test',
-            'storeId': 'MomoTestStore',
-            'requestId': request_id,
-            'amount': str(amount),
-            'orderId': order_id,
-            'orderInfo': order_info,
-            'redirectUrl': redirect_url,
-            'ipnUrl': ipn_url,
-            'lang': 'vi',
-            'extraData': '',
-            'requestType': 'captureWallet',
-            'signature': signature
-        }
-
-        # Gửi yêu cầu thanh toán đến MoMo
-        response = requests.post(endpoint, json=data)
-        print(response.json())
-        # Xử lý kết quả trả về từ MoMo
-        if response.status_code == 200:
-            response_data = response.json()
-            if 'payUrl' in response_data:
-                # Nếu thành công, trả về URL thanh toán cho frontend
-                return jsonify({'payUrl': response_data['payUrl']})
-            else:
-                return jsonify({'error': 'Failed to process payment'}), 500
+    # Tạo dữ liệu gửi đến MoMo
+    data = {
+        'partnerCode': 'MOMO',
+        'partnerName': 'Test',
+        'storeId': 'MomoTestStore',
+        'requestId': request_id,
+        'amount': str(amount),
+        'orderId': order_id,
+        'orderInfo': order_info,
+        'redirectUrl': redirect_url,
+        'ipnUrl': ipn_url,
+        'lang': 'vi',
+        'extraData': '',
+        'requestType': 'captureWallet',
+        'signature': signature
+    }
+    # Gửi yêu cầu thanh toán đến MoMo
+    response = requests.post(endpoint, json=data)
+    # Xử lý kết quả trả về từ MoMo
+    if response.status_code == 200:
+        response_data = response.json()
+        if 'payUrl' in response_data:
+            # Nếu thành công, trả về URL thanh toán cho frontend
+            payUrl = response_data['payUrl']
+            print(payUrl)
+            return payUrl
         else:
-            return jsonify({'error': 'Failed to communicate with MoMo'}), 500
-
+            return jsonify({'error': 'Failed to process payment'}), 500
     else:
-        return jsonify({'error': 'Invalid request method'}), 405
+        return jsonify({'error': 'Failed to communicate with MoMo'}), 500
 
 
 @app.route('/payment', methods=['GET'])
@@ -414,7 +453,5 @@ def do_bill(prescription_id):
 
 if __name__ == '__main__':
     with app.app_context():
-        from clinicapp import admin
-
         app.run(debug=True)
 

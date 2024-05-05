@@ -1,7 +1,7 @@
 window.onload = checkAppointmentDate; // Gọi hàm kiểm tra ngay khi trang được tải lần đầu
 
 var today = new Date().toISOString().split('T')[0];
-document.getElementById("datepicker").value = today;
+// document.getElementById("datepicker").value = today;
 
 // Thiết lập giá trị min cho input date
 document.getElementById("datepicker").setAttribute("min", today);
@@ -21,6 +21,7 @@ function resetData() {
     // Ẩn thông báo không khả dụng và cửa sổ chọn giờ
     document.getElementById("unavailableMessage").style.display = "none";
     document.getElementById("class-timepicker").style.display = "none";
+    document.getElementById("gateway").style.display = "none";
 
     // Xóa tất cả các tùy chọn trong select box
     document.getElementById("timepicker").innerHTML = '';
@@ -78,6 +79,11 @@ function handlePaymentMethodChange() {
                 document.getElementById("timepicker").innerHTML = '';
                 document.getElementById("bookAppointmentButton").style.display = "none";
                 document.getElementById("payAndBookAppointmentButton").style.display = "block";
+                document.getElementById("gateway").style.display = "block";
+                  document.querySelectorAll('input[name="way"]').forEach(function (radio) {
+        radio.checked = false;
+    });
+
                 initializeTimeOptions(unavailableHoursString);
             })
             .catch(error => {
@@ -94,6 +100,8 @@ function handlePaymentMethodChange() {
                 document.getElementById("bookAppointmentButton").style.display = "block";
                 document.getElementById("timepicker").innerHTML = '';
                 document.getElementById("payAndBookAppointmentButton").style.display = "none";
+                document.getElementById("gateway").style.display = "none";
+
                 initializeTimeOptions(unavailableHoursString);
             })
             .catch(error => {
