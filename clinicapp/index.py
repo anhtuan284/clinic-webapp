@@ -14,6 +14,7 @@ from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_h
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
     get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id
 from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin
+from clinicapp.exceptions import BillAlreadyExists
 from clinicapp.models import UserRole, Unit
 from clinicapp.forms import PrescriptionForm
 from clinicapp.vnpay import vnpay
@@ -342,13 +343,14 @@ def pay():
 @app.route('/bills/<prescription_id>', methods=['GET', 'POST'])
 @cashiernotloggedin
 def do_bill(prescription_id):
+    global error, created
     current_prescription = get_prescription_by_id(prescription_id)
     current_patient = get_patient_by_prescription_id(prescription_id)
     current_medicines = get_medicines_by_prescription_id(prescription_id)
     medicine_price = get_medicine_price_by_prescription_id(prescription_id)
 
     # cai nay khi nao thong nhat policy xong thi replace value khac
-    service_price = 1000000
+    service_price = 100000
     total = medicine_price
     is_paid = get_is_paid_by_prescription_id(prescription_id)
 
@@ -357,8 +359,9 @@ def do_bill(prescription_id):
 
     if request.method.__eq__('POST'):
         try:
-            if get_bill_by_prescription_id(prescription_id):
+            if len(get_bill_by_prescription_id(prescription_id)) > 0:
                 raise Exception("Bill này có rồi!!!")
+
             create_bill(
                 service_price=service_price,
                 medicine_price=medicine_price,
@@ -366,18 +369,21 @@ def do_bill(prescription_id):
                 cashier_id=current_user.id,
                 prescription_id=prescription_id
             )
-            successful = True
+
+            error = None
+            created = True
         except Exception as e:
             error = str(e)
-            successful = False
+            created = False
         finally:
             return redirect(url_for('do_bill',
                                     prescription_id=prescription_id,
-                                    error=error
+                                    error=error,
+                                    created=created
                                     ))
 
-    q_successful = request.args.get('successful')
     q_error = request.args.get('error')
+    q_created = request.args.get('created')
 
     return render_template('cashier/bill.html',
                            prescription=current_prescription,
@@ -387,8 +393,8 @@ def do_bill(prescription_id):
                            service_price=service_price,
                            is_paid=is_paid,
                            total=total,
-                           successful=q_successful,
-                           error=q_error
+                           error=q_error,
+                           created=q_created
                            )
 
 

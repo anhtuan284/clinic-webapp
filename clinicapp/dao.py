@@ -260,4 +260,4 @@ def create_bill(service_price, medicine_price, total, cashier_id, prescription_i
 
 
 def get_bill_by_prescription_id(prescription_id):
-    return Bill.query.filter_by(prescription_id=prescription_id).all()[0]
+    return Bill.query.filter_by(prescription_id=prescription_id).all()
