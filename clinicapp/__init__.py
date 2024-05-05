@@ -1,5 +1,7 @@
 from flask import Flask
 from urllib.parse import quote
+
+from flask_admin import Admin
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_babel import Babel
@@ -8,8 +10,6 @@ from flask_cors import CORS
 import cloudinary
 
 app = Flask(__name__)
-
-
 app.secret_key = '^%^&%^(*^^&&*^$%((^^&$$&^'
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/clinicdb?charset=utf8mb4" % quote('Admin@123')
 
@@ -21,6 +21,7 @@ db = SQLAlchemy(app)
 login = LoginManager(app)
 Babel(app)
 cors = CORS(app)
+
 
 # VNPAY CONFIG
 VNPAY_RETURN_URL = 'http://127.0.0.1:5000/payment_return_vnpay'  # get from config

@@ -1,5 +1,4 @@
 import datetime
-
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Date, Time, DateTime, DECIMAL
 from clinicapp import app, db, utils
 from sqlalchemy.orm import relationship
@@ -153,17 +152,19 @@ class MedicineUnit(db.Model):
     unit_id = Column(Integer, ForeignKey(Unit.id))
     medicine_id = Column(Integer, ForeignKey(Medicine.id))
     medicine_details = relationship("MedicineDetail", backref='medicine_unit', lazy=True)
-
     quantity = Column(Integer)
 
 
 class MedicineDetail(db.Model):
     quantity = Column(Integer)
     usage = Column(String(100))
-
     prescription_id = Column(Integer, ForeignKey(Prescription.id), primary_key=True)
     medicine_id = Column(Integer, ForeignKey(Medicine.id), primary_key=True)
     medicine_unit_id = Column(Integer, ForeignKey(MedicineUnit.id))
+
+    def __str__(self):
+        return 'prescription_id: ' + str(self.prescription_id) + \
+            ' medicine_id: ' + str(self.medicine_id)
 
 
 class Bill(BaseModel):
@@ -181,6 +182,7 @@ class Bill(BaseModel):
 class Category(BaseModel):
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String(100))
+    medicine_category = relationship("MedicineCategory", backref='category', lazy=True)
 
 
 class MedicineCategory(BaseModel):
@@ -196,6 +198,7 @@ class HistoryOnlinePayment(BaseModel):
     amount = Column(DECIMAL(11, 2))
     response_code = Column(String(300))
     gateway_name = Column(String(100))
+    gateway_name = Column(String(100))
     patient_id = Column(Integer, ForeignKey(Patient.id), nullable=False)
     paid = Column(Boolean, default=False)
 
@@ -203,24 +206,26 @@ class HistoryOnlinePayment(BaseModel):
 if __name__ == '__main__':
     with app.app_context():
 
-        db.create_all()
+        # db.create_all()
         # order = HistoryOnlinePayment(amount=200000, response_code="aadasdasdasdas", gateway_name="vnpay", patient_id=1)
         # db.session.add(order)
         # db.session.commit()
 
         # db.create_all()
-        # new_user1 = User(
-        #     name='Admin',
-        #     phone='0123456789',
-        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
-        #     email='admin@example.com',
-        #     address='Admin Site',
-        #     username='admin',
-        #     password=str(utils.hash_password("123")),
-        #     cid='092884828822',
-        #     gender=Gender.MALE,
-        #     role=UserRole.ADMIN,
-        # )
+        new_user1 = User(
+            name='Admin',
+            phone='0123456789',
+            avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+            email='admin@example.com',
+            address='Admin Site',
+            username='admin',
+            password=str(utils.hash_password("123")),
+            cid='092884828822',
+            gender=Gender.MALE,
+            role=UserRole.ADMIN,
+        )
+        db.session.add(new_user1)
+        db.session.commit()
         # new_user2 = User(
         #     name='Doctor Strange',
         #     phone='0123456789',
