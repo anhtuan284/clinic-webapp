@@ -229,21 +229,16 @@ def get_unit_by_name(name):
 
 
 def get_medicine_price_by_prescription_id(prescription_id):
-    medicines_by_prescription_id = db.session.query(MedicineDetail, Medicine) \
-        .filter(MedicineDetail.medicine_id == Medicine.id) \
+    total = db.session.query(func.sum(MedicineDetail.quantity * MedicineUnit.quantity * Medicine.price)) \
+        .filter(MedicineUnit.id == MedicineDetail.medicine_unit_id) \
+        .filter(MedicineUnit.medicine_id == Medicine.id) \
+        .filter(MedicineUnit.unit_id == Unit.id) \
         .filter(MedicineDetail.prescription_id == prescription_id)
 
-    price_by_blister = db.session.query(func.sum(MedicineDetail.quantity * 10 * Medicine.price)) \
-        .filter(MedicineDetail.unit_id == get_unit_by_name('vỉ').id).all()
+    return float(str(total[0][0]))
 
-    print(float(str(price_by_blister[0][0])))
 
-    # price_by_vien = medicines_by_prescription_id \
-    #     .filter(MedicineDetail.unit.name__eq__("viên")) \
-    #     .sum(MedicineDetail.quantity * Medicine.price)
-    #
-    # price_by_chai = medicines_by_prescription_id \
-    #     .filter(MedicineDetail.unit.name__eq__("chai")) \
-    #     .sum(MedicineDetail.quantity * 40 * Medicine.price)
+def get_is_paid_by_prescription_id(prescription_id):
+    return Appointment.query.filter_by(id=prescription_id).all()[0].is_paid
 
-    return price_by_blister
+
