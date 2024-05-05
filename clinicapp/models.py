@@ -83,7 +83,7 @@ class Policy(db.Model):
     name = Column(String(100))
     value = Column(String(100), nullable=False)
 
-    admin_id = Column(Integer, ForeignKey(Admin.id), nullable=False)
+    admin_id = Column(Integer, ForeignKey(Admin.id), default=1, nullable=False)
 
 
 class AppointmentList(BaseModel):
@@ -272,6 +272,67 @@ if __name__ == '__main__':
         # APPOINTMENT CỦA HUY
 #         new_user5 = User(
 #             name='Quốc Tuấn',
+#         db.create_all()
+        # new_user = User(
+        #     name='benh nhan',
+        #     phone='0905952379',
+        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+        #     email='2151013029huy@ou.edu.vn',
+        #     address='patient Site',
+        #     username='patient1',
+        #     password=str(utils.hash_password("123")),
+        #     gender=Gender.MALE,
+        #     cid='066203000228',
+        #     role=UserRole.PATIENT,
+        # )
+        # db.session.add_all([new_user])
+        # db.session.commit()
+        # new_doctor = Patient(id=new_user.id)
+        # db.session.add_all([new_doctor])
+        # db.session.commit()
+        # new_user = User(
+        #     name='ADMIN',
+        #     phone='0905952379',
+        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+        #     email='voquochuy3006@gmail.com',
+        #     address='admin Site',
+        #     username='admin1',
+        #     password=str(utils.hash_password("123")),
+        #     gender=Gender.MALE,
+        #     cid='066203000227',
+        #     role=UserRole.ADMIN,
+        # )
+        # db.session.add_all([new_user])
+        # db.session.commit()
+        # new_doctor = Admin(id=new_user.id)
+        # db.session.add_all([new_doctor])
+        # db.session.commit()
+        # new_user = User(
+        #     name='y ta',
+        #     phone='0905952379',
+        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+        #     email='baoempro2003@gmail.com',
+        #     address='nurse Site',
+        #     username='nurse1',
+        #     password=str(utils.hash_password("123")),
+        #     gender=Gender.MALE,
+        #     cid='066203000229',
+        #     role=UserRole.NURSE,
+        # )
+        # db.session.add_all([new_user])
+        # db.session.commit()
+        # new_doctor = Nurse(id=new_user.id)
+        # db.session.add_all([new_doctor])
+        # db.session.commit()
+#         new_appointment_list = AppointmentList(
+#             scheduled_date=datetime.date(2024, 5, 10),  # Ngày đặt cuộc hẹn
+#             nurse_id=3  # ID của y tá (Nurse)
+#         )
+#
+# #         # # Thêm đối tượng mới vào session và lưu xuống cơ sở dữ liệu
+#         db.session.add(new_appointment_list)
+#         db.session.commit()
+
 #             phone='0123456789',
 #             avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
 #             email='patient2@example.com',
@@ -293,6 +354,74 @@ if __name__ == '__main__':
 #             cid='32589441528',
 #             gender=Gender.MALE,
 #             role=UserRole.PATIENT,
+#         db.session.add_all([new_user1, new_user2, new_user3])
+#         db.session.commit()
+#         new_doctor = Doctor(id=new_user2.id)
+#         new_admin = Admin(id=new_user1.id)
+#         new_patient = Patient(id=new_user3.id)
+#         db.session.add_all([new_doctor, new_admin, new_patient])
+#         db.session.commit()
+
+#         danh_muc_1 = Category(name="Giảm đau")
+#         danh_muc_2 = Category(name="Thực phẩm bổ sung")
+#         danh_muc_3 = Category(name="Thần Kinh")
+
+#         db.session.add_all([danh_muc_1, danh_muc_2, danh_muc_3])
+#         db.session.commit()
+
+#         don_vi_vien = Unit(name="Viên")
+#         don_vi_hop = Unit(name="Hộp")
+#         don_vi_chai = Unit(name="Chai")
+
+#         db.session.add_all([don_vi_vien, don_vi_hop, don_vi_chai])
+#         db.session.commit()
+
+#         # Tạo các loại thuốc (medicine)
+#         thuoc_1 = Medicine(name="Panadol", price=10000, usage="Uống sau bữa ăn", exp=datetime.date(2025, 12, 31))
+#         thuoc_2 = Medicine(name="Zinc", price=20000, usage="Uống trước khi ngủ", exp=datetime.date(2024, 6, 30))
+#         thuoc_3 = Medicine(name="Vitamin C", price=30000, usage="Uống trước khi ngủ", exp=datetime.date(2024, 6, 30))
+
+#         db.session.add_all([thuoc_1, thuoc_2, thuoc_3])
+#         db.session.commit()
+
+#         cat_med1 = MedicineCategory(category_id=danh_muc_1.id, medicine_id=thuoc_1.id)
+#         cat_med2 = MedicineCategory(category_id=danh_muc_2.id, medicine_id=thuoc_1.id)
+#         cat_med3 = MedicineCategory(category_id=danh_muc_2.id, medicine_id=thuoc_2.id)
+#         cat_med4 = MedicineCategory(category_id=danh_muc_3.id, medicine_id=thuoc_3.id)
+
+#         db.session.add_all([cat_med1, cat_med2, cat_med3, cat_med4])
+#         db.session.commit()
+
+
+
+# APPOINTMENT CỦA HUY
+#         # new_appointment_list = AppointmentList(
+#         #     scheduled_date=datetime.date(2024, 4, 25),  # Ngày đặt cuộc hẹn
+#         #     nurse_id=1  # ID của y tá (Nurse)
+#         # )
+#         #
+#         # # Thêm đối tượng mới vào session và lưu xuống cơ sở dữ liệu
+#         # db.session.add(new_appointment_list)
+#         # db.session.commit()
+#         new_appointment = Appointment(
+#             scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+#             scheduled_hour=datetime.time(10, 30),  # Giờ đặt cuộc     hẹn
+#             is_confirm=False,  # Trạng thái xác nhận
+#             is_paid=False,  # Trạng thái thanh toán
+#             status=False,  # Trạng thái cuộc hẹn
+#             appointment_list_id= None,  # ID của danh sách đặt hẹn
+#             patient_id=2  # ID của bệnh nhân
+# =======
+#         new_user = User(
+# name='Admin',
+# phone='0123456789',
+# avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+# email='admin@example.com',
+# address='Admin Site',
+# username='admin',
+# password=str(utils.hash_password("123")),
+# gender=Gender.MALE,
+# role=UserRole.ADMIN,)
 #         )
 #         db.session.add_all([new_user5, new_user6])
 #         db.session.commit()

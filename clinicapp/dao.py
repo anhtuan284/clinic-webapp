@@ -4,8 +4,9 @@ from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker
 
 from clinicapp import db
-from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory, Appointment, Unit, Prescription, \
-    MedicineDetail, AppointmentList, Patient, Doctor, MedicineUnit, Bill
+from clinicapp.models import (User, UserRole, Medicine, Category, MedicineCategory, Appointment, Unit, Prescription,
+                              MedicineDetail, AppointmentList, Patient, Doctor, MedicineUnit, Bill, Policy)
+
 
 from clinicapp.utils import hash_password, verify_password
 
@@ -55,8 +56,8 @@ def add_appointment(scheduled_date, scheduled_hour, is_confirm, is_paid, status,
     db.session.commit()
 
 
-def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None,
-                  category_id=None):
+def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None, category_id=None):
+
     medicines = Medicine.query
 
     if category_id:
@@ -79,8 +80,6 @@ def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None
 
     medicines = medicines.all()
 
-    print(medicines)
-
     return medicines
 
 
@@ -88,11 +87,8 @@ def get_medicine_by_id(id):
     return Medicine.query.get(id)
 
 
-def get_medicine_current_category(category_id):
-    medicines = db.session.query(Medicine, Category, MedicineCategory) \
-        .filter(Medicine.id == MedicineCategory.medicine_id, MedicineCategory.category_id == Category.id) \
-        .filter(Category.id == category_id) \
-        .all()
+def get_medicine_by_category(category_id):
+    medicines = db.session.query(Medicine).join(Medicine.medicine_category).filter(MedicineCategory.category_id == category_id).all()
 
     return medicines
 
@@ -124,7 +120,7 @@ def add_or_update_medicine(id, price, name, usage, exp):
         return medicineMoi.id
 
 
-def get_categorys():
+def get_categories():
     return db.session.query(Category).all()
 
 
@@ -153,14 +149,21 @@ def add_category_medicine(category_id, medicine_id):
     db.session.commit()
 
 
-def get_categorys_current_medicine(id):
+def get_categories_current_medicine(id):
     categorymedicine = db.session.query(Medicine, Category, MedicineCategory) \
         .filter(Medicine.id == MedicineCategory.medicine_id, MedicineCategory.category_id == Category.id) \
         .filter(Medicine.id == id) \
         .all()
 
-    print(categorymedicine)
     return categorymedicine
+
+
+def get_value_policy(id):
+    policy = Policy.query.get(id)
+    if policy:
+        return policy.value
+    else:
+        return None
 
 
 def get_units():
@@ -171,16 +174,15 @@ def update_list_appointment(patient_id):
     return None
 
 
+
 def create_medical_form(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, units):
     new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id,
                             doctor_id=doctor_id)
+
+def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, units):
+    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id, doctor_id=doctor_id)
     db.session.add(new_pres)
     db.session.commit()
-    print(usages)
-    print(quantities)
-    print(medicines)
-    print(units)
-    print(new_pres.id)
     for i in range(len(medicines)):
         medicine_id = medicines[i]
         quantity = quantities[i]
@@ -190,7 +192,6 @@ def create_medical_form(doctor_id, patient_id, date, diagnosis, symptoms, usages
                                          prescription_id=new_pres.id)
         db.session.add(medicine_detail)
     db.session.commit()
-
 
 def get_prescriptions_by_scheduled_date(date):
     prescriptions = db.session.query(Prescription, Appointment, AppointmentList) \
@@ -261,3 +262,10 @@ def create_bill(service_price, medicine_price, total, cashier_id, prescription_i
 
 def get_bill_by_prescription_id(prescription_id):
     return Bill.query.filter_by(prescription_id=prescription_id).all()
+
+def get_patient_info(patient_cid=None):
+    if patient_cid:
+        patient = db.session.query(User).filter_by(cid=patient_cid).first()
+        return patient
+    return None
+
