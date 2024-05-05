@@ -181,11 +181,23 @@ class MedicineCategory(BaseModel):
         return f"Danh mục {self.category_id} - Thuốc {self.medicine_id}"
 
 
+class HistoryOnlinePayment(BaseModel):
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    amount = Column(DECIMAL(11, 2))
+    response_code = Column(String(300))
+    gateway_name = Column(String(100))
+    patient_id = Column(Integer, ForeignKey(Patient.id), nullable=False)
+    paid = Column(Boolean, default=False)
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        # order = HistoryOnlinePayment(amount=200000, response_code="aadasdasdasdas", gateway_name="vnpay", patient_id=1)
+        # db.session.add(order)
+        # db.session.commit()
         # new_user = User(
-        #     name='benh nhan',
+        #     name='benh nhan',s
         #     phone='0905952379',
         #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
         #     email='2151013029huy@ou.edu.vn',
@@ -201,23 +213,23 @@ if __name__ == '__main__':
         # new_doctor = Patient(id=new_user.id)
         # db.session.add_all([new_doctor])
         # db.session.commit()
-        new_user = User(
-            name='ADMIN',
-            phone='0905952379',
-            avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
-            email='voquochuy3006@gmail.com',
-            address='admin Site',
-            username='admin1',
-            password=str(utils.hash_password("123")),
-            gender=Gender.MALE,
-            cid='066203000227',
-            role=UserRole.ADMIN,
-        )
-        db.session.add_all([new_user])
-        db.session.commit()
-        new_doctor = Admin(id=new_user.id)
-        db.session.add_all([new_doctor])
-        db.session.commit()
+        # new_user = User(
+        #     name='ADMIN',
+        #     phone='0905952379',
+        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+        #     email='voquochuy3006@gmail.com',
+        #     address='admin Site',
+        #     username='admin1',
+        #     password=str(utils.hash_password("123")),
+        #     gender=Gender.MALE,
+        #     cid='066203000227',
+        #     role=UserRole.ADMIN,
+        # )
+        # db.session.add_all([new_user])
+        # db.session.commit()
+        # new_doctor = Admin(id=new_user.id)
+        # db.session.add_all([new_doctor])
+        # db.session.commit()
         # new_user = User(
         #     name='y ta',
         #     phone='0905952379',
@@ -243,7 +255,6 @@ if __name__ == '__main__':
 # #         # # Thêm đối tượng mới vào session và lưu xuống cơ sở dữ liệu
 #         db.session.add(new_appointment_list)
 #         db.session.commit()
-=======
 #         new_user1 = User(
 #             name='Admin',
 #             phone='0123456789',
@@ -317,7 +328,6 @@ if __name__ == '__main__':
 
 #         db.session.add_all([cat_med1, cat_med2, cat_med3, cat_med4])
 #         db.session.commit()
-
 
 
 # APPOINTMENT CỦA HUY

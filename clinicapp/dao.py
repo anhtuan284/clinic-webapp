@@ -1,9 +1,11 @@
 import hashlib
 
+from sqlalchemy import desc
 from sqlalchemy.orm import sessionmaker
 
 from clinicapp import db
-from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory, Appointment, Unit, Prescription, MedicineDetail, Policy
+from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory, Appointment, Unit, Prescription, \
+    MedicineDetail, Policy, HistoryOnlinePayment
 
 from clinicapp.utils import hash_password, verify_password
 
@@ -53,7 +55,8 @@ def add_appointment(scheduled_date, scheduled_hour, is_confirm, is_paid, status,
     db.session.commit()
 
 
-def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None, category_id=None):
+def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None,
+                  category_id=None):
     medicines = Medicine.query
 
     if category_id:
@@ -165,7 +168,8 @@ def get_value_policy(id):
         return policy.value
     else:
         return None
-  
+
+
 def get_units():
     return db.session.query(Unit).all()
 
@@ -175,7 +179,8 @@ def update_list_appointment(patient_id):
 
 
 def create_medical_form(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, units):
-    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id, doctor_id=doctor_id)
+    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id,
+                            doctor_id=doctor_id)
     db.session.add(new_pres)
     db.session.commit()
     print(usages)
@@ -188,7 +193,21 @@ def create_medical_form(doctor_id, patient_id, date, diagnosis, symptoms, usages
         quantity = quantities[i]
         usage = usages[i]
         unit = units[i]
-        medicine_detail = MedicineDetail(medicine_id=medicine_id, unit_id=unit, quantity=quantity, usage=usage, prescription_id=new_pres.id)
+        medicine_detail = MedicineDetail(medicine_id=medicine_id, unit_id=unit, quantity=quantity, usage=usage,
+                                         prescription_id=new_pres.id)
         db.session.add(medicine_detail)
     db.session.commit()
 
+
+def create_order_payment(amount, gateway, patient_id, paid, response_code):
+    order = HistoryOnlinePayment(amount=amount, gateway_name=gateway, patient_id=patient_id, paid=paid, response_code=response_code)
+    db.session.add(order)
+    db.session.commit()
+
+
+def get_quantity_history_payment():
+    latest_record = HistoryOnlinePayment.query.order_by(desc(HistoryOnlinePayment.id)).first()
+    if latest_record.id:
+        return latest_record.id
+    else:
+        return 1

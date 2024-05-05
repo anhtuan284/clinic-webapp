@@ -1,7 +1,27 @@
 {% extends 'layout/base.html' %}
 
 {% block title %}Đăng ký lịch hẹn{% endblock %}
+<style>
 
+    .payment-option {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .payment-label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .payment-icon {
+        width: 32px;
+        height: 32px;
+        margin-right: 10px;
+    }
+
+</style>
 {% block content %}
 {% if err_msg %}
 <div class="alert alert-danger">{{ err_msg }}</div>
@@ -17,7 +37,7 @@
                         <div class="mb-3">
                             <label for="datepicker" class="form-label">Chọn ngày</label>
                             <input type="date" id="datepicker" name="appointment_date" class="form-control"
-                                   placeholder="Chọn ngày">
+                                   placeholder="Chọn ngày" value="{{appointment_date}}">
                         </div>
                         <div id="unavailableMessage" class="alert alert-warning" style="display: none;">
                             Ngày này không khả dụng. Vui lòng chọn ngày khác.
@@ -43,6 +63,23 @@
                             </select>
                         </div>
 
+                        <div class="mb-3" id="gateway" style="display: none;">
+                            <p class="mb-2">Cổng thanh toán:</p>
+                            <div class="d-flex justify-content-center mb-3">
+                                <div class="form-check me-3" style="padding: 5px 50px 0 0;">
+                                    <label class="form-check-label" for="vnpay">VNPAY</label>
+                                    <img src="/static/img/vnpay.png" style="width: 50px" alt="VNPAY"
+                                         class="payment-icon">
+                                    <input class="form-check-input" type="radio" name="way" id="vnpay" value="vnpay">
+                                </div>
+                                <div class="form-check" style="padding: 5px 0 0 50px;">
+                                    <label class="form-check-label" for="momo">MOMO</label>
+                                    <img src="/static/img/momo.png" style="width: 50px" alt="MOMO" class="payment-icon">
+                                    <input class="form-check-input" type="radio" name="way" id="momo" value="momo">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d-grid">
                             <button type="submit" id="bookAppointmentButton" class="btn btn-primary"
                                     style="display: none;">Đặt lịch hẹn
@@ -62,3 +99,4 @@
 
 
 {% endblock %}
+
