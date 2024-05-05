@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from clinicapp import db
 from clinicapp.models import User, UserRole, Medicine, Category, MedicineCategory, Appointment, Unit, Prescription, \
-    MedicineDetail, AppointmentList, Patient, Doctor, MedicineUnit
+    MedicineDetail, AppointmentList, Patient, Doctor, MedicineUnit, Bill
 
 from clinicapp.utils import hash_password, verify_password
 
@@ -219,6 +219,7 @@ def get_medicines_by_prescription_id(prescription_id):
         .filter(MedicineDetail.medicine_unit_id == MedicineUnit.id) \
         .filter(MedicineUnit.medicine_id == Medicine.id) \
         .filter(MedicineUnit.unit_id == Unit.id) \
+        .filter(MedicineDetail.prescription_id == prescription_id) \
         .all()
 
     return medicines
@@ -235,10 +236,28 @@ def get_medicine_price_by_prescription_id(prescription_id):
         .filter(MedicineUnit.unit_id == Unit.id) \
         .filter(MedicineDetail.prescription_id == prescription_id)
 
-    return float(str(total[0][0]))
+    total = total[0][0]
+    if not total:
+        total = '0'
+
+    return float(str(total))
 
 
 def get_is_paid_by_prescription_id(prescription_id):
     return Appointment.query.filter_by(id=prescription_id).all()[0].is_paid
 
 
+def create_bill(service_price, medicine_price, total, cashier_id, prescription_id):
+    new_bill = Bill(
+        service_price=service_price,
+        medicine_price=medicine_price,
+        total=total,
+        cashier_id=cashier_id,
+        prescription_id=prescription_id
+    )
+    db.session.add(new_bill)
+    db.session.commit()
+
+
+def get_bill_by_prescription_id(prescription_id):
+    return Bill.query.filter_by(prescription_id=prescription_id).all()[0]

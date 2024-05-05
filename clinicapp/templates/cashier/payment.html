@@ -5,9 +5,10 @@
 {% block content %}
 <h1 class="text text-center text-info">DANH SÁCH PHIẾU KHÁM THEO NGÀY</h1>
 <form class="d-flex" method="get" action="/payment">
-    <input class="form-control me-2" name="q" value="" type="date" placeholder="Nhập ngày của danh sách">
+    <input class="form-control me-2" name="q" value="{{date}}" type="date" id="date" placeholder="Nhập ngày của danh sách">
     <button class="btn btn-primary" type="submit">Tìm</button>
 </form>
+
 <table class="table">
     <tr class="table-row">
         <th>Id</th>
@@ -26,12 +27,14 @@
                 <td>{{P.doctor_id}}</td>
                 <td>{{P.patient_id}}</td>
                 <td>
-                    <a class="btn btn-success" href="/bill/{{P.id}}"><b>Tạo hoá đơn</b></a>
+                    <a class="btn btn-success"
+                       href="/bills/{{P.id}}">
+                        <b>Tạo hoá đơn</b>
+                    </a>
                 </td>
             </tr>
         {%endfor%}
     {%endif%}
 </table>
-
 
 {% endblock %}

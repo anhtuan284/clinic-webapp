@@ -3,9 +3,9 @@
 {% block title %}Thanh Toán{% endblock %}
 
 {% block content %}
-<h1 class="text text-center text-info">HOÁ ĐƠN THANH TOÁN</h1>
+<h1 class="text text-center text-info mt-3">HOÁ ĐƠN THANH TOÁN</h1>
 
-<form method="post" action="/bills">
+<form method="post" action="/bills/{{prescription.id}}">
     <div class="form-group mb-3 mt-3">
         <label for="name">Họ Tên</label>
         <input type="text" class="form-control" id="name" name="name"
@@ -54,35 +54,51 @@
                readonly required>
     </div>
 
-    <div class="form-floating mt-3 mb-3 d-flex justify-content-around">
-        <div class="form-check">
-            <input type="radio"
-                   class="form-check-input"
-                   id="radio_online"
-                   name="optradio"
-                   value="radio_online"
-                   onclick="displayOfflinePayment()"
-                   checked>
-            Thanh toán Online
-            <label class="form-check-label" for="radio_online"></label>
+    {%if not successful%}
+        {%if error%}
+            <div class="d-flex flex-row-reverse">
+                <h1 class="text text-center text-danger">{{error}}</h1>
+            </div>
+            <div class="d-flex flex-row-reverse">
+                <a class="btn btn-outline-primary" href="/payment">Chọn phiếu khám khác</a>
+            </div>
+        {%else%}
+            <div class="form-floating mt-3 mb-3 d-flex justify-content-around">
+            <div class="form-check">
+                <input type="radio"
+                       class="form-check-input"
+                       id="radio_online"
+                       name="optradio"
+                       onclick="displayOnlinePayment()"
+                       value="radio_online"
+                       checked>
+                <label class="form-check-label" for="radio_online">Thanh toán Online</label>
+            </div>
+            <div class="form-check">
+                <input type="radio"
+                       class="form-check-input"
+                       id="radio_offline"
+                       name="optradio"
+                       onclick="displayOfflinePayment()"
+                       value="radio_offline">
+                <label class="form-check-label" for="radio_offline">Thanh toán trực tiếp</label>
+            </div>
         </div>
-        <div class="form-check">
-            <input type="radio"
-                   class="form-check-input"
-                   id="radio_online2"
-                   name="optradio"
-                   value="radio_online2">
-            Thanh toán trực tiếp
-            <label class="form-check-label" for="radio_online2"></label>
+            <div id="xuat-hoa-don">
+            </div>
+        {%endif%}
+    {%else%}
+        <div class="d-flex flex-row-reverse">
+            <h1 class="text text-center text-success">Hoá đơn xác nhận thành công</h1>
         </div>
-    </div>
+        <div class="d-flex flex-row-reverse">
+            <a class="btn btn-outline-primary" href="/payment">Chọn phiếu khám khác</a>
+        </div>
+    {%endif%}
 
-    <div id="xuat-hoa-don">
-
-    </div>
 
 </form>
 
-<script></script>
+<script src="{{ url_for('static', filename='js/cashier.js') }}"></script>
 
 {% endblock %}

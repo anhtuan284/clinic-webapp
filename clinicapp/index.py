@@ -5,15 +5,15 @@ import uuid
 import requests
 from datetime import date
 import cloudinary.uploader
-from flask import request, redirect, render_template, jsonify, url_for, current_app, flash
+from flask import request, redirect, render_template, jsonify, url_for, current_app, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
     get_list_scheduled_hours_by_date_confirm, get_prescriptions_by_scheduled_date, get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
-    get_is_paid_by_prescription_id
-from clinicapp.decorators import loggedin, roles_required
+    get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id
+from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin
 from clinicapp.models import UserRole, Unit
 from clinicapp.forms import PrescriptionForm
 from clinicapp.vnpay import vnpay
@@ -325,25 +325,59 @@ def process_payment():
 
 
 @app.route('/payment', methods=['GET'])
+@cashiernotloggedin
 def pay():
-    q = request.args.get('q')
+    q = request.args.get('q') or session.get('date')
     prescriptions = None
     if q:
         prescriptions = get_prescriptions_by_scheduled_date(date=q)
-    return render_template('cashier/payment.html', prescriptions=prescriptions)
+        session['date'] = q
+
+    return render_template('cashier/payment.html',
+                           prescriptions=prescriptions,
+                           date=session['date'] if session.get('date') else None
+                           )
 
 
 @app.route('/bills/<prescription_id>', methods=['GET', 'POST'])
+@cashiernotloggedin
 def do_bill(prescription_id):
     current_prescription = get_prescription_by_id(prescription_id)
     current_patient = get_patient_by_prescription_id(prescription_id)
     current_medicines = get_medicines_by_prescription_id(prescription_id)
     medicine_price = get_medicine_price_by_prescription_id(prescription_id)
+
+    # cai nay khi nao thong nhat policy xong thi replace value khac
     service_price = 1000000
     total = medicine_price
     is_paid = get_is_paid_by_prescription_id(prescription_id)
+
     if not is_paid:
         total += service_price
+
+    if request.method.__eq__('POST'):
+        try:
+            if get_bill_by_prescription_id(prescription_id):
+                raise Exception("Bill này có rồi!!!")
+            create_bill(
+                service_price=service_price,
+                medicine_price=medicine_price,
+                total=total,
+                cashier_id=current_user.id,
+                prescription_id=prescription_id
+            )
+            successful = True
+        except Exception as e:
+            error = str(e)
+            successful = False
+        finally:
+            return redirect(url_for('do_bill',
+                                    prescription_id=prescription_id,
+                                    error=error
+                                    ))
+
+    q_successful = request.args.get('successful')
+    q_error = request.args.get('error')
 
     return render_template('cashier/bill.html',
                            prescription=current_prescription,
@@ -352,7 +386,9 @@ def do_bill(prescription_id):
                            medicine_price=medicine_price,
                            service_price=service_price,
                            is_paid=is_paid,
-                           total=total
+                           total=total,
+                           successful=q_successful,
+                           error=q_error
                            )
 
 
