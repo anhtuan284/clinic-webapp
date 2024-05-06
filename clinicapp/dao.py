@@ -101,10 +101,9 @@ def get_medicine_by_id(id):
 
 
 def get_medicine_by_category(category_id):
-    medicines = db.session.query(Medicine).join(Medicine.medicine_category).filter(
-        MedicineCategory.category_id == category_id).all()
-
-    return medicines
+    if category_id == 0:
+        return db.session.query(Medicine).all()
+    return db.session.query(Medicine).join(Medicine.medicine_category).filter(MedicineCategory.category_id == category_id).all()
 
 
 def delete_medicine_by_id(id):
@@ -189,22 +188,29 @@ def get_units():
     return db.session.query(Unit).all()
 
 
+def get_unit_by_id(id):
+    unit = db.session.query(Unit).get(id)
+    return unit.name
+
+
+def get_units_by_medicine(medicine_id):
+    return db.session.query(MedicineUnit).filter_by(medicine_id=medicine_id).all()
+
+
 def update_list_appointment(patient_id):
     return None
 
 
-def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, units):
-    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id,
-                            doctor_id=doctor_id)
-
+def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, medicine_units):
+    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id, doctor_id=doctor_id)
     db.session.add(new_pres)
     db.session.commit()
     for i in range(len(medicines)):
         medicine_id = medicines[i]
         quantity = quantities[i]
         usage = usages[i]
-        unit = units[i]
-        medicine_detail = MedicineDetail(medicine_id=medicine_id, unit_id=unit, quantity=quantity, usage=usage,
+        medicine_unit = medicine_units[i]
+        medicine_detail = MedicineDetail(medicine_id=medicine_id, medicine_unit_id=medicine_unit, quantity=quantity, usage=usage,
                                          prescription_id=new_pres.id)
         db.session.add(medicine_detail)
     db.session.commit()
@@ -313,3 +319,11 @@ def get_patient_info(patient_cid=None):
         patient = db.session.query(User).filter_by(cid=patient_cid).first()
         return patient
     return None
+
+
+def get_prescription_by_patient(patient_id):
+    return db.session.query(Prescription).filter_by(patient_id=patient_id).all()
+
+
+def get_patient_by_id(patient_id):
+    return db.session.query(Patient).get(patient_id)

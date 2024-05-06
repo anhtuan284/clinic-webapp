@@ -2,7 +2,8 @@ import datetime
 import hashlib
 import hmac
 import uuid
-
+import requests
+from datetime import date
 import cloudinary.uploader
 import requests
 from PIL import Image
@@ -80,9 +81,9 @@ def register_user():
 
             gender = None
             if request.form.get('gender') == 'male':
-                gender=Gender.MALE
+                gender = Gender.MALE
             else:
-                gender=Gender.FEMALE
+                gender = Gender.FEMALE
 
             dao.add_user(name=request.form.get('name'),
                          username=request.form.get('username'),
@@ -135,6 +136,7 @@ def prescription():
 
 
 @app.route('/prescription/create', methods=['POST'])
+@login_required
 @roles_required([UserRole.DOCTOR])
 def create_prescription():
     doctor_id = current_user.id
@@ -148,13 +150,14 @@ def create_prescription():
     medicines = request.form.getlist('list-medicine_id')
     dao.update_list_appointment(patient_id)
     dao.create_prescription(doctor_id=doctor_id, patient_id=patient_id, date=date, diagnosis=diagnosis,
-                            symptoms=symptoms, usages=usages, quantities=quantities, medicines=medicines, units=units)
-    # flash("Lập phiếu khám thành công!", 'success')
-    print("Create Presciption Successfully!")
+                            symptoms=symptoms, usages=usages, quantities=quantities, medicines=medicines,
+                            medicine_units=units)
+    flash("Tạo phiếu khám cho bệnh nhân ID%s thành công!" % patient_id, "success")
     return redirect(url_for('prescription'))
 
 
 @app.route('/api/medicines/category/<int:category_id>')
+@login_required
 def get_medicines_by_category(category_id):
     medicines = dao.get_medicine_by_category(category_id)
     medicines_json = [{'id': medicine.id,
@@ -164,6 +167,22 @@ def get_medicines_by_category(category_id):
                        'exp': medicine.exp
                        } for medicine in medicines]
     return jsonify(medicines_json)
+
+
+@app.route('/api/medicines/units/<int:medicine_id>')
+def get_units_by_medicine(medicine_id):
+    units_medicine = dao.get_units_by_medicine(medicine_id)
+    units_json = [{'id': unit_medicine.id,
+                   'name': dao.get_unit_by_id(unit_medicine.unit_id),
+                   } for unit_medicine in units_medicine]
+    return jsonify(units_json)
+
+
+@app.route("/patient/<int:patient_id>/history")
+def patient_history(patient_id):
+    patient = dao.get_user_by_id(patient_id)
+    prescriptions = dao.get_prescription_by_patient(patient.id)
+    return render_template('doctor/disease_history.html', patient=patient, prescriptions=prescriptions)
 
 
 @login.user_loader
@@ -554,7 +573,6 @@ def profile_change_avatar():
     else:
         flash('Form không hợp lệ.', 'danger')
     return redirect(url_for('profile'))
-
 
 
 

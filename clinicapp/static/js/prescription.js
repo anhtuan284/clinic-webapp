@@ -1,5 +1,4 @@
 let listMedicines = []
-
 function add() {
     const selectedMedicine = document.getElementById('selected-medicine');
 
@@ -78,26 +77,24 @@ function cancelCreatePres() {
     }
 }
 
-
 function fetchPatientInfo() {
     const patientId = document.getElementById('patient_cid').value;
-    console.info(2222)
     fetch(`/api/patient/${patientId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data) {
-                console.log(data)
-                document.getElementById('patient-name').value = data.name;
-                document.getElementById('patient_id').value = data.id;
-            } else {
-                alert("Không tìm thấy bệnh nhân với CID này.");
-                document.getElementById('patient-name').value = "";
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Không thể tìm thấy bệnh nhân');
             }
+            return response.json();
         })
-        .catch(error => console.error('Error:', error));
-
+        .then(data => {
+            document.getElementById('patient-name').value = data.name;
+            document.getElementById('patient_id').value = data.id;
+        })
+        .catch(error => {
+            alert(error.message);
+            document.getElementById('patient-name').value = "";
+        });
 }
-
 
 function fetchMedicinesByCategory(categoryId) {
     fetch(`/api/medicines/category/${categoryId}`)
@@ -109,6 +106,7 @@ function fetchMedicinesByCategory(categoryId) {
                 medicineSelect.removeChild(medicineSelect.firstChild);
             }
             // add new options
+            fetchMedicineUnits(data[0].id)
             data.forEach(medicine => {
                 const option = document.createElement('option');
                 option.value = medicine.id;
@@ -117,4 +115,34 @@ function fetchMedicinesByCategory(categoryId) {
             });
         })
         .catch(error => console.error('Error:', error));
+}
+
+function fetchMedicineUnits(medicineId) {
+    fetch(`/api/medicines/units/${medicineId}`)
+        .then(response => response.json())
+        .then(data => {
+            const unitSelected = document.getElementById('selected-unit');
+            // remove old options
+            while (unitSelected.firstChild) {
+                unitSelected.removeChild(unitSelected.firstChild);
+            }
+
+            data.forEach(medicine_unit => {
+                const option = document.createElement('option');
+                option.value = medicine_unit.id;
+                option.textContent = medicine_unit.name;
+                unitSelected.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+
+function viewPatientHistory() {
+    const patientId = document.getElementById('patient_id').value;
+    if (!patientId || patientId === '' || typeof patientId === undefined || patientId === null || patientId === '0') {
+        alert("Không tìm thấy bệnh nhân này !");
+    } else {
+        window.location.href = `/patient/${patientId}/history`;
+    }
 }
