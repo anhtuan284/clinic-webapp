@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Thông Báo Lịch Hẹn Khám Bệnh</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .header {
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 5rem;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+        }
+
+        .company-info {
+            margin-left: 1rem;
+        }
+
+        .company-info h2 {
+            font-size: 1.5em;
+            margin-bottom: 0.5rem;
+        }
+
+        .company-info p {
+            margin: 0;
+        }
+
+        .content {
+            margin-top: 5rem;
+            text-align: left;
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+        }
+
+        .content ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .content ul li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center;">
+                <img src="https://res.cloudinary.com/dgsii3nt1/image/upload/v1701079653/LOGO_ao7prq.png" alt="Logo"
+                    class="logo">
+                <div class="company-info">
+                    <h2>PHÒNG KHÁM TÂM ĐỨC</h2>
+                    <p>Nhơn Đức - Nhà Bè- TP HCM | Số điện thoại: 0228812345</p>
+                </div>
+            </div>
+
+            <div class="content">
+                <p>Xin chào {{user.name}},</p>
+                <p>Chúng tôi xin thông báo rằng lịch hẹn khám bệnh tại Phòng Khám Tâm Đức đã <b>{{status}}</b> .</p>
+                <p>Thông tin chi tiết như sau:</p>
+                <ul>
+                    <li><strong>Ngày khám:</strong> {{appointment.scheduled_date}}</li>
+                    <li><strong>Giờ khám:</strong> {{appointment.scheduled_hour}}</li>
+                </ul>
+                <p>Đây là một bước quan trọng để duy trì sức khỏe của bạn, vui lòng đến đúng giờ và mang theo các giấy
+                    tờ cần thiết.</p>
+                <p>Cảm ơn bạn đã chọn Phòng Khám Tâm Đức. Nếu bạn có bất kỳ câu hỏi hoặc cần sự hỗ trợ, vui lòng liên hệ
+                    chúng tôi qua số điện thoại 0228812345.</p>
+                <p>Chúc bạn một ngày khỏe mạnh!</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,60 @@
+
+
+{% extends 'layout/base.html' %}
+
+{% block title %}Thanh Toán{% endblock %}
+
+{% block content %}
+<div class="input-group mb-3">
+    <label class="input-group-text" for="datePicker">Chọn ngày:</label>
+    <input type="date" class="form-control" id="datePicker" name="date">
+    <a class="btn btn-primary" id="confirmBtn" href="#">Xác nhận</a>
+</div>
+
+<!-- Bảng hiển thị dữ liệu -->
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col">Tên bệnh nhân</th>
+            <th scope="col">CCCD</th>
+            <th scope="col">Số điện thoại</th>
+            <th scope="col">Ngày hẹn</th>
+            <th scope="col">Giờ hẹn</th>
+        </tr>
+        </thead>
+      <tbody>
+        {% for appointment, user in approved_appointments %}
+        <tr>
+            {% if user and appointment %}
+
+            <td>{{ user.name }}</td>
+            <td>{{ user.cid }}</td>
+            <td>{{ user.phone }}</td>
+            <td>{{ appointment.scheduled_date }}</td>
+            <td>{{ appointment.scheduled_hour }}</td>
+            {% endif %}
+
+        </tr>
+        {% endfor %}
+</tbody>
+    </table>
+</div>
+<script>
+    document.getElementById('confirmBtn').addEventListener('click', function(event) {
+        // Ngăn chặn hành động mặc định của thẻ a (chuyển hướng)
+        event.preventDefault();
+
+        // Lấy giá trị của ngày từ trường input
+        const selectedDate = document.getElementById('datePicker').value;
+
+        // Chèn giá trị của ngày vào href của thẻ a
+        const confirmLink = document.getElementById('confirmBtn');
+        confirmLink.href = `/nurse/approved_appointment?approved-date=${selectedDate}`;
+
+        // Chuyển hướng đến trang xác nhận
+        window.location.href = confirmLink.href;
+    });
+</script>
+
+{% endblock %}
