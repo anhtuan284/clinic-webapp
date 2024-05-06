@@ -177,6 +177,14 @@ def get_value_policy(id):
         return None
 
 
+def get_policy_value_by_name(name):
+    policy = Policy.query.filter_by(name=name).all()
+    if policy:
+        return float(policy[0].value)
+    else:
+        return None
+
+
 def get_units():
     return db.session.query(Unit).all()
 
@@ -223,6 +231,18 @@ def get_prescriptions_by_scheduled_date(date):
         .filter(Appointment.appointment_list_id == AppointmentList.id) \
         .filter(AppointmentList.scheduled_date == date) \
         .all()
+
+    return prescriptions
+
+
+def get_unpaid_prescriptions_by_scheduled_date(date):
+    prescriptions = db.session.query(Prescription, Appointment) \
+        .filter(Prescription.appointment_id == Appointment.id) \
+        .filter(
+        Prescription.id.not_in(db.session.query(Bill.prescription_id))
+    ).all()
+
+    print(prescriptions)
 
     return prescriptions
 
