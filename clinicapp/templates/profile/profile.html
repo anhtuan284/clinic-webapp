@@ -1,0 +1,104 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Hồ sơ người dùng{% endblock %}
+{% block content %}
+<div class="container mt-5">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title">Hồ sơ Người dùng</h5>
+        </div>
+        <div class="card-body">
+            <div class="row d-flex justify-content-around">
+                <div class="col-md-4">
+                    <img src="{{ current_user.avatar }}"
+                         style="width: 100%; max-width: 100%; border-radius: 50%; object-fit: cover;"
+                         class="img-fluid rounded-circle mb-3" alt="Avatar">
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Tên đăng nhập:</strong> {{ current_user.username }}</li>
+                        <li class="list-group-item"><strong>Họ tên:</strong> {{ current_user.name }}</li>
+                        <li class="list-group-item" id="cid_row" style="display: none;"><strong>CMND:</strong> {{
+                            current_user.cid }}
+                        </li>
+                        <li class="list-group-item"><strong>Ngày sinh:</strong> {{ current_user.dob }}</li>
+                        <li class="list-group-item"><strong>Điện thoại:</strong> {{ current_user.phone }}</li>
+                        <li class="list-group-item"><strong>Email:</strong> {{ current_user.email }}</li>
+                        <li class="list-group-item"><strong>Giới tính:</strong> {{ 'Nam' if current_user.gender.value ==
+                            'male' else 'Nữ' }}
+                        </li>
+                        <li class="list-group-item"><strong>Địa chỉ:</strong> {{ current_user.address }}</li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <a href="/profile/edit" class="btn btn-primary">Chỉnh sửa Hồ sơ</a>
+            <a href="/profile/change_password" class="btn btn-outline-danger">Đổi mật khẩu</a>
+            <a href="#" id="show_cid_btn" class="btn btn-outline-secondary">
+                <i class="bi bi-eye"></i> Hiện CMND
+            </a>
+            <form action="/profile/change_avatar" method="POST" enctype="multipart/form-data"
+                  class="d-inline">
+                {{ change_avatar_form.csrf_token }}
+                <input type="file" name="avatar" accept="image/*" onchange="PreviewImage()" style="display: none;"
+                       id="avatar_input">
+                <label for="avatar_input" class="btn btn-outline-secondary">
+                    <i class="bi bi-image"></i> Đổi avatar
+                </label>
+                <br/>
+                <img class="img-rounded my-4 shadow-lg" id="blah" src="#" alt="your image" style="display: none" />
+                <button id="save_button" type="submit" class="btn btn-success" style="display: none;">Lưu</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('show_cid_btn').addEventListener('click', function (event) {
+        event.preventDefault();
+        var cidRow = document.getElementById('cid_row');
+        if (cidRow.style.display === 'none') {
+            cidRow.style.display = 'block';
+            document.getElementById('show_cid_btn').innerHTML = '<i class="bi bi-eye-slash"></i>  Ẩn CMND';
+        } else {
+            cidRow.style.display = 'none';
+            document.getElementById('show_cid_btn').innerHTML = '<i class="bi bi-eye-slash"></i>   Hiện CMND';
+        }
+    });
+
+    document.getElementById('avatar_input').addEventListener('change', function (event) {
+        document.getElementById('save_button').style.display = 'block';
+        document.getElementById('blah').style.display = 'block';
+    });
+
+
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                $('#blah').attr('src', e.target.result);
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    $("#avatar_input").change(function () {
+        readURL(this);
+    });
+</script>
+<script src="https://code.jquery.com/jquery-3.7.1.slim.js" integrity="sha256-UgvvN8vBkgO0luPSUl2s8TIlOSYRoGFAX4jlCIm9Adc=" crossorigin="anonymous"></script>
+{% endblock %}
