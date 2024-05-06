@@ -1,0 +1,85 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Lịch sử khám bệnh của bệnh nhân{% endblock %}
+
+{% block content %}
+<div class="row gx-5 mb-4">
+    <h2 class="text-primary text-center fa-bold mt-3" >LỊCH SỬ KHÁM BỆNH</h2>
+</div>
+<div class="container-fluid py-3">
+    <div class="container">
+        {% if patient %}
+        <div class="row">
+            <div class="form-group mt-2 col-md-3 col-sm-12">
+                <label><b>Mã bệnh nhân:</b></label>
+                <input  disabled type="text" class="form-control" value="{{ patient.id }}">
+            </div>
+            <div class="form-group mt-2 col-md-3 col-sm-12">
+                <label><b>Họ tên bệnh nhân:</b></label>
+                <input disabled type="text" class="form-control" value="{{ patient.name }}">
+            </div>
+            <div class="form-group mt-2 col-md-3 col-sm-12">
+                <label><b>CCCD:</b></label>
+                <input disabled type="text" class="form-control" value="{{ patient.cid }}">
+            </div>
+            <div class="form-group mt-2 col-md-3 col-sm-12">
+                <label><b>SĐT:</b></label>
+                <input disabled type="text" class="form-control" value="{{ patient.phone }}">
+            </div>
+        </div>
+        {% if prescriptions %}
+        <div class="d-flex row justify-content-md-between">
+            {% for prescription in prescriptions %}
+            <div class="row shadow my-5 py-2 rounded col-md-6">
+                <div style="max-width: 100%; margin-top:20px">
+                    <h5 class="d-inline-block text-primary text-uppercase text-center border-5"><b>{{ prescription.date }}</b></h5>
+                </div>
+                <div class="form-group mt-2 col-md-6 col-sm-12">
+                    <label><b>Triệu chứng:</b></label>
+                    <textarea disabled class="form-control">{{ prescription.symptoms }}</textarea>
+                </div>
+                <div class="form-group mt-2 col-md-6 col-sm-12">
+                    <label><b>Chuẩn đoán:</b></label>
+                    <textarea disabled class="form-control">{{ prescription.diagnosis }}</textarea>
+                </div>
+                <h5 class="text-primary mt-4 "><b>Thuốc sử dụng</b></h5>
+                <div class="form-group mt-2 col-md-12 col-sm-12">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Tên thuốc</th>
+                                <th scope="col">Số lượng</th>
+                                <th scope="col">Đơn vị</th>
+                                <th scope="col">Cách sử dụng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for medicine_detail in prescription.medicine_details %}
+                                <tr>
+                                    <td>{{ medicine_detail.medicine.name }}</td>
+                                    <td>{{ medicine_detail.quantity }}</td>
+                                    <td>{{ medicine_detail.medicine_unit.unit.name }}</td>
+                                    <td>{{ medicine_detail.usage }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="mt-3">
+            <div class="alert text-center alert-warning m-auto" style="width:50%;">Bệnh nhân chưa khám tại đây!
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="mt-3">
+            <div class="alert text-center alert-warning m-auto" style="width:50%;">Không có bệnh nhân tìm kiếm!
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
