@@ -5,19 +5,20 @@ import uuid
 
 import cloudinary.uploader
 import requests
-from flask import request, redirect, render_template, jsonify, url_for, session
+from PIL import Image
+from flask import request, redirect, render_template, jsonify, url_for, session, flash
 from flask_cors import cross_origin
 from flask_login import login_user, logout_user, login_required, current_user
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
-    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, admin
+    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, admin, db, utils
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
     get_prescriptions_by_scheduled_date, get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
     get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, \
     get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions_by_scheduled_date
 from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin
-from clinicapp.forms import PrescriptionForm
+from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileForm, ChangeAvatarForm
 from clinicapp.models import UserRole, Gender
 from clinicapp.vnpay import vnpay
 
@@ -479,6 +480,82 @@ def do_bill(prescription_id):
                                )
     except Exception as e:
         print(str(e))
+
+
+@app.route('/profile')
+@login_required
+def profile():
+    form = ChangeAvatarForm()
+    return render_template('profile/profile.html', change_avatar_form=form)
+
+
+@app.route('/profile/edit', methods=['GET', 'POST'])
+def profile_edit():
+    form = EditProfileForm()
+    if form.validate_on_submit():
+        current_user.name = form.name.data
+        current_user.cid = form.cid.data
+        current_user.dob = form.dob.data
+        current_user.phone = form.phone.data
+        current_user.email = form.email.data
+        current_user.gender = form.gender.data
+        current_user.address = form.address.data
+        db.session.commit()
+        return redirect(url_for('profile'))
+    form.name.data = current_user.name
+    form.cid.data = current_user.cid
+    form.dob.data = current_user.dob
+    form.phone.data = current_user.phone
+    form.email.data = current_user.email
+    form.gender.data = current_user.gender
+    form.address.data = current_user.address
+    return render_template('profile/edit_profile.html', form=form)
+
+
+@app.route('/profile/change_password', methods=['GET', 'POST'])
+@login_required
+def profile_change_password():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        old_pass = form.old_password.data.strip()
+        new_pass = form.new_password.data.strip()
+        if dao.verify_password(old_pass, current_user.password):
+            current_user.password = dao.hash_password(new_pass)
+            db.session.commit()
+            flash('Đổi mật khẩu thành công!', 'success')
+            return redirect(url_for('profile'))
+        flash('Mật khẩu không đúng!', 'danger')
+    return render_template('profile/change_password.html', form=form)
+
+
+@app.route('/profile/change_avatar', methods=['POST'])
+def profile_change_avatar():
+    form = ChangeAvatarForm()
+    if form.validate_on_submit():
+        if 'avatar' in request.files:
+            file_to_upload = request.files['avatar']
+            if file_to_upload.filename != '':
+                img = Image.open(file_to_upload)
+                img_cropped = utils.crop_to_square(img)
+
+                # Upload hình ảnh đã cắt lên Cloudinary
+                new_avatar_url = utils.upload_image_to_cloudinary(img_cropped)
+                if new_avatar_url:
+                    current_user.avatar = new_avatar_url
+                    db.session.commit()
+                    flash('Đã đổi avatar thành công.', 'success')
+                    return redirect(url_for('profile'))
+                else:
+                    flash('Đã xảy ra lỗi khi tải lên hình ảnh.', 'danger')
+            else:
+                flash('Vui lòng chọn hình ảnh để tải lên.', 'danger')
+        else:
+            flash('Không có hình ảnh được gửi.', 'danger')
+    else:
+        flash('Form không hợp lệ.', 'danger')
+    return redirect(url_for('profile'))
+
+
 
 
 if __name__ == '__main__':

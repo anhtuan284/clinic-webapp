@@ -9,45 +9,72 @@
                 <li class="nav-item">
                     <a class="nav-link active" href="/">Trang chủ</a>
                 </li>
-<!--                {% for c in categories %}-->
-<!--                <li class="nav-item">-->
-<!--                    <a class="nav-link" href="/?category_id={{ c.id }}">{{ c.name }}</a>-->
-<!--                </li>-->
-<!--                {% endfor %}-->
-
-
                 {% if current_user.is_authenticated %}
-                {%if current_user.role.value == 'cashier'%}
+                {% if current_user.role.value == 'doctor' %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink1" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Khám bệnh
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink1">
+                        <li><a class="dropdown-item" href="/prescription">Lập phiếu khám</a></li>
+                        <li><a class="dropdown-item" href="#">Tiền sử bệnh</a></li>
+                        <li><a class="dropdown-item" href="#">Tra cứu thuốc</a></li>
+                    </ul>
+                </li>
+                {% elif current_user.role.value == 'nurse' %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink2" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Danh sách khám bệnh
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink1">
+                        <li><a class="dropdown-item" href="#">Lập danh sách khám</a></li>
+                        <li><a class="dropdown-item" href="#">Đăng ký khám tại phòng</a></li>
+                    </ul>
+                </li>
+                {% elif current_user.role.value == 'patient' %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink3" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Khám bệnh
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink1">
+                        <li><a class="dropdown-item" href="#">Đăng ký khám online</a></li>
+                        <li><a class="dropdown-item" href="#">X</a></li>
+                    </ul>
+                </li>
+                {% elif current_user.role.value == 'cashier' %}
                 <li class="nav-item">
                     <a class="nav-link" href="/payment">
                         Thanh Toán
                     </a>
                 </li>
-                {%endif%}
-                <li class="nav-item">
-                    <a class="nav-link text-info" href="/login">
-                        <img src="{{ current_user.avatar }}" width="25" class="rounded img-fluid"/> Chào {{
+                {% endif %}
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                {% if current_user.is_authenticated %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink4" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="{{ current_user.avatar }}" width="25" class="rounded-circle img-fluid me-2"/> {{
                         current_user.username }}
                     </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link text-info" href="/logout">&#128110; Đăng xuất</a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink2">
+                        <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                        <li><a class="dropdown-item" href="/logout">Đăng xuất</a></li>
+                    </ul>
                 </li>
                 {% else %}
                 <li class="nav-item">
-                    <a class="nav-link text-info" href="/login">&#128110; Đăng nhập</a>
+                    <a class="nav-link text-info" href="/login">Đăng nhập</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-success" href="/register">&#128110; Đăng ký</a>
+                    <a class="nav-link text-success" href="/register">Đăng ký</a>
                 </li>
                 {% endif %}
-
-
             </ul>
-            <form class="d-flex" method="get" action="/">
-                <input class="form-control me-2" name="q" type="text" placeholder="Nhập từ khóa...">
-                <button class="btn btn-primary" type="submit">Tìm</button>
-            </form>
         </div>
     </div>
 </nav>
