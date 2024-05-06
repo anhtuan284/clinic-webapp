@@ -12,7 +12,7 @@ import cloudinary
 app = Flask(__name__)
 
 app.secret_key = '^%^&%^(*^^&&*^$%((^^&$$&^'
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/clinicdb?charset=utf8mb4" % quote('123456')
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/clinicdb?charset=utf8mb4" % quote('Baopro123')
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app.config["PAGE_SIZE"] = 8
@@ -38,8 +38,8 @@ secret_key = "K951B6PE1waDMi640xX08PD3vg6EkVlz"
 redirect_url = "http://127.0.0.1:5000/payment_return_momo"
 ipn_url = "http://127.0.0.1:5000/"
 
-TIENKHAM = 1
-SOLUONGKHAM = 2
+TIENKHAM = 2
+SOLUONGKHAM = 3
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'

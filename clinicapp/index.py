@@ -22,7 +22,7 @@ from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_h
     get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions_by_scheduled_date
 from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin
 from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileForm, ChangeAvatarForm
-from clinicapp.models import UserRole, Gender
+from clinicapp.models import UserRole, Gender, Appointment, AppointmentList
 from clinicapp.vnpay import vnpay
 from flask_mail import Mail, Message
 
@@ -655,6 +655,7 @@ def status_change():
         # mail.send(msg)
         # dao.delete_appointment(new_appointment)
         send_notification_email(new_user, new_appointment, "TỪ CHỐI")
+        dao.delete_appointment(new_appointment)
         return jsonify({'message': 'Appointment status updated successfully.'}), 200
     return jsonify({'error': 'Invalid status value.'}), 400
 
@@ -671,6 +672,8 @@ def send_list_email():
         print(new_appointment)
         print(1222)
         send_notification_email(new_user, new_appointment, "ĐƯỢC DUYỆT")
+        print(1222)
+
     return jsonify({'message': 'Email notifications sent successfully.'}), 200
 
 
@@ -691,7 +694,6 @@ def send_notification_email(user, appointment, status):
     # msg.body = body
     msg.html = render_template('nurse/email.html', user=user, appointment=appointment, status=status)
     mail.send(msg)
-    dao.delete_appointment(appointment)
     return jsonify({'message': 'Appointment status updated successfully.'}), 200
 
 

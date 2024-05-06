@@ -101,10 +101,10 @@ def get_medicine_by_id(id):
 
 
 def get_medicine_by_category(category_id):
-
     if category_id == 0:
         return db.session.query(Medicine).all()
-    return db.session.query(Medicine).join(Medicine.medicine_category).filter(MedicineCategory.category_id == category_id).all()
+    return db.session.query(Medicine).join(Medicine.medicine_category).filter(
+        MedicineCategory.category_id == category_id).all()
 
 
 def delete_medicine_by_id(id):
@@ -194,7 +194,6 @@ def get_unit_by_id(id):
     return unit.name
 
 
-
 def get_units_by_medicine(medicine_id):
     return db.session.query(MedicineUnit).filter_by(medicine_id=medicine_id).all()
 
@@ -203,8 +202,10 @@ def update_list_appointment(patient_id):
     return None
 
 
-def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, medicine_units):
-    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id, doctor_id=doctor_id)
+def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines,
+                        medicine_units):
+    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id,
+                            doctor_id=doctor_id)
     db.session.add(new_pres)
     db.session.commit()
     for i in range(len(medicines)):
@@ -212,7 +213,8 @@ def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages
         quantity = quantities[i]
         usage = usages[i]
         medicine_unit = medicine_units[i]
-        medicine_detail = MedicineDetail(medicine_id=medicine_id, medicine_unit_id=medicine_unit, quantity=quantity, usage=usage,
+        medicine_detail = MedicineDetail(medicine_id=medicine_id, medicine_unit_id=medicine_unit, quantity=quantity,
+                                         usage=usage,
                                          prescription_id=new_pres.id)
         db.session.add(medicine_detail)
     db.session.commit()
@@ -245,7 +247,7 @@ def get_prescriptions_by_scheduled_date(date):
 
 def get_unpaid_prescriptions_by_scheduled_date(date):
     prescriptions = db.session.query(Prescription, Appointment) \
-        .filter(Prescription.appointment_id == Appointment.id) \
+        .filter(Prescription.appointment_id == Appointment.id).filter(Prescription.date == date) \
         .filter(
         Prescription.id.not_in(db.session.query(Bill.prescription_id))
     ).all()
@@ -398,7 +400,8 @@ def get_approved_appointments_by_date(date):
     approved_appointments = db.session.query(Appointment, User).filter(Appointment.patient_id == User.id).filter(
         Appointment.status == True, Appointment.scheduled_date == date).all()
     return approved_appointments
-=======
+
+
 def get_prescription_by_patient(patient_id):
     return db.session.query(Prescription).filter_by(patient_id=patient_id).all()
 
