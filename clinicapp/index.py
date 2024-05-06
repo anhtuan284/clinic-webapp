@@ -91,6 +91,7 @@ def register_user():
                          phone=request.form.get('phone'),
                          address=request.form.get('address'),
                          cid=request.form.get('cid'),
+                         dob=request.form.get('dob'),
                          gender=gender
                          )
 
