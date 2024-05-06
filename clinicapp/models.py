@@ -82,7 +82,7 @@ class Policy(db.Model):
     name = Column(String(100))
     value = Column(String(100), nullable=False)
 
-    admin_id = Column(Integer, ForeignKey(Admin.id), default=1, nullable=False)
+    admin_id = Column(Integer, ForeignKey(Admin.id), default=6, nullable=False)
 
 
 class AppointmentList(BaseModel):

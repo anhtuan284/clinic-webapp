@@ -15,7 +15,7 @@ from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_h
     get_prescriptions_by_scheduled_date, get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
     get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, \
-    get_value_policy
+    get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions_by_scheduled_date
 from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin
 from clinicapp.forms import PrescriptionForm
 from clinicapp.models import UserRole, Gender
@@ -404,7 +404,7 @@ def pay():
     q = request.args.get('q') or session.get('date')
     prescriptions = None
     if q:
-        prescriptions = get_prescriptions_by_scheduled_date(date=q)
+        prescriptions = get_unpaid_prescriptions_by_scheduled_date(date=q)
         session['date'] = q
 
     return render_template('cashier/payment.html',
@@ -416,66 +416,69 @@ def pay():
 @app.route('/bills/<prescription_id>', methods=['GET', 'POST'])
 @cashiernotloggedin
 def do_bill(prescription_id):
-    global error, created
-    current_prescription = get_prescription_by_id(prescription_id)
-    current_patient = get_patient_by_prescription_id(prescription_id)
-    current_medicines = get_medicines_by_prescription_id(prescription_id)
-    medicine_price = get_medicine_price_by_prescription_id(prescription_id)
+    try:
+        global error, created
+        current_prescription = get_prescription_by_id(prescription_id)
+        current_patient = get_patient_by_prescription_id(prescription_id)
+        current_medicines = get_medicines_by_prescription_id(prescription_id)
+        medicine_price = get_medicine_price_by_prescription_id(prescription_id)
 
-    # cai nay khi nao thong nhat policy xong thi replace value khac
-    service_price = 100000
-    total = medicine_price
-    is_paid = get_is_paid_by_prescription_id(prescription_id)
+        # cai nay khi nao thong nhat policy xong thi replace value khac
+        service_price = get_policy_value_by_name('tien_kham')
+        total = medicine_price
+        is_paid = get_is_paid_by_prescription_id(prescription_id)
 
-    if not is_paid:
-        total += service_price
+        if not is_paid:
+            total += service_price
 
-    if request.method.__eq__('POST'):
-        try:
-            if len(get_bill_by_prescription_id(prescription_id)) > 0:
-                raise Exception("Bill này có rồi!!!")
+        if request.method.__eq__('POST'):
+            try:
+                if len(get_bill_by_prescription_id(prescription_id)) > 0:
+                    raise Exception("Bill này có rồi!!!")
 
-            create_bill(
-                service_price=service_price,
-                medicine_price=medicine_price,
-                total=total,
-                cashier_id=current_user.id,
-                prescription_id=prescription_id
-            )
+                create_bill(
+                    service_price=service_price,
+                    medicine_price=medicine_price,
+                    total=total,
+                    cashier_id=current_user.id,
+                    prescription_id=prescription_id
+                )
 
-            if not session.get('paid_list'):
-                session['paid_list'] = []
+                if not session.get('paid_list'):
+                    session['paid_list'] = []
 
-            paid_list = session['paid_list']
-            paid_list.append(prescription_id)
-            session['paid_list'] = paid_list
+                paid_list = session['paid_list']
+                paid_list.append(prescription_id)
+                session['paid_list'] = paid_list
 
-            error = None
-            created = True
-        except Exception as e:
-            error = str(e)
-            created = False
-        finally:
-            return redirect(url_for('do_bill',
-                                    prescription_id=prescription_id,
-                                    error=error,
-                                    created=created
-                                    ))
+                error = None
+                created = True
+            except Exception as e:
+                error = str(e)
+                created = False
+            finally:
+                return redirect(url_for('do_bill',
+                                        prescription_id=prescription_id,
+                                        error=error,
+                                        created=created
+                                        ))
 
-    q_error = request.args.get('error')
-    q_created = request.args.get('created')
+        q_error = request.args.get('error')
+        q_created = request.args.get('created')
 
-    return render_template('cashier/bill.html',
-                           prescription=current_prescription,
-                           medicines=current_medicines,
-                           patient=current_patient,
-                           medicine_price=medicine_price,
-                           service_price=service_price,
-                           is_paid=is_paid,
-                           total=total,
-                           error=q_error,
-                           created=q_created
-                           )
+        return render_template('cashier/bill.html',
+                               prescription=current_prescription,
+                               medicines=current_medicines,
+                               patient=current_patient,
+                               medicine_price=medicine_price,
+                               service_price=service_price,
+                               is_paid=is_paid,
+                               total=total,
+                               error=q_error,
+                               created=q_created
+                               )
+    except Exception as e:
+        print(str(e))
 
 
 if __name__ == '__main__':
