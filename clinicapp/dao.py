@@ -20,7 +20,7 @@ def auth_user(username, password):
     return None
 
 
-def add_user(name, username, password, avatar, email, phone, address, cid, gender):
+def add_user(name, username, password, avatar, email, phone, address, cid, gender, dob):
     hashed_password = hash_password(password.strip())
     u = User(
         username=username,
@@ -32,7 +32,8 @@ def add_user(name, username, password, avatar, email, phone, address, cid, gende
         email=email,
         gender=gender,
         address=address,
-        avatar=avatar
+        avatar=avatar,
+        dob=dob
     )
     db.session.add(u)
     db.session.commit()
