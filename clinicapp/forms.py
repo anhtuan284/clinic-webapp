@@ -4,7 +4,7 @@ from wtforms.fields.form import FormField
 from wtforms.fields.list import FieldList
 from wtforms.fields.numeric import IntegerField
 from wtforms.fields.simple import TextAreaField, HiddenField
-from wtforms.validators import InputRequired, Length, NumberRange, Regexp, DataRequired
+from wtforms.validators import InputRequired, Length, NumberRange, Regexp, DataRequired, EqualTo, Email
 
 from clinicapp import dao
 from clinicapp.models import Gender, MedicineCategory
@@ -58,14 +58,26 @@ class PrescriptionForm(FlaskForm):
 
     submit = SubmitField("Tạo phiếu khám")
 
-    def validate(self, extra_validators=None):
-        if super().validate(extra_validators):
-            if self.add_medicine.data:
-                if not self.medicine_name:
-                    self.medicine_name.errors.append("Thuốc không được bỏ trống.")
-                    return False
-            elif self.submit.data:
-                if not self.diagnosis.data:
-                    self.diagnosis.errors.append("Chưa đưa ra chẩn đoán cho bệnh nhân.")
-                    return False
-        return True
+
+class EditProfileForm(FlaskForm):
+    name = StringField('Họ tên')
+    cid = StringField('CMND', validators=[Length(min=9, max=12)])
+    dob = DateField('Ngày sinh')
+    phone = StringField('Điện thoại')
+    email = StringField('Email', validators=[Email()])
+    gender = SelectField('Giới tính', choices=[(gender.name, gender.value) for gender in Gender])
+    address = StringField('Địa chỉ')
+    submit = SubmitField('Lưu thay đổi')
+
+
+class ChangePasswordForm(FlaskForm):
+    old_password = PasswordField('Mật khẩu cũ', validators=[DataRequired()])
+    new_password = PasswordField('Mật khẩu mới', validators=[DataRequired()])
+    confirm_password = PasswordField('Xác nhận mật khẩu mới', validators=[DataRequired(), EqualTo('new_password', message='Mật khẩu xác nhận không trùng khớp')])
+    submit = SubmitField('Đổi mật khẩu')
+
+
+class ChangeAvatarForm(FlaskForm):
+    avatar = FileField('Chọn hình ảnh', validators=[DataRequired()])
+    submit = SubmitField('Đổi avatar')
+
