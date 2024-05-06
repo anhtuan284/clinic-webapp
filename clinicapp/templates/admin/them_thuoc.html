@@ -42,23 +42,13 @@
         <label for="ds_danh_muc">Danh mục:</label>
         <select class="form-control" id="ds_danh_muc" name="ds_danh_muc" multiple>
             {%if thuoc%}
-            {%for o_dm in danhmucs%}
-                {%if danhmucscurrentthuoc|length > 0%}
-                    {%for t, i_dm, dmc in danhmucscurrentthuoc%}
-                        {%if o_dm.id == dmc.category_id%}
-                        <option value="{{o_dm.id}}" id="{{o_dm.id}}" selected>{{o_dm.name}}</option>
-                        {%else%}
-                        <option value="{{o_dm.id}}">{{o_dm.name}}</option>
-                        {%endif%}
-                    {%endfor%}
-                {%else%}
-                    <option value="{{o_dm.id}}" >{{o_dm.name}}</option>
-                {%endif%}
-            {%endfor%}
-            {%else%}
-            {%for o_dm in danhmucs%}
-                <option value="{{o_dm.id}}" >{{o_dm.name}}</option>
-            {%endfor%}
+                {%for c in cates%}
+                    {%if c in currentcates%}
+                        <option value="{{c.id}}" selected>{{c.name}}</option>
+                    {%else%}
+                        <option value="{{c.id}}" >{{c.name}}</option>
+                    {%endif%}
+                {%endfor%}
             {%endif%}
         </select>
     </div>

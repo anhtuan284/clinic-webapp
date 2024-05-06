@@ -19,10 +19,11 @@
         <th></th>
     </tr>
     {%if prescriptions%}
-        {%for P, A, AL in prescriptions%}
-            <tr class="table-row">
+        {%for P, A in prescriptions%}
+            {%if P.id|string not in session['paid_list']%}
+                <tr class="table-row">
                 <td>{{P.id}}</td>
-                <td>{{AL.scheduled_date}}</td>
+                <td>{{A.scheduled_date}}</td>
                 <td>{{P.symptoms}}</td>
                 <td>{{P.doctor_id}}</td>
                 <td>{{P.patient_id}}</td>
@@ -33,6 +34,7 @@
                     </a>
                 </td>
             </tr>
+            {%endif%}
         {%endfor%}
     {%endif%}
 </table>

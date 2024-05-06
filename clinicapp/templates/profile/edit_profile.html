@@ -1,0 +1,45 @@
+{% extends 'layout/base.html' %}
+{% block title %}Chỉnh sửa Hồ sơ{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title">Chỉnh sửa Hồ sơ</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    {{ form.name.label() }}
+                    {{ form.name(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.cid.label() }}
+                    {{ form.cid(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.dob.label() }}
+                    {{ form.dob(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.phone.label() }}
+                    {{ form.phone(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.email.label() }}
+                    {{ form.email(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.gender.label() }}
+                    {{ form.gender(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.address.label() }}
+                    {{ form.address(class="form-control") }}
+                </div>
+                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

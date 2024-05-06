@@ -1,21 +1,24 @@
-import bcrypt
-from flask_admin import Admin, expose
-from flask_admin.contrib.sqla import ModelView
-from flask_admin import BaseView
-
-from clinicapp.dao import *
-
-from clinicapp.models import UserRole, User, Doctor, Nurse, Patient, Policy, Medicine, Unit, MedicineCategory
-from clinicapp import app, db, utils
-
-from flask_login import logout_user, current_user
 from flask import redirect, request
+from flask_admin import BaseView, Admin
+from flask_admin import expose
+from flask_admin.contrib.sqla import ModelView
+from flask_login import logout_user, current_user
+
+from clinicapp import app, db, utils
+from clinicapp.dao import get_medicines, get_categories, get_category_medicines, add_or_update_medicine, \
+    delete_all_category_medicine_by_medicine_id, add_category_medicine, get_medicine_by_id, delete_medicine_by_id, \
+    get_categories_by_medicine_id
+from clinicapp.models import UserRole, User, Doctor, Nurse, Patient, Policy, Medicine, Unit, Category, MedicineUnit
 
 
 class AuthenticatedView(ModelView):
     def is_accessible(self):
         return current_user.is_authenticated and current_user.role == UserRole.ADMIN
 
+
+class AuthenticatedBaseView(BaseView):
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.role == UserRole.ADMIN
 
 class MyUserView(AuthenticatedView):
     column_list = ['id', 'name', 'phone', 'username', 'email', 'address', 'role']
@@ -48,28 +51,28 @@ class MyUserView(AuthenticatedView):
         form.password.data = ''
 
 
-class DoctorAdminView(ModelView):
+class DoctorAdminView(AuthenticatedView):
     column_list = ['id']
     column_labels = {
         'id': 'User ID'
     }
 
 
-class NurseAdminView(ModelView):
+class NurseAdminView(AuthenticatedView):
     column_list = ['id']
     column_labels = {
         'id': 'User ID'
     }
 
 
-class PatientAdminView(ModelView):
+class PatientAdminView(AuthenticatedView):
     column_list = ['id']
     column_labels = {
         'id': 'User ID'
     }
 
 
-class PolicyAdminView(ModelView):
+class PolicyAdminView(AuthenticatedView):
     column_list = ['name', 'value', 'admin']
     column_searchable_list = ['name', 'value']
     column_editable_list = ['name', 'value']
@@ -79,13 +82,13 @@ class PolicyAdminView(ModelView):
     }
 
 
-class MedicineAdminView(ModelView):
+class MedicineAdminView(AuthenticatedView):
     column_list = ['name', 'gia', 'usage', 'exp']
     column_searchable_list = ['name']
     column_editable_list = ['name', 'price', 'usage', 'exp']
 
 
-class CategoryAdminView(ModelView):
+class CategoryAdminView(AuthenticatedView):
     column_list = ['name', 'medicine']
 
 
@@ -97,30 +100,24 @@ class CategoryAdminView(ModelView):
 #     form_ajax_refs = {'medicine': {'fields': ['name']}}
 
 
-class UnitAdminView(ModelView):
+class UnitAdminView(AuthenticatedView):
     column_list = ['id', 'name']
 
 
-class StatsView(BaseView):
+class StatsView(AuthenticatedBaseView):
     @expose('/')
     def index(self):
         return self.render('admin/stats.html')
 
-    def is_accessible(self):
-        return current_user.is_authenticated
 
-
-class LogoutView(BaseView):
+class LogoutView(AuthenticatedBaseView):
     @expose('/')
     def index(self):
         logout_user()
         return redirect('/admin')
 
-    def is_accessible(self):
-        return current_user.is_authenticated
 
-
-class ThuocView(BaseView):
+class ThuocView(AuthenticatedBaseView):
     @expose('/')
     def index(self):
         gia_bat_dau = request.args.get('gia_bat_dau')
@@ -178,33 +175,29 @@ class ThuocView(BaseView):
         else:
             return self.render(
                 'admin/them_thuoc.html',
-                danhmucs=get_categories(),
+                cates=get_categories(),
                 thuoc=thuoc,
-                danhmucscurrentthuoc=get_categories_current_medicine(id)
+                currentcates=get_categories_by_medicine_id(id)
             )
 
-    def is_accessible(self):
-        return current_user.is_authenticated
 
-
-class MyDanhMucView(BaseView):
+class MyDanhMucView(AuthenticatedView):
     @expose('/')
     def index(self):
         return self.render('admin/danh_muc.html', danhmucs=get_categories())
 
-    def is_accessible(self):
-        return current_user.is_authenticated
 
-
-class MyCategoryView(ModelView):
+class MyCategoryView(AuthenticatedView):
     column_list = ['id', 'name']
 
-    def is_accessible(self):
-        return current_user.is_authenticated
+
+class MyMedicineUnitView(AuthenticatedView):
+    column_list = ['id', 'unit_id', 'medicine_id', 'quantity', 'medicine_details']
 
 
 admin = Admin(app, name='Clinic Website', template_mode='bootstrap4')
-admin.add_view(MyCategoryView(Category, db.session))
+
+admin.add_view(MyCategoryView(Category, db.session, name='Danh mục'))
 admin.add_view(ThuocView(name="Thuốc"))
 admin.add_view(StatsView(name='Thống kê'))
 admin.add_view(MyUserView(User, db.session))
@@ -212,7 +205,6 @@ admin.add_view(DoctorAdminView(Doctor, db.session, name="Bác sĩ"))
 admin.add_view(NurseAdminView(Nurse, db.session, name="Y tá"))
 admin.add_view(PatientAdminView(Patient, db.session, name="Bệnh nhân"))
 admin.add_view(PolicyAdminView(Policy, db.session, name="Quy Định"))
-admin.add_view(MedicineAdminView(Medicine, db.session, name="Thuốc"))
-# admin.add_view(MedicineCategoryAdminView(MedicineCategory, db.session, name="Thuốc"))
 admin.add_view(UnitAdminView(Unit, db.session, name="Đơn vị"))
+admin.add_view(MyMedicineUnitView(MedicineUnit, db.session, name="Thuốc-Đơn vị"))
 admin.add_view(LogoutView(name='Đăng xuất'))

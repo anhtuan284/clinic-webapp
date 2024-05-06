@@ -1,5 +1,4 @@
 import datetime
-
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Date, Time, DateTime, DECIMAL
 from clinicapp import app, db, utils
 from sqlalchemy.orm import relationship
@@ -83,7 +82,7 @@ class Policy(db.Model):
     name = Column(String(100))
     value = Column(String(100), nullable=False)
 
-    admin_id = Column(Integer, ForeignKey(Admin.id), default=1, nullable=False)
+    admin_id = Column(Integer, ForeignKey(Admin.id), default=6, nullable=False)
 
 
 class AppointmentList(BaseModel):
@@ -154,17 +153,19 @@ class MedicineUnit(db.Model):
     unit_id = Column(Integer, ForeignKey(Unit.id))
     medicine_id = Column(Integer, ForeignKey(Medicine.id))
     medicine_details = relationship("MedicineDetail", backref='medicine_unit', lazy=True)
-
     quantity = Column(Integer)
 
 
 class MedicineDetail(db.Model):
     quantity = Column(Integer)
     usage = Column(String(100))
-
     prescription_id = Column(Integer, ForeignKey(Prescription.id), primary_key=True)
     medicine_id = Column(Integer, ForeignKey(Medicine.id), primary_key=True)
     medicine_unit_id = Column(Integer, ForeignKey(MedicineUnit.id))
+
+    def __str__(self):
+        return 'prescription_id: ' + str(self.prescription_id) + \
+            ' medicine_id: ' + str(self.medicine_id)
 
 
 class Bill(BaseModel):
@@ -182,6 +183,7 @@ class Bill(BaseModel):
 class Category(BaseModel):
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String(100))
+    medicine_category = relationship("MedicineCategory", backref='category', lazy=True)
 
 
 class MedicineCategory(BaseModel):
@@ -197,6 +199,7 @@ class HistoryOnlinePayment(BaseModel):
     amount = Column(DECIMAL(11, 2))
     response_code = Column(String(300))
     gateway_name = Column(String(100))
+    gateway_name = Column(String(100))
     patient_id = Column(Integer, ForeignKey(Patient.id), nullable=False)
     paid = Column(Boolean, default=False)
 
@@ -204,6 +207,8 @@ class HistoryOnlinePayment(BaseModel):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+
+        # db.create_all()
         # order = HistoryOnlinePayment(amount=200000, response_code="aadasdasdasdas", gateway_name="vnpay", patient_id=1)
         # db.session.add(order)
         # db.session.commit()
@@ -256,36 +261,96 @@ if __name__ == '__main__':
         # new_patient = Patient(id=new_user3.id)
         # db.session.add_all([ new_doctor2])
         # db.session.commit()
+        db.create_all()
+        new_user1 = User(
+            name='Admin',
+            phone='0123456789',
+            avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+            email='admin@example.com',
+            address='Admin Site',
+            username='admin',
+            password=str(utils.hash_password("123")),
+            cid='092884828822',
+            gender=Gender.MALE,
+            role=UserRole.ADMIN,
+        )
+        db.session.add(new_user1)
+        db.session.commit()
+        new_user2 = User(
+            name='Doctor Strange',
+            phone='0123456789',
+            avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+            email='docter@example.com',
+            address='Clinic',
+            username='doctorstrange',
+            password=str(utils.hash_password("123")),
+            cid='092884828872',
+            gender=Gender.MALE,
+            role=UserRole.DOCTOR,
+        )
+        new_user3 = User(
+            name='Quốc Huy',
+            phone='0123456789',
+            avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+            email='patient@example.com',
+            address='Clinic',
+            username='patient',
+            password=str(utils.hash_password("123")),
+            cid='092814828872',
+            gender=Gender.MALE,
+            role=UserRole.PATIENT,
+        )
+        db.session.add_all([new_user1, new_user2, new_user3])
+        db.session.commit()
+        new_doctor2 = Doctor(id=new_user2.id)
+        new_admin = Admin(id=new_user1.id)
+        new_patient = Patient(id=new_user3.id)
+        db.session.add_all([new_doctor2, new_admin, new_patient])
+        db.session.commit()
 
-        # danh_muc_1 = Category(name="Giảm đau")
-        # danh_muc_2 = Category(name="Thực phẩm bổ sung")
-        # danh_muc_3 = Category(name="Thần Kinh")
-        #
-        # db.session.add_all([danh_muc_1, danh_muc_2, danh_muc_3])
-        # db.session.commit()
-        #
-        # don_vi_vien = Unit(name="Viên")
-        # don_vi_hop = Unit(name="Hộp")
-        # don_vi_chai = Unit(name="Chai")
-        #
-        # db.session.add_all([don_vi_vien, don_vi_hop, don_vi_chai])
-        # db.session.commit()
-        #
-        # # Tạo các loại thuốc (medicine)
-        # thuoc_1 = Medicine(name="Panadol", price=10000, usage="Uống sau bữa ăn", exp=datetime.date(2025, 12, 31))
-        # thuoc_2 = Medicine(name="Zinc", price=20000, usage="Uống trước khi ngủ", exp=datetime.date(2024, 6, 30))
-        # thuoc_3 = Medicine(name="Vitamin C", price=30000, usage="Uống trước khi ngủ", exp=datetime.date(2024, 6, 30))
-        #
-        # db.session.add_all([thuoc_1, thuoc_2, thuoc_3])
-        # db.session.commit()
-        #
-        # cat_med1 = MedicineCategory(category_id=danh_muc_1.id, medicine_id=thuoc_1.id)
-        # cat_med2 = MedicineCategory(category_id=danh_muc_2.id, medicine_id=thuoc_1.id)
-        # cat_med3 = MedicineCategory(category_id=danh_muc_2.id, medicine_id=thuoc_2.id)
-        # cat_med4 = MedicineCategory(category_id=danh_muc_3.id, medicine_id=thuoc_3.id)
-        #
-        # db.session.add_all([cat_med1, cat_med2, cat_med3, cat_med4])
-        # db.session.commit()
+        danh_muc_1 = Category(name="Giảm đau")
+        danh_muc_2 = Category(name="Thực phẩm bổ sung")
+        danh_muc_3 = Category(name="Thần Kinh")
+
+        db.session.add_all([danh_muc_1, danh_muc_2, danh_muc_3])
+        db.session.commit()
+
+        don_vi_vien = Unit(name="Viên")
+        don_vi_hop = Unit(name="Hộp")
+        don_vi_vi = Unit(name="Chai")
+
+        db.session.add_all([don_vi_vien, don_vi_hop, don_vi_vi])
+        db.session.commit()
+
+        # Tạo các loại thuốc (medicine)
+        thuoc_1 = Medicine(name="Panadol", price=10000, usage="Uống sau bữa ăn", exp=datetime.date(2025, 12, 31))
+        thuoc_2 = Medicine(name="Zinc", price=20000, usage="Uống trước khi ngủ", exp=datetime.date(2024, 6, 30))
+        thuoc_3 = Medicine(name="Vitamin C", price=30000, usage="Uống trước khi ngủ", exp=datetime.date(2024, 6, 30))
+
+        db.session.add_all([thuoc_1, thuoc_2, thuoc_3])
+        db.session.commit()
+
+        cat_med1 = MedicineCategory(category_id=danh_muc_1.id, medicine_id=thuoc_1.id)
+        cat_med2 = MedicineCategory(category_id=danh_muc_2.id, medicine_id=thuoc_1.id)
+        cat_med3 = MedicineCategory(category_id=danh_muc_2.id, medicine_id=thuoc_2.id)
+        cat_med4 = MedicineCategory(category_id=danh_muc_3.id, medicine_id=thuoc_3.id)
+
+        db.session.add_all([cat_med1, cat_med2, cat_med3, cat_med4])
+        db.session.commit()
+
+        med1_unit1 = MedicineUnit(medicine_id=thuoc_1.id, unit_id=don_vi_vien.id, quantity=1)
+        med1_unit2 = MedicineUnit(medicine_id=thuoc_1.id, unit_id=don_vi_hop.id, quantity=23)
+        med1_unit3 = MedicineUnit(medicine_id=thuoc_1.id, unit_id=don_vi_vi.id, quantity=14)
+
+        med2_unit1 = MedicineUnit(medicine_id=thuoc_2.id, unit_id=don_vi_vien.id, quantity=1)
+        med2_unit2 = MedicineUnit(medicine_id=thuoc_2.id, unit_id=don_vi_hop.id, quantity=23)
+
+        med3_unit1 = MedicineUnit(medicine_id=thuoc_3.id, unit_id=don_vi_vien.id, quantity=1)
+        med3_unit2 = MedicineUnit(medicine_id=thuoc_3.id, unit_id=don_vi_vi.id, quantity=11)
+
+        db.session.add_all([med1_unit1, med1_unit2, med1_unit3, med2_unit1, med2_unit2, med3_unit1, med3_unit2])
+        db.session.commit()
+
 
         # APPOINTMENT CỦA HUY
 #         new_user5 = User(
