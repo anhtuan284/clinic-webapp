@@ -524,23 +524,23 @@ if __name__ == '__main__':
 #         db.session.add_all([new_user5, new_user6])
 #         db.session.commit()
 
-        new_user4 = User(
-            name='Thao Van',
-            phone='0123456789',
-            avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
-            email='cashier@example.com',
-            address='Clinic',
-            username='cashier',
-            password=str(utils.hash_password("123")),
-            cid='6854651894',
-            gender=Gender.FEMALE,
-            role=UserRole.CASHIER,
-        )
-        db.session.add(new_user4)
-        db.session.commit()
-        new_cashier = Cashier(id=3)
-        db.session.add(new_cashier)
-        db.session.commit()
+        # new_user4 = User(
+        #     name='Thao Van',
+        #     phone='0123456789',
+        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+        #     email='cashier@example.com',
+        #     address='Clinic',
+        #     username='cashier',
+        #     password=str(utils.hash_password("123")),
+        #     cid='6854651894',
+        #     gender=Gender.FEMALE,
+        #     role=UserRole.CASHIER,
+        # )
+        # db.session.add(new_user4)
+        # db.session.commit()
+        # new_cashier = Cashier(id=3)
+        # db.session.add(new_cashier)
+        # db.session.commit()
 
 # new_user5 = User(
 #     name='Luu Danh',
