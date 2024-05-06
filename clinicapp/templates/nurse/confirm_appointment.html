@@ -1,0 +1,168 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Lập danh sách{% endblock %}
+
+{% block content %}
+{% if err_msg %}
+<div class="alert alert-danger">{{ err_msg }}</div>
+{% endif %}
+
+
+<style>
+    .list-container {
+        float: left;
+        width: 45vw;
+        height:70vh;
+        margin: 40px;
+        background-color: #dbd6d6;
+        border-radius: 10px;
+        overflow-y: auto; /* Thêm cuộn khi cần */
+        max-height: 67vh; /* Giới hạn chiều cao */
+
+    }
+
+    .list_no_confirm,
+    .list_confirm {
+        height: 100%;
+        width: 100%;
+        padding: 12px;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .card {
+        max-width: 200px;
+        max-height: 260px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 10px;
+        text-align: center;
+    }
+
+    .card img {
+        width: 100%;
+        height: 100px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    .card-body {
+        padding: 10px;
+    }
+
+    .card-title {
+        font-size: 18px;
+        margin-bottom: 5px;
+        margin-top: -5px;
+    }
+
+    .card-text {
+        font-size: 14px;
+        margin-bottom: -2px;
+    }
+
+    .time-info-column {
+        text-align: left;
+        padding: 0 10px;
+    }
+
+    .action-buttons button {
+        margin: 5px;
+    }
+
+    .overlay {
+        position: fixed;
+        z-index: 99999;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+        display: none; /* Initially hidden */
+        justify-content: center;
+        align-items: center;
+    }
+
+
+    .close-button {
+        bottom: 0;
+    }
+
+    .create-list-btn {
+        position: absolute; /* Đặt vị trí cố định */
+        z-index: 9999; /* Đảm bảo nút hiển thị trên tất cả các phần khác */
+    }
+
+</style>
+<div class="overlay" id="overlay">
+    <button class="btn close-button" onclick="hideOverlay()" style="background-color: #dbd6d6; color: white;"> Close
+    </button>
+</div>
+
+<div class="list-container">
+    <div class="list_no_confirm">
+        <!-- Danh sách chưa xác nhận -->
+        {% for appointment, user in appointments_no_confirm %}
+        <div class="card" data-appointment-id="{{ appointment.id }}" data-user-id="{{ user.id }}">
+            {% if user and appointment %}
+            <img src="{{ user.avatar }}" class="card-img-top" alt="Avatar">
+            <div class="card-body">
+                <h5 class="card-title">{{ user.name }}</h5>
+                <p class="card-text">Số điện thoại: {{ user.phone }}</p>
+                <p class="card-text">Ngày hẹn: {{ appointment.scheduled_date }}</p>
+                <p class="card-text">Giờ khám: {{ appointment.scheduled_hour }}</p>
+                <div>
+                    <button class="btn btn-danger reject-appointment-btn"
+                            onclick="rejectAppointment('{{ appointment.id }}', '{{ user.id }}')">Từ chối
+                    </button>
+
+                    <button onClick="change_confirm('{{appointment.id}}','{{appointment.scheduled_date}}','{{appointment.scheduled_hour}}')"
+                            class="btn btn-success confirm-appointment-btn">
+                        Xác nhận
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+
+ <div class="list-container">
+    <div class="list_confirm">
+        <button class="btn btn-primary create-list-btn" onclick="create_list_for_date()">Lập danh sách cho tất cả</button>
+        <!-- Danh sách đã xác nhận -->
+        {% for appointment, user in appointments_confirm %}
+        <div class="card" data-appointment-id="{{ appointment.id }}" data-user-id="{{ user.id }}">
+            {% if user and appointment %}
+            <img src="{{ user.avatar }}" class="card-img-top" alt="Avatar">
+            <div class="card-body">
+                <h5 class="card-title">{{ user.name }}</h5>
+                <p class="card-text">Số điện thoại: {{ user.phone }}</p>
+                <p class="card-text">Ngày hẹn: {{ appointment.scheduled_date }}</p>
+                <p class="card-text">Giờ khám: {{ appointment.scheduled_hour }}</p>
+                <div>
+                    <button class="btn btn-danger reject-appointment-btn"
+                            onclick="rejectAppointment('{{ appointment.id }}', '{{ user.id }}')">Từ chối
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<div class="container">
+  <h1>Danh sách cuộc hẹn đã được xác nhận</h1>
+  {% include 'appoinment/approved_appointments.html' %}
+</div>
+
+<script src="/static/js/nurse/nurse_confirm.js">
+</script>
+
+
+{% endblock %}

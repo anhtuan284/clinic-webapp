@@ -9,9 +9,9 @@ import cloudinary
 
 app = Flask(__name__)
 
-
 app.secret_key = '^%^&%^(*^^&&*^$%((^^&$$&^'
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/clinicdb?charset=utf8mb4" % quote('Admin@123')
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/clinicdb?charset=utf8mb4" % quote(
+    'Baopro123')
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app.config["PAGE_SIZE"] = 8
@@ -38,3 +38,16 @@ ipn_url = "http://127.0.0.1:5000/"
 
 TIENKHAM = 1
 SOLUONGKHAM = 2
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'peteralwaysloveu@gmail.com'
+EMAIL_HOST_PASSWORD = "uvbc jfpm udxt apwv"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_USERNAME'] = 'peteralwaysloveu@gmail.com'
+app.config['MAIL_PASSWORD'] = "uvbc jfpm udxt apwv"
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_PORT'] = 587

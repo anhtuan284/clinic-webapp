@@ -1,13 +1,10 @@
 import hashlib
 
-
 from sqlalchemy import func, desc
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, joinedload
 
 from clinicapp import db
 from clinicapp.models import *
-
-
 
 from clinicapp.utils import hash_password, verify_password
 
@@ -31,7 +28,7 @@ def add_user(name, username, password, avatar):
 
 
 def get_quantity_appointment_by_date(date):
-    quantity = Appointment.query.filter_by(scheduled_date=date, is_confirm=False).count()
+    quantity = Appointment.query.filter_by(scheduled_date=date, is_confirm=True).count()
     return quantity
 
 
@@ -57,10 +54,8 @@ def add_appointment(scheduled_date, scheduled_hour, is_confirm, is_paid, status,
     db.session.commit()
 
 
-
-def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None, category_id=None):
-
-
+def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None,
+                  category_id=None):
     medicines = Medicine.query
 
     if category_id:
@@ -91,7 +86,8 @@ def get_medicine_by_id(id):
 
 
 def get_medicine_by_category(category_id):
-    medicines = db.session.query(Medicine).join(Medicine.medicine_category).filter(MedicineCategory.category_id == category_id).all()
+    medicines = db.session.query(Medicine).join(Medicine.medicine_category).filter(
+        MedicineCategory.category_id == category_id).all()
 
     return medicines
 
@@ -177,13 +173,9 @@ def update_list_appointment(patient_id):
     return None
 
 
-
-def create_medical_form(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, units):
-    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id,
-                            doctor_id=doctor_i
-
 def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines, units):
-    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id, doctor_id=doctor_id)
+    new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id,
+                            doctor_id=doctor_id)
 
     db.session.add(new_pres)
     db.session.commit()
@@ -198,9 +190,9 @@ def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages
     db.session.commit()
 
 
-
 def create_order_payment(amount, gateway, patient_id, paid, response_code):
-    order = HistoryOnlinePayment(amount=amount, gateway_name=gateway, patient_id=patient_id, paid=paid, response_code=response_code)
+    order = HistoryOnlinePayment(amount=amount, gateway_name=gateway, patient_id=patient_id, paid=paid,
+                                 response_code=response_code)
     db.session.add(order)
     db.session.commit()
 
@@ -211,7 +203,8 @@ def get_quantity_history_payment():
         return latest_record.id
     else:
         return 1
-                            
+
+
 def get_prescriptions_by_scheduled_date(date):
     prescriptions = db.session.query(Prescription, Appointment, AppointmentList) \
         .filter(Prescription.appointment_id == Appointment.id) \
@@ -282,6 +275,7 @@ def create_bill(service_price, medicine_price, total, cashier_id, prescription_i
 def get_bill_by_prescription_id(prescription_id):
     return Bill.query.filter_by(prescription_id=prescription_id).all()
 
+
 def get_patient_info(patient_cid=None):
     if patient_cid:
         patient = db.session.query(User).filter_by(cid=patient_cid).first()
@@ -289,3 +283,78 @@ def get_patient_info(patient_cid=None):
     return None
 
 
+def get_list_appointment_no_confirm_by_date(date):
+    if date is not None:
+        appointments_with_patient_info = db.session.query(Appointment, User). \
+            join(User, User.id == Appointment.patient_id). \
+            filter(Appointment.is_confirm == False, scheduled_date=date).all()
+    else:
+        appointments_with_patient_info = db.session.query(Appointment, User). \
+            join(User, User.id == Appointment.patient_id). \
+            filter(Appointment.is_confirm == False).all()
+
+    return appointments_with_patient_info
+
+
+def get_list_appointment_confirm_by_date(date):
+    if date is not None:
+        appointments_with_patient_info = db.session.query(Appointment, User). \
+            join(User, User.id == Appointment.patient_id). \
+            filter(Appointment.is_confirm == True, Appointment.status == False, scheduled_date=date).all()
+    else:
+        appointments_with_patient_info = db.session.query(Appointment, User). \
+            join(User, User.id == Appointment.patient_id). \
+            filter(Appointment.is_confirm == True, Appointment.status == False).all()
+    return appointments_with_patient_info
+
+
+def get_appointment_by_id(id):
+    return Appointment.query.get(id)
+
+
+def update_confirm_appointment(id):
+    appointment = get_appointment_by_id(id)
+    if appointment:
+        appointment.is_confirm = True
+        db.session.commit()
+
+
+def conflict_appointment(scheduled_date, scheduled_hour):
+    conflicting_appointments = Appointment.query.filter_by(scheduled_date=scheduled_date, scheduled_hour=scheduled_hour,
+                                                           is_confirm=True).all()
+    if conflicting_appointments:
+        return True
+    else:
+        return False
+
+
+def delete_appointment(appointment):
+    # try:
+    #     db.session.delete(appointment)
+    #     db.session.commit()
+    # except Exception as e:
+    #     # Handle exceptions if any
+    #     db.session.rollback()
+    #     raise e
+    db.session.delete(appointment)
+    db.session.commit()
+
+
+def get_date_range():
+    current_date = datetime.datetime.now().date()
+    nearest_date = db.session.query(func.max(AppointmentList.scheduled_date)).scalar()
+    if not nearest_date:
+        nearest_date = current_date
+    date_range = db.session.query(AppointmentList.scheduled_date) \
+        .filter(AppointmentList.scheduled_date >= current_date, AppointmentList.scheduled_date <= nearest_date) \
+        .order_by(AppointmentList.scheduled_date) \
+        .all()
+    date_range = [date[0] for date in date_range]
+    return date_range
+
+
+def get_approved_appointments_by_date(date):
+    # Thực hiện join giữa bảng Appointment và User thông qua trường user_id
+    approved_appointments = db.session.query(Appointment, User).filter(Appointment.patient_id == User.id).filter(
+        Appointment.status == True, Appointment.scheduled_date == date).all()
+    return approved_appointments

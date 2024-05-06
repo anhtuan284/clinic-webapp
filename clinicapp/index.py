@@ -8,17 +8,19 @@ import cloudinary.uploader
 from flask import request, redirect, render_template, jsonify, url_for, current_app, flash, session
 from flask_cors import cross_origin
 from flask_login import login_user, logout_user, login_required, current_user
+from sqlalchemy import update
+from sqlalchemy.exc import NoResultFound
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
     TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint
-from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
-    get_list_scheduled_hours_by_date_confirm, get_prescriptions_by_scheduled_date, get_prescription_by_id, \
-    get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
-    get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, get_value_policy
+from clinicapp.dao import *
 from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin
 from clinicapp.models import UserRole, Unit
 from clinicapp.forms import PrescriptionForm
 from clinicapp.vnpay import vnpay
+from flask_mail import Mail, Message
+
+mail = Mail(app)
 
 
 @app.route('/')
@@ -148,6 +150,7 @@ def get_medicines_by_category(category_id):
                        } for medicine in medicines]
     return jsonify(medicines_json)
 
+
 @login.user_loader
 def load_user(user_id):
     return dao.get_user_by_id(user_id)
@@ -168,11 +171,11 @@ def book():
 
         if date is not None and appointment_time is not None:
             appointment_date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
-            return render_template('/appoinment/patient_create_appoinment.html', appointment_date=appointment_date,
+            return render_template('/appointment/patient_create_appoinment.html', appointment_date=appointment_date,
                                    appointment_time=appointment_time, payment_method_id=payment_method_id)
         else:
             appointment_date = datetime.datetime.now().date()
-    return render_template('/appoinment/patient_create_appoinment.html', appointment_date=appointment_date)
+    return render_template('/appointment/patient_create_appoinment.html', appointment_date=appointment_date)
 
 
 def process_vnpay(amount, patient):
@@ -199,6 +202,7 @@ def process_vnpay(amount, patient):
     vnp.requestData["vnp_ReturnUrl"] = VNPAY_RETURN_URL
     vnpay_payment_url = vnp.get_payment_url(VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY)
     return vnpay_payment_url
+
 
 @app.route('/patient/book-appointment', methods=['POST'])
 def patient_book_appointment():
@@ -305,6 +309,9 @@ def check_appointment_date():
     quantity = get_quantity_appointment_by_date(date)
     # print(quantity)
     policy = int(get_value_policy(SOLUONGKHAM))
+    print(policy)
+    print(11111)
+    print(quantity)
     # print(policy)
     if quantity < policy:
         return jsonify({'status': 'available'})
@@ -451,7 +458,183 @@ def do_bill(prescription_id):
                            )
 
 
+@app.route('/nurse/confirm_appointment', methods=['GET'])
+def confirm_appointment():
+    date = request.args.get('date')  # Lấy ngày từ yêu cầu GET
+    get_list_appointment_no_confirm = dao.get_list_appointment_no_confirm_by_date(date)
+    print(get_list_appointment_no_confirm)
+    get_list_appointment_confirm = dao.get_list_appointment_confirm_by_date(date)
+
+    return render_template('nurse/confirm_appointment.html', appointments_no_confirm=get_list_appointment_no_confirm,
+                           appointments_confirm=get_list_appointment_confirm)
+
+
+@app.route('/nurse/approved_appointment', methods=['GET'])
+def approved_appointment():
+    date = request.args.get('approved-date')  # Lấy ngày từ
+    print(date)
+    approved_appointments = dao.get_approved_appointments_by_date(date)
+    print(approved_appointments)
+    return render_template("/appointment/approved_appointments.html", approved_appointments=approved_appointments )
+
+
+@app.route('/nurse/change_confirm', methods=['POST'])
+def change_confirm():
+    data = request.json
+    appointment_id = data.get('id')
+    scheduled_date = data.get('scheduled_date')
+    scheduled_hour = data.get('scheduled_hour')
+
+    if appointment_id is None or scheduled_date is None or scheduled_hour is None:
+        return 'Invalid request. Missing required parameters.', 400
+
+    flag = dao.conflict_appointment(scheduled_date, scheduled_hour)
+    if flag:
+        return 'There is a conflicting appointment. Please choose another date and time.', 400
+    else:
+        dao.update_confirm_appointment(appointment_id)
+        print(appointment_id)
+        return 'Success', 200
+
+
+@app.route('/nurse/status-change', methods=['PATCH'])
+def status_change():
+    appointment_id = request.args.get('appointment_id')
+    user_id = request.args.get('user_id')
+    new_user = dao.get_user_by_id(user_id)
+    new_appointment = dao.get_appointment_by_id(appointment_id)
+    new_status = request.args.get('status')
+
+    if new_appointment is None:
+        return jsonify({'error': 'Appointment not found.'}), 404
+
+    if new_status in ['approved', 'cancelled']:
+        if new_status == 'cancelled':
+            print(2222)
+        # new_appointment.status = True  # Assuming True represents cancelled status in your database
+        # # subject = f'Appointment Status Changed DateTime: #{new_appointment.scheduled_date} - {
+        # # new_appointment.scheduled_hour}' # body = f"Dear {new_user.name}, \nYour appointment status has been {
+        # # new_status} " \ #        f"from to " \ #        f"\nRegards,\nThe Private Clinic Team"
+        # data = {
+        #     'user': new_user,
+        #     'appointment': new_appointment,
+        #     'status': "HUỶ"
+        # }
+        # print(data)
+        # # Gửi email
+        # msg = Message('qweqwe', sender='peteralwaysloveu@gmail.com',
+        #               recipients=[new_user.email, '2151010419tuan@ou.edu.vn'])
+        # # msg.body = body
+        # msg.html = render_template('nurse/email.html', user=new_user, appointment=new_appointment, status="HUỶ")
+        # mail.send(msg)
+        # dao.delete_appointment(new_appointment)
+        send_notification_email(new_user, new_appointment, "TỪ CHỐI")
+        return jsonify({'message': 'Appointment status updated successfully.'}), 200
+    return jsonify({'error': 'Invalid status value.'}), 400
+
+
+@app.route('/nurse/send_list_email', methods=['POST'])
+def send_list_email():
+    data = request.json
+    for entry in data:
+        appointment_id = entry.get('appointment_id')
+        user_id = entry.get('user_id')
+        new_user = dao.get_user_by_id(user_id)
+        new_appointment = dao.get_appointment_by_id(appointment_id)
+        print(new_user)
+        print(new_appointment)
+        print(1222)
+        send_notification_email(new_user, new_appointment, "ĐƯỢC DUYỆT")
+    return jsonify({'message': 'Email notifications sent successfully.'}), 200
+
+
+def send_notification_email(user, appointment, status):
+    # appointment.status = True  # Assuming True represents cancelled status in your database
+    subject = f'Appointment Status Changed DateTime: {appointment.scheduled_date} - {appointment.scheduled_hour}'
+    # body = f"Dear {new_user.name}, \nYour appointment status has been {
+    # new_status} " \ #        f"from to " \ #        f"\nRegards,\nThe Private Clinic Team"
+    data = {
+        'user': user,
+        'appointment': appointment,
+        'status': "HUỶ"
+    }
+    print(data)
+    # Gửi email
+    msg = Message(subject, sender='peteralwaysloveu@gmail.com',
+                  recipients=[user.email, '2151013029huy@ou.edu.vn'])
+    # msg.body = body
+    msg.html = render_template('nurse/email.html', user=user, appointment=appointment, status=status)
+    mail.send(msg)
+    dao.delete_appointment(appointment)
+    return jsonify({'message': 'Appointment status updated successfully.'}), 200
+
+
+@app.route('/test')
+def test_mail():  # Renamed the function to avoid naming conflict
+    msg = Message('ssdasdasd', sender='peteralwaysloveu@gmail.com',
+                  recipients=['baoempro2003@gmail.com', '2151013029huy@ou.dedu.vn', ])
+    msg.body = "clinic asdasdasdasd"
+    mail.send(msg)
+    return "success"
+
+
+@app.route('/nurse/create_list_by_date', methods=['POST'])
+def create_list_by_date():
+    data = request.json
+    scheduled_dates = data.get('scheduled_dates', [])
+    scheduled_dates = [datetime.datetime.strptime(date_str.split(": ")[1], "%Y-%m-%d").date() for date_str in
+                       scheduled_dates]
+
+    # for scheduled_date in scheduled_dates:
+    #     if not AppointmentList.query.filter_by(scheduled_date=scheduled_date).first():
+    #         new_appointment_list = AppointmentList(scheduled_date=scheduled_date)
+    #         db.session.add(new_appointment_list)
+    #         db.session.commit()
+    date_range = dao.get_date_range()
+    print(scheduled_dates)
+    print(dao.get_date_range())
+    unique_dates = list(filter(lambda date: date not in date_range, scheduled_dates))
+    print(222)
+    print(unique_dates)
+    try:
+        # Tạo mới các AppointmentList cho các ngày không trùng
+        for scheduled_date in unique_dates:
+            new_appointment_list = AppointmentList(scheduled_date=scheduled_date, nurse_id=current_user.id)
+            db.session.add(new_appointment_list)
+        # Lưu thay đổi vào cơ sở dữ liệu
+        db.session.commit()
+        return jsonify({'message': 'Appointment lists created successfully'}), 200
+    except:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to create appointment lists'}), 500
+
+
+@app.route('/nurse/process_card_data', methods=['POST'])
+def process_card_data():
+    # for card in card_data:
+    #     appointment_id = card.get('appointment_id')
+    #     appointment = Appointment.query.get(appointment_id)
+    #     if appointment:
+    #         appointment.status = True  # Đổi status thành True
+    #         appointment_list = AppointmentList.query.filter_by(scheduled_date=appointment.scheduled_date).first()
+    #         if appointment_list:
+    #             appointment.appointment_list_id = appointment_list.id  # Gắn AppointmentList_id
+    #         db.session.commit()
+    card_data = request.json
+    appointment_ids = [int(card['appointment_id']) for card in card_data]
+    db.session.execute(update(Appointment).where(Appointment.id.in_(appointment_ids)).values(status=True))
+    for card in card_data:
+        appointment_id = int(card['appointment_id'])
+        appointment = Appointment.query.get(appointment_id)
+        if appointment:
+            scheduled_date = appointment.scheduled_date
+            appointment_list = AppointmentList.query.filter_by(scheduled_date=scheduled_date).first()
+            if appointment_list:
+                appointment.appointment_list_id = appointment_list.id
+    db.session.commit()
+    return jsonify({'message': 'Card data processed successfully'}), 200
+
+
 if __name__ == '__main__':
     with app.app_context():
         app.run(debug=True)
-
