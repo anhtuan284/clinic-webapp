@@ -180,7 +180,7 @@ def get_value_policy(id):
 def get_policy_value_by_name(name):
     policy = Policy.query.filter_by(name=name).all()
     if policy:
-        return float(policy.first().value)
+        return float(policy[0].value)
     else:
         return None
 
@@ -291,7 +291,7 @@ def get_medicine_price_by_prescription_id(prescription_id):
         .filter(MedicineUnit.unit_id == Unit.id) \
         .filter(MedicineDetail.prescription_id == prescription_id)
 
-    total = total.first().sum
+    total = total[0].sum
     if not total:
         total = '0'
 
@@ -299,7 +299,7 @@ def get_medicine_price_by_prescription_id(prescription_id):
 
 
 def get_is_paid_by_prescription_id(prescription_id):
-    return Appointment.query.filter_by(id=prescription_id).first().is_paid
+    return Appointment.query.filter_by(id=prescription_id).all()[0].is_paid
 
 
 def create_bill(service_price, medicine_price, total, cashier_id, prescription_id):

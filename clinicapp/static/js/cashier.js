@@ -1,27 +1,28 @@
 function displayOfflinePayment() {
+    document.getElementById("online_payment").style.display = "none";
     var content = document.getElementById("xuat-hoa-don");
     while (content.firstChild) {
         content.removeChild(content.lastChild);
     }
-    
+
     //floating label tien nhan
     var divTienNhan = document.createElement("div");
     divTienNhan.setAttribute("class", "form-floating mb-3 mt-3");
     content.appendChild(divTienNhan);
-    
+
     var inputTienNhan = document.createElement("input");
     inputTienNhan.setAttribute("type", "number");
     inputTienNhan.setAttribute("class", "form-control");
     inputTienNhan.setAttribute("id", "tien_nhan");
     inputTienNhan.setAttribute("placeholder", "Nhập tiền nhận");
     inputTienNhan.setAttribute("name", "tien_nhan");
-    inputTienNhan.addEventListener("input", ()=>{
+    inputTienNhan.addEventListener("input", () => {
         var total = document.getElementById("total");
         var inputTienThoi = document.getElementById("tien_thoi");
-        inputTienThoi.setAttribute("value",  inputTienNhan.value - total.value);
+        inputTienThoi.setAttribute("value", inputTienNhan.value - total.value);
     });
     divTienNhan.appendChild(inputTienNhan);
-    
+
     var labelTienNhan = document.createElement("label");
     labelTienNhan.setAttribute("for", "tien_nhan");
     labelTienNhan.innerHTML = "Tiền Nhận"
@@ -40,7 +41,7 @@ function displayOfflinePayment() {
     inputTienThoi.setAttribute("name", "tien_thoi");
     inputTienThoi.setAttribute("readonly", "true");
     divTienThoi.appendChild(inputTienThoi);
-    
+
     var labelTienThoi = document.createElement("label");
     labelTienThoi.setAttribute("for", "tien_thoi");
     labelTienThoi.innerHTML = "Tiền Thối"
@@ -64,8 +65,12 @@ function displayOnlinePayment() {
     while (content.firstChild) {
         content.removeChild(content.lastChild);
     }
+    document.getElementById("online_payment").style.display = "block";
 
     //xu ly giao dien online payment va goi api online payment o day
     //dung content de xu ly giao dien
 }
+
+
+
 

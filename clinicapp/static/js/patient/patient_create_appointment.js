@@ -80,9 +80,9 @@ function handlePaymentMethodChange() {
                 document.getElementById("bookAppointmentButton").style.display = "none";
                 document.getElementById("payAndBookAppointmentButton").style.display = "block";
                 document.getElementById("gateway").style.display = "block";
-                  document.querySelectorAll('input[name="way"]').forEach(function (radio) {
-        radio.checked = false;
-    });
+                document.querySelectorAll('input[name="way"]').forEach(function (radio) {
+                    radio.checked = false;
+                });
 
                 initializeTimeOptions(unavailableHoursString);
             })

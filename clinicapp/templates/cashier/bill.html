@@ -64,46 +64,72 @@
     </div>
 
     {%if error%}
-        <div class="d-flex flex-row-reverse">
-            <h1 class="text text-center text-danger">{{error}}</h1>
-        </div>
-        <div class="d-flex flex-row-reverse">
-            <a class="btn btn-outline-primary" href="/payment">Chọn phiếu khám khác</a>
-        </div>
+    <div class="d-flex flex-row-reverse">
+        <h1 class="text text-center text-danger">{{error}}</h1>
+    </div>
+    <div class="d-flex flex-row-reverse">
+        <a class="btn btn-outline-primary" href="/payment">Chọn phiếu khám khác</a>
+    </div>
     {%else%}
-        {%if not created%}
-            <div class="form-floating mt-3 mb-3 d-flex justify-content-around">
-                <div class="form-check">
-                    <input type="radio"
-                           class="form-check-input"
-                           id="radio_online"
-                           name="optradio"
-                           onclick="displayOnlinePayment()"
-                           value="radio_online"
-                           checked>
-                    <label class="form-check-label" for="radio_online">Thanh toán Online</label>
+    {%if not created%}
+    <div class="form-floating mt-3 mb-3 d-flex justify-content-around">
+        <div class="form-check">
+            <input type="radio"
+                   class="form-check-input"
+                   id="radio_online"
+                   name="optradio"
+                   onclick="displayOnlinePayment()"
+                   value="radio_online"
+                   >
+            <label class="form-check-label" for="radio_online">Thanh toán Online</label>
+        </div>
+        <div class="form-check">
+            <input type="radio"
+                   class="form-check-input"
+                   id="radio_offline"
+                   name="optradio"
+                   onclick="displayOfflinePayment()"
+                   value="radio_offline">
+            <label class="form-check-label" for="radio_offline">Thanh toán trực tiếp</label>
+        </div>
+    </div>
+    <div id="xuat-hoa-don">
+    </div>
+    <div style="display: none" id="online_payment" class="online_payment">
+        <div class="mb-3" id="gateway" style="display: block;">
+            <p class="mb-2">Cổng thanh toán:</p>
+            <div class="d-flex justify-content-center mb-3">
+                <div class="form-check me-3" style="padding: 5px 50px 0 0;">
+                    <label class="form-check-label" for="vnpay">VNPAY</label>
+                    <img src="/static/img/vnpay.png" style="width: 50px" alt="VNPAY"
+                         class="payment-icon">
+                    <input class="form-check-input" type="radio" name="way" id="vnpay" value="vnpay">
                 </div>
-                <div class="form-check">
-                    <input type="radio"
-                           class="form-check-input"
-                           id="radio_offline"
-                           name="optradio"
-                           onclick="displayOfflinePayment()"
-                           value="radio_offline">
-                    <label class="form-check-label" for="radio_offline">Thanh toán trực tiếp</label>
+                <div class="form-check" style="padding: 5px 0 0 50px;">
+                    <label class="form-check-label" for="momo">MOMO</label>
+                    <img src="/static/img/momo.png" style="width: 50px" alt="MOMO" class="payment-icon">
+                    <input class="form-check-input" type="radio" name="way" id="momo" value="momo">
                 </div>
-            </div>
-            <div id="xuat-hoa-don">
-            </div>
-        {%else%}
-            <div class="d-flex flex-row-reverse">
-                <h1 class="text text-center text-success">Hoá đơn xác nhận thành công</h1>
-            </div>
-            <div class="d-flex flex-row-reverse">
-                <a class="btn btn-outline-primary" href="/payment">Chọn phiếu khám khác</a>
             </div>
 
-        {%endif%}
+            <div class="d-grid">
+                <button  id="pay" class="btn btn-primary"
+                         style="display: block;">Thanh toán để đặt lịch hẹn
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    {%else%}
+    <div class="d-flex flex-row-reverse">
+        <h1 class="text text-center text-success">Hoá đơn xác nhận thành công</h1>
+    </div>
+    <div class="d-flex flex-row-reverse">
+        <a class="btn btn-outline-primary" href="/payment">Chọn phiếu khám khác</a>
+    </div>
+
+    {%endif%}
     {%endif%}
 </form>
 
