@@ -109,17 +109,20 @@ def register_user():
     return render_template('auth/register.html', err_msg=err_msg)
 
 
-@app.route('/api/patient/<int:patient_cid>', methods=['GET'])
+@app.route('/api/patient/<int:patient_cid>', methods=['POST'])
 @cross_origin()
 @roles_required([UserRole.DOCTOR])
 def get_patient_info(patient_cid):
-    patient = dao.get_patient_info(patient_cid=patient_cid)
+    scheduled_date = request.json.get('scheduled_date')
+    print(scheduled_date)
+    patient = dao.get_patient_info(patient_cid=patient_cid, scheduled_date=scheduled_date)
     if patient:
         patient_info = {
-            'id': patient.id,
-            'name': patient.name,
-            'phone': patient.phone,
-            'email': patient.email,
+            'id': patient[1],
+            'name': patient[0],
+            'phone': patient[2],
+            'email': patient[3],
+            'appointment_id': patient[4]
         }
         return jsonify(patient_info)
     else:
@@ -134,10 +137,11 @@ def prescription():
     categories = dao.get_categories()
     medicines = dao.get_medicines()
     units = dao.get_units()
+    scheduled_date = request.args.get('scheduled_date')
     if form.validate_on_submit():
         print("Create Success")
     return render_template('doctor/createprescription.html', form=form, medicines=medicines, cats=categories,
-                           units=units)
+                           units=units, scheduled_date=scheduled_date)
 
 
 @app.route('/prescription/create', methods=['POST'])
@@ -149,6 +153,7 @@ def create_prescription():
     patient_id = request.form.get('patient_id')
     symptoms = request.form.get('symptoms')
     diagnosis = request.form.get('diagnosis')
+    appointment_id = request.form.get('appointment_id')
     usages = request.form.getlist('list-usage')
     units = request.form.getlist('list-unit')
     quantities = request.form.getlist('list-quantity')
@@ -156,7 +161,7 @@ def create_prescription():
     dao.update_list_appointment(patient_id)
     dao.create_prescription(doctor_id=doctor_id, patient_id=patient_id, date=date, diagnosis=diagnosis,
                             symptoms=symptoms, usages=usages, quantities=quantities, medicines=medicines,
-                            medicine_units=units)
+                            medicine_units=units, appointment_id=appointment_id)
     flash("Tạo phiếu khám cho bệnh nhân ID%s thành công!" % patient_id, "success")
     return redirect(url_for('prescription'))
 
