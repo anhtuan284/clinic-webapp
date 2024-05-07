@@ -78,8 +78,18 @@ function cancelCreatePres() {
 }
 
 function fetchPatientInfo() {
-    const patientId = document.getElementById('patient_cid').value;
-    fetch(`/api/patient/${patientId}`)
+    const patientCid = document.getElementById('patient_cid').value;
+    const scheduled_date = document.getElementById('scheduled_date').value;
+    console.log(scheduled_date)
+    fetch(`/api/patient/${patientCid}`, {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+            scheduled_date: scheduled_date
+        })
+    })
         .then(response => {
             if (!response.ok) {
                 throw new Error('Không thể tìm thấy bệnh nhân');
@@ -89,6 +99,7 @@ function fetchPatientInfo() {
         .then(data => {
             document.getElementById('patient-name').value = data.name;
             document.getElementById('patient_id').value = data.id;
+            document.getElementById('appointment_id').value = data.appointment_id;
         })
         .catch(error => {
             alert(error.message);

@@ -18,8 +18,8 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink1">
                         <li><a class="dropdown-item" href="/prescription">Lập phiếu khám</a></li>
-<!--                        <li><a class="dropdown-item" href="#">Tiền sử bệnh</a></li>-->
-<!--                        <li><a class="dropdown-item" href="#">Tra cứu thuốc</a></li>-->
+                        <!--                        <li><a class="dropdown-item" href="#">Tiền sử bệnh</a></li>-->
+                        <!--                        <li><a class="dropdown-item" href="#">Tra cứu thuốc</a></li>-->
                     </ul>
                 </li>
                 {% elif current_user.role.value == 'nurse' %}
@@ -52,6 +52,14 @@
                 </li>
                 {% endif %}
                 {% endif %}
+                {%if current_user.is_authenticated and current_user.role.value == 'doctor'%}
+                    <li class="nav-item">
+                        <form class="d-flex" method="get" action="/prescription">
+                            <input class="form-control me-2" name="scheduled_date" type="date" placeholder="Nhập ngày khám">
+                            <button class="btn btn-primary" type="submit">Hiện form</button>
+                        </form>
+                    </li>
+                {%endif%}
             </ul>
             <ul class="navbar-nav ms-auto">
                 {% if current_user.is_authenticated %}

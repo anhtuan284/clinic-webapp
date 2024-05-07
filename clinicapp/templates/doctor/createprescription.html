@@ -3,9 +3,10 @@
 {% block title %}Tạo phiếu khám{% endblock %}
 
 
-    {% block content %}
+{% block content %}
+{%if scheduled_date %}
 <div class="container" style="min-height: 75vh">
-
+    {{scheduled_date}}
     <form action="/prescription/create" method="POST">
         {{ form.csrf_token }}
         <p>{{form.hidden_tag()}}</p>
@@ -24,6 +25,10 @@
             <div class="col-md-6 shadow">
                 <h2 class="text-center">Bệnh nhân</h2>
                 <div class="row my-2">
+                    <div class="mb-3 my-2">
+                        {{ form.scheduled_date.label(class="form-label fw-bold") }}
+                        {{ form.scheduled_date(class="form-control", id="scheduled_date", value=scheduled_date) }}
+                    </div>
                     <div class="col-md-6">
                         {{ form.patient_cid.label(class="form-label fw-bold") }}
                         {{ form.patient_cid(class="form-control", onblur="fetchPatientInfo()")}}
@@ -36,6 +41,11 @@
                     <div class="col-md-4 my-2">
                         <a class="btn btn-secondary" onclick="viewPatientHistory()">Xem lịch sử khám</a>
                     </div>
+                </div>
+
+                <div class="mb-3 my-2">
+                    {{ form.appointment_id.label(class="form-label fw-bold") }}
+                    {{ form.appointment_id(class="form-control", id="appointment_id") }}
                 </div>
                 <div class="mb-3 my-2">
                     {{ form.symptoms.label(class="form-label fw-bold") }}
@@ -125,5 +135,5 @@
 
     <script src="../static/js/prescription.js"></script>
 </div>
-
-    {% endblock %}
+{%endif%}
+{% endblock %}

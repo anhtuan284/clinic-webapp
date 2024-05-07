@@ -203,9 +203,9 @@ def update_list_appointment(patient_id):
 
 
 def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines,
-                        medicine_units):
+                        medicine_units, appointment_id):
     new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id,
-                            doctor_id=doctor_id)
+                            doctor_id=doctor_id, appointment_id=appointment_id)
     db.session.add(new_pres)
     db.session.commit()
     for i in range(len(medicines)):
@@ -318,12 +318,27 @@ def get_bill_by_prescription_id(prescription_id):
     return Bill.query.filter_by(prescription_id=prescription_id).all()
 
 
-def get_patient_info(patient_cid=None):
-    if patient_cid:
-        patient = db.session.query(User).filter_by(cid=patient_cid).first()
+def get_patient_info(patient_cid=None, scheduled_date=None):
+    if patient_cid and scheduled_date:
+        patient = db.session.query(User.name, User.id, User.phone, User.email, Appointment.id)\
+            .filter(User.id == Appointment.patient_id)\
+            .filter(Appointment.scheduled_date == scheduled_date)\
+            .filter(User.cid == patient_cid).first()
+
+        print(patient)
+
         return patient
     return None
 
+
+# def get_patient_info(patient_cid=None, scheduled_date=None):
+#     if patient_cid and scheduled_date:
+#         patient = db.session.query(User)\
+#             .join(Appointment, User.id == Appointment.patient_id)\
+#             .filter(User.cid == patient_cid, Appointment.scheduled_date == scheduled_date, Appointment.status == True)\
+#             .first()
+#         return patient
+#     return None
 
 def get_list_appointment_no_confirm_by_date(date):
     if date is not None:
