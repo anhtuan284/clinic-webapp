@@ -11,9 +11,12 @@ function displayOfflinePayment() {
     content.appendChild(divTienNhan);
 
     var inputTienNhan = document.createElement("input");
+    var inputTotal = document.getElementById('total')
     inputTienNhan.setAttribute("type", "number");
     inputTienNhan.setAttribute("class", "form-control");
     inputTienNhan.setAttribute("id", "tien_nhan");
+    inputTienNhan.setAttribute("required", "True");
+    inputTienNhan.setAttribute("min", inputTotal.value);
     inputTienNhan.setAttribute("placeholder", "Nhập tiền nhận");
     inputTienNhan.setAttribute("name", "tien_nhan");
     inputTienNhan.addEventListener("input", () => {

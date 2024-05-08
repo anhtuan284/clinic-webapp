@@ -83,7 +83,6 @@ class PolicyAdminView(AuthenticatedView):
     }
 
 
-
 class MedicineAdminView(AuthenticatedView):
     column_list = ['name', 'gia', 'usage', 'exp']
     column_searchable_list = ['name']
@@ -217,7 +216,7 @@ admin = Admin(app, name='Clinic Website', template_mode='bootstrap4')
 
 admin.add_view(ThuocView(name="Thuốc"))
 admin.add_view(UnitAdminView(Unit, db.session, name="Đơn vị"))
-admin.add_view(MyMedicineUnitView(MedicineUnit, db.session, name="Thuốc-Đơn vị"))
+admin.add_view(MyMedicineUnitView(MedicineUnit, db.session, name="Thêm đơn vị cho thuốc"))
 admin.add_view(MyCategoryView(Category, db.session, name='Danh mục'))
 admin.add_view(MyUserView(User, db.session))
 admin.add_view(PolicyAdminView(Policy, db.session, name="Quy Định"))

@@ -174,15 +174,7 @@ def prescription():
     categories = dao.get_categories()
     medicines = dao.get_medicines()
     units = dao.get_units()
-    scheduled_date = request.args.get('scheduled_date')
-    if form.validate_on_submit():
-        print("Create Success")
-#     return render_template('doctor/createprescription.html',
-#                            form=form, medicines=medicines, cats=categories,
-#                            units=units, scheduled_date=scheduled_date)
-# =======
-    return render_template('doctor/createprescription.html', form=form, appointment=appointment, medicines=medicines,
-                           cats=categories,
+    return render_template('doctor/createprescription.html', form=form, appointment=appointment, medicines=medicines, cats=categories,
                            units=units)
 
 

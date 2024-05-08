@@ -120,7 +120,7 @@ class Appointment(BaseModel):
 
 class Prescription(db.Model):
     id = Column(Integer, autoincrement=True, primary_key=True)
-    date = Column(Date, default=lambda: datetime.now().date())
+    date = Column(Date, default=lambda: datetime.date.today())
     symptoms = Column(String(1000))
     diagnosis = Column(String(1000))
 
@@ -131,7 +131,7 @@ class Prescription(db.Model):
     medicine_details = relationship("MedicineDetail", backref='prescription', lazy=True)
 
     def __str__(self):
-        return f"Phieu khám ngày {self.date}, triệu chứng {self.symptoms}, chuẩn đoán {self.diagnosis}"
+        return f"Phiếu khám ngày {self.date}, triệu chứng {self.symptoms}, chuẩn đoán {self.diagnosis}"
 
 
 class Medicine(BaseModel):
