@@ -2,9 +2,36 @@
 
 {% block body %}
 
-{% if current_user.is_authenticated %}
+{% if current_user.is_authenticated and current_user.role.value == 'admin'%}
 <h1 class="text-info">CHÀO MỪNG BẠN ĐẾN TRANG QUẢN TRỊ!</h1>
 <h2 class="text-success">Chào mừng bạn <span>{{current_user.name}} đã quay lại!</span></h2>
+<h3 class="text text-info text-center">Chọn các mục quản trị sau đây: </span></h3>
+<div class="container">
+    <div class="d-flex row justify-content-space-between">
+        <a class="col col-5 btn btn-outline-danger m-3" href="/admin/thuocview/">
+            Thuốc
+        </a>
+        <a class="col col-5 btn btn-outline-danger m-3" href="/admin/unit/">
+            Đơn Vị
+        </a>
+        <a class="col col-5 btn btn-outline-danger m-3"  href="/admin/medicineunit/">
+            Thuốc-Đơn Vị
+        </a>
+        <a class="col col-5 btn btn-outline-danger m-3" href="/admin/category/">
+            Danh Mục
+        </a>
+        <a class="col col-5 btn btn-outline-danger m-3" href="/admin/user/">
+            Người Dùng
+        </a>
+        <a class="col col-5 btn btn-outline-danger m-3" href="/admin/policy/">
+            Quy Định
+        </a>
+        <a class="col col-5 btn btn-outline-danger m-3" href="/admin/statsview/">
+            Thống Kê
+        </a>
+
+    </div>
+</div>
 {% else %}
 <h1 class="text-center text-info mt-1">ĐĂNG NHẬP NGƯỜI DÙNG</h1>
 <form method="post" action="/admin-login">

@@ -41,15 +41,17 @@
     <div class="form-group mt-3 mb-3">
         <label for="ds_danh_muc">Danh mục:</label>
         <select class="form-control" id="ds_danh_muc" name="ds_danh_muc" multiple>
-            {%if thuoc%}
-                {%for c in cates%}
+            {%for c in cates%}
+                {%if currentcates%}
                     {%if c in currentcates%}
                         <option value="{{c.id}}" selected>{{c.name}}</option>
                     {%else%}
                         <option value="{{c.id}}" >{{c.name}}</option>
                     {%endif%}
-                {%endfor%}
-            {%endif%}
+                {%else%}
+                    <option value="{{c.id}}" >{{c.name}}</option>
+                {%endif%}
+            {%endfor%}
         </select>
     </div>
 

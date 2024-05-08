@@ -47,6 +47,9 @@ class Admin(db.Model):
 
     policies = relationship('Policy', backref='admin', lazy=True)
 
+    def __str__(self):
+        return User.query.get(self.id).name
+
 
 class Doctor(db.Model):
     id = Column(Integer, ForeignKey(User.id), primary_key=True)
@@ -117,7 +120,7 @@ class Appointment(BaseModel):
 
 class Prescription(db.Model):
     id = Column(Integer, autoincrement=True, primary_key=True)
-    date = Column(Date, default=lambda: datetime.now().date())
+    date = Column(Date, default=lambda: datetime.date.today())
     symptoms = Column(String(1000))
     diagnosis = Column(String(1000))
 
@@ -128,7 +131,7 @@ class Prescription(db.Model):
     medicine_details = relationship("MedicineDetail", backref='prescription', lazy=True)
 
     def __str__(self):
-        return f"Phieu khám ngày {self.date}, triệu chứng {self.symptoms}, chuẩn đoán {self.diagnosis}"
+        return f"Phiếu khám ngày {self.date}, triệu chứng {self.symptoms}, chuẩn đoán {self.diagnosis}"
 
 
 class Medicine(BaseModel):
@@ -143,7 +146,7 @@ class Medicine(BaseModel):
     medicine_units = relationship("MedicineUnit", backref='medicine', lazy=True)
 
     def __str__(self):
-        return f"Thuoc {self.name}"
+        return f"Thuốc {self.name}"
 
 
 class Unit(db.Model):
@@ -151,6 +154,9 @@ class Unit(db.Model):
     name = Column(String(100), nullable=False)
 
     medicine_units = relationship("MedicineUnit", backref='unit', lazy=True)
+
+    def __str__(self):
+        return self.name
 
 
 class MedicineUnit(db.Model):
@@ -170,8 +176,7 @@ class MedicineDetail(db.Model):
     medicine_unit_id = Column(Integer, ForeignKey(MedicineUnit.id))
 
     def __str__(self):
-        return 'prescription_id: ' + str(self.prescription_id) + \
-            ' medicine_id: ' + str(self.medicine_id)
+        return 'Phiếu khám ngày: ' + str(self.prescription.date) + ', id: ' + str(self.prescription_id)
 
 
 class Bill(BaseModel):
