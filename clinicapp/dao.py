@@ -302,10 +302,7 @@ def get_is_paid_by_prescription_id(prescription_id):
     # Assuming Prescription and Appointment are SQLAlchemy model classes
     appointment_id = Prescription.query.filter_by(id=prescription_id).first().appointment_id
     if appointment_id:
-        appointment = Appointment.query.filter_by(id=appointment_id).first()
-        if appointment:
-            print(appointment.is_paid)
-            return appointment.is_paid
+        return Appointment.query.filter_by(id=appointment_id).first().is_paid
     return None  # Or any other default value indicating no information foun
 
 
