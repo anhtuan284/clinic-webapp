@@ -130,8 +130,10 @@
 {% if appointment_booked %}
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
     <div class="card" style="width: 30rem;">
-        <div class="card-body">
+        <div class="card-header bg-primary text-white justify-content-center d-flex">
             <h5 class="card-title">THÔNG TIN LỊCH HẸN ĐANG CÓ</h5>
+        </div>
+        <div class="card-body">
             <p class="card-text"><b>Tên:</b> {{ current_user.name }}</p>
             <p class="card-text"><b>Số CCCD:</b> {{ current_user.cid }}</p>
             <p class="card-text"><b>Ngày Sinh:</b> {{ current_user.dob }}</p>

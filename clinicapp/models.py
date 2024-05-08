@@ -1,4 +1,6 @@
 import datetime
+import hashlib
+
 from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Date, Time, DateTime, DECIMAL
 from clinicapp import app, db, utils
 from sqlalchemy.orm import relationship
@@ -82,7 +84,7 @@ class Policy(db.Model):
     name = Column(String(100))
     value = Column(String(100), nullable=False)
 
-    admin_id = Column(Integer, ForeignKey(Admin.id), default=6, nullable=False)
+    admin_id = Column(Integer, ForeignKey(Admin.id), default=1, nullable=False)
 
 
 class AppointmentList(BaseModel):
@@ -107,6 +109,7 @@ class Appointment(BaseModel):
     appointment_list_id = Column(Integer, ForeignKey(AppointmentList.id), nullable=True)
     patient_id = Column(Integer, ForeignKey(Patient.id), nullable=False)
 
+    prescription = relationship('Prescription', backref="appointment", lazy=True)
 
     def __str__(self):
         return f"Lịch khám ngày {self.scheduled_date}, giờ {self.scheduled_hour}, trạng thái {self.status}"
@@ -117,9 +120,11 @@ class Prescription(db.Model):
     date = Column(Date, default=lambda: datetime.now().date())
     symptoms = Column(String(1000))
     diagnosis = Column(String(1000))
+
     doctor_id = Column(Integer, ForeignKey(Doctor.id), nullable=False)
     patient_id = Column(Integer, ForeignKey(Patient.id), nullable=False)
     appointment_id = Column(Integer, ForeignKey(Appointment.id))
+
     medicine_details = relationship("MedicineDetail", backref='prescription', lazy=True)
 
     def __str__(self):
@@ -159,6 +164,7 @@ class MedicineUnit(db.Model):
 class MedicineDetail(db.Model):
     quantity = Column(Integer)
     usage = Column(String(100))
+
     prescription_id = Column(Integer, ForeignKey(Prescription.id), primary_key=True)
     medicine_id = Column(Integer, ForeignKey(Medicine.id), primary_key=True)
     medicine_unit_id = Column(Integer, ForeignKey(MedicineUnit.id))
@@ -206,12 +212,35 @@ class HistoryOnlinePayment(BaseModel):
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
-
         # db.create_all()
+        # new_appointment4 = Appointment(
+        #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
+        #     scheduled_hour=datetime.time(9, 30),  # Giờ đặt cuộc hẹn
+        #     is_confirm=False,  # Trạng thái xác nhận
+        #     is_paid=False,  # Trạng thái thanh toán
+        #     status=True,  # Trạng thái cuộc hẹn
+        #     patient_id=3  # ID của bệnh nhân
+        # )
+        # db.session.add(new_appointment4)
+        # db.session.commit()
         # order = HistoryOnlinePayment(amount=200000, response_code="aadasdasdasdas", gateway_name="vnpay", patient_id=1)
         # db.session.add(order)
         # db.session.commit()
+
+        new_user4 = User(
+            name='Thao Van',
+            phone='0123456759',
+            avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+            email='cashier11@example.com',
+            address='Clinic',
+            username='cashier',
+            password=str(utils.hash_password("123")),
+            cid='68543151894',
+            gender=Gender.FEMALE,
+            role=UserRole.CASHIER,
+        )
+        db.session.add(new_user4)
+        db.session.commit()
 
         # db.create_all()
         # new_user1 = User(

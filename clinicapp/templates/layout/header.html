@@ -11,16 +11,11 @@
                 </li>
                 {% if current_user.is_authenticated %}
                 {% if current_user.role.value == 'doctor' %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink1" role="button"
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        Khám bệnh
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink1">
-                        <li><a class="dropdown-item" href="/prescription">Lập phiếu khám</a></li>
-                        <!--                        <li><a class="dropdown-item" href="#">Tiền sử bệnh</a></li>-->
-                        <!--                        <li><a class="dropdown-item" href="#">Tra cứu thuốc</a></li>-->
-                    </ul>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/list-patient">Danh sách bệnh nhân</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">Tra cứu thuốc</a>
                 </li>
                 {% elif current_user.role.value == 'nurse' %}
                 <li class="nav-item dropdown">
@@ -29,7 +24,8 @@
                         Danh sách khám bệnh
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink1">
-                        <li><a class="dropdown-item" href="/nurse/confirm_appointment">Xác nhận và lập danh sách</a></li>
+                        <li><a class="dropdown-item" href="/nurse/confirm_appointment">Xác nhận và lập danh sách</a>
+                        </li>
                         <li><a class="dropdown-item" href="/nurse/approved_appointment">Xem danh sách đã lập</a></li>
                     </ul>
                 </li>
@@ -52,14 +48,14 @@
                 </li>
                 {% endif %}
                 {% endif %}
-                {%if current_user.is_authenticated and current_user.role.value == 'doctor'%}
-                    <li class="nav-item">
-                        <form class="d-flex" method="get" action="/prescription">
-                            <input class="form-control me-2" name="scheduled_date" type="date" placeholder="Nhập ngày khám">
-                            <button class="btn btn-primary" type="submit">Hiện form</button>
-                        </form>
-                    </li>
-                {%endif%}
+<!--                {%if current_user.is_authenticated and current_user.role.value == 'doctor'%}-->
+<!--                <li class="nav-item">-->
+<!--                    <form class="d-flex" method="get" action="/prescription">-->
+<!--                        <input class="form-control me-2" name="scheduled_date" type="date" placeholder="Nhập ngày khám">-->
+<!--                        <button class="btn btn-primary" type="submit">Hiện form</button>-->
+<!--                    </form>-->
+<!--                </li>-->
+<!--                {%endif%}-->
             </ul>
             <ul class="navbar-nav ms-auto">
                 {% if current_user.is_authenticated %}
