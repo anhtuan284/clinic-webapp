@@ -1,6 +1,6 @@
 import hashlib
 
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, update
 from sqlalchemy.orm import sessionmaker, joinedload
 
 from clinicapp import db
@@ -427,3 +427,29 @@ def get_prescription_by_patient(patient_id):
 
 def get_patient_by_id(patient_id):
     return db.session.query(Patient).get(patient_id)
+
+
+def get_appointment_booked_by_patient_id(patient_id):
+    current_datetime = datetime.datetime.now()
+    current_date = current_datetime.date()
+    current_time = current_datetime.time()
+    return Appointment.query.filter(
+        Appointment.patient_id == patient_id,
+        (Appointment.scheduled_date == current_date) &
+        (Appointment.scheduled_hour >= current_time) |
+        (Appointment.scheduled_date > current_date)
+    ).first()
+
+
+def make_the_list(card_data):
+    appointment_ids = [int(card['appointment_id']) for card in card_data]
+    db.session.execute(update(Appointment).where(Appointment.id.in_(appointment_ids)).values(status=True))
+    for card in card_data:
+        appointment_id = int(card['appointment_id'])
+        appointment = Appointment.query.get(appointment_id)
+        if appointment:
+            scheduled_date = appointment.scheduled_date
+            appointment_list = AppointmentList.query.filter_by(scheduled_date=scheduled_date).first()
+            if appointment_list:
+                appointment.appointment_list_id = appointment_list.id
+    db.session.commit()
