@@ -560,7 +560,7 @@ def pay():
     q = request.args.get('q') or session.get('date')
     prescriptions = None
     if q:
-        prescriptions = get_unpaid_prescriptions_by_scheduled_date(date=q)
+        prescriptions = get_unpaid_prescriptions_by_scheduled_date(scheduled_date=q)
         print(prescriptions)
         session['date'] = q
 
@@ -594,13 +594,11 @@ def do_bill(prescription_id):
         current_medicines = get_medicines_by_prescription_id(prescription_id)
         medicine_price = get_medicine_price_by_prescription_id(prescription_id)
 
-        # cai nay khi nao thong nhat policy xong thi replace value khac
         service_price = get_policy_value_by_name('tien_kham')
         if not service_price:
             service_price = 0
         total = medicine_price
         is_paid = get_is_paid_by_prescription_id(prescription_id)
-        print(total)
         print(is_paid)
         if not is_paid:
             total += service_price
