@@ -1,6 +1,6 @@
 import hashlib
 
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, update
 from sqlalchemy.orm import sessionmaker, joinedload
 
 from clinicapp import db
@@ -419,8 +419,9 @@ def get_date_range():
 
 def get_approved_appointments_by_date(date):
     # Thực hiện join giữa bảng Appointment và User thông qua trường user_id
-    approved_appointments = db.session.query(Appointment, User).filter(Appointment.patient_id == User.id).filter(
-        Appointment.status == True, Appointment.scheduled_date == date).all()
+    approved_appointments = (db.session.query(Appointment, User)
+                             .filter(Appointment.patient_id == User.id)
+                             .filter(Appointment.status == True, Appointment.scheduled_date == date, Appointment.prescription == None).all())
     return approved_appointments
 
 
@@ -430,7 +431,6 @@ def get_prescription_by_patient(patient_id):
 
 def get_patient_by_id(patient_id):
     return db.session.query(Patient).get(patient_id)
-
 
 def get_doctor_by_id(doctor_id):
     return User.query.get(id=doctor_id)
@@ -446,3 +446,29 @@ def get_all_doctor():
 
 def get_all_patient():
     return User.query.filter_by(role=UserRole.PATIENT).all()
+
+def get_appointment_booked_by_patient_id(patient_id):
+    current_datetime = datetime.datetime.now()
+    current_date = current_datetime.date()
+    current_time = current_datetime.time()
+    return Appointment.query.filter(
+        Appointment.patient_id == patient_id,
+        (Appointment.scheduled_date == current_date) &
+        (Appointment.scheduled_hour >= current_time) |
+        (Appointment.scheduled_date > current_date)
+    ).first()
+
+
+def make_the_list(card_data):
+    appointment_ids = [int(card['appointment_id']) for card in card_data]
+    db.session.execute(update(Appointment).where(Appointment.id.in_(appointment_ids)).values(status=True))
+    for card in card_data:
+        appointment_id = int(card['appointment_id'])
+        appointment = Appointment.query.get(appointment_id)
+        if appointment:
+            scheduled_date = appointment.scheduled_date
+            appointment_list = AppointmentList.query.filter_by(scheduled_date=scheduled_date).first()
+            if appointment_list:
+                appointment.appointment_list_id = appointment_list.id
+    db.session.commit()
+

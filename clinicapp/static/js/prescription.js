@@ -51,10 +51,10 @@ function updateTable() {
                                 <div style="width:100%;">${listMedicines[i].unit_text}<div/>
                             </td>
                             <td>
-                                <input class="border-0" style="outline: none; width:100%;" name="list-quantity" value="${listMedicines[i].quantity}"/>
+                                <input class="border-0" style="outline: none; width:100%;" name="list-quantity" disabled value="${listMedicines[i].quantity}"/>
                             </td>
                             <td>
-                                <input class="border-0" style="outline: none; width:100%;" name="list-usage" value="${listMedicines[i].usage}"/>
+                                <input class="border-0" style="outline: none; width:100%;" name="list-usage" disabled value="${listMedicines[i].usage}"/>
                             </td>
                             <td>
                                 <div class="m-auto"><input type="button" class="btn btn-danger py-1" onclick="deleteRow(this)" value="Xóa"/></div>
@@ -151,6 +151,7 @@ function fetchMedicineUnits(medicineId) {
 
 function viewPatientHistory() {
     const patientId = document.getElementById('patient_id').value;
+    console.log(patientId)
     if (!patientId || patientId === '' || typeof patientId === undefined || patientId === null || patientId === '0') {
         alert("Không tìm thấy bệnh nhân này !");
     } else {

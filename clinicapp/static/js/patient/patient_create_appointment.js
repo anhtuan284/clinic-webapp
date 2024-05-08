@@ -84,7 +84,7 @@ function handlePaymentMethodChange() {
                     radio.checked = false;
                 });
 
-                initializeTimeOptions(unavailableHoursString);
+                initializeTimeOptions(unavailableHoursString, selectedDate);
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -102,7 +102,7 @@ function handlePaymentMethodChange() {
                 document.getElementById("payAndBookAppointmentButton").style.display = "none";
                 document.getElementById("gateway").style.display = "none";
 
-                initializeTimeOptions(unavailableHoursString);
+                initializeTimeOptions(unavailableHoursString, selectedDate);
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -122,7 +122,41 @@ document.querySelectorAll('input[name="payment_method"]').forEach(function (radi
 });
 
 // Hàm khởi tạo các tùy chọn thời gian dựa trên dữ liệu từ fetch
-function initializeTimeOptions(unavailableHoursString) {
+function initializeTimeOptions(unavailableHoursString, dateInput) {
+    var currentDate = new Date();
+    var currentDay = currentDate.getDate();
+    var currentMonth = currentDate.getMonth() + 1;
+    var currentYear = currentDate.getFullYear();
+
+    // Format ngày hiện tại
+    var formattedCurrentDate = currentYear + '-' + (currentMonth < 10 ? '0' : '') + currentMonth + '-' + (currentDay < 10 ? '0' : '') + currentDay;
+
+    // Lấy giờ hiện tại
+    var currentHour = currentDate.getHours();
+    var currentMinute = currentDate.getMinutes();
+
+    // Kiểm tra nếu ngày đã chọn khác ngày hiện tại
+    if (dateInput === formattedCurrentDate) {
+        // Ngày đã chọn là ngày hiện tại, lấy giờ hiện tại
+        var startTime = currentHour + ':' + (currentMinute < 10 ? '0' : '') + currentMinute;
+        // Gán giờ bắt đầu vào thẻ input giờ
+        document.getElementById('timepicker').value = startTime;
+
+        // Thêm các giờ trước giờ hiện tại vào mảng unavailableHours
+        var currentHourMinutes = currentHour * 60 + currentMinute;
+        var unavailableHours = JSON.parse(unavailableHoursString);
+        for (var i = 0; i < currentHourMinutes; i += 15) {
+            var hour = Math.floor(i / 60);
+            var minute = i % 60;
+            var formattedHour = hour < 10 ? '0' + hour : hour;
+            var formattedMinute = minute < 10 ? '0' + minute : minute;
+            var startTimeFormatted = formattedHour + ':' + formattedMinute;
+            unavailableHours.push(startTimeFormatted);
+        }
+        // Cập nhật unavailableHoursString
+        unavailableHoursString = JSON.stringify(unavailableHours);
+    }
+
     var startTime = 7 * 60; // 7:00 AM tính bằng phút
     var endTime = 21 * 60; // 9:00 PM tính bằng phút
     var interval = 15; // Khoảng thời gian giữa mỗi tùy chọn, tính bằng phút
@@ -160,4 +194,102 @@ function initializeTimeOptions(unavailableHoursString) {
 
     // Xóa các tùy chọn hiện có và thêm các tùy chọn mới vào select box
     $('#timepicker').empty().append(availableStartTimes.map(option => $('<option>', option)));
+}
+
+// Hàm khởi tạo các tùy chọn thời gian dựa trên dữ liệu từ fetch
+// function initializeTimeOptions(unavailableHoursString, dateInput) {
+//     var currentDate = new Date();
+//     var currentDay = currentDate.getDate();
+//     var currentMonth = currentDate.getMonth() + 1;
+//     var currentYear = currentDate.getFullYear();
+//
+// // Format ngày hiện tại
+//     var formattedCurrentDate = currentYear + '-' + (currentMonth < 10 ? '0' : '') + currentMonth + '-' + (currentDay < 10 ? '0' : '') + currentDay;
+//
+// // Lấy giờ hiện tại
+//     var currentHour = currentDate.getHours();
+//     var currentMinute = currentDate.getMinutes();
+//
+// // Lấy thẻ input ngày
+//     var dateInput = document.getElementById('datepicker').value;
+//
+// // Kiểm tra nếu ngày đã chọn khác ngày hiện tại
+//     if (dateInput === formattedCurrentDate) {
+//         // Ngày đã chọn là ngày hiện tại, lấy giờ hiện tại
+//         var startTime = currentHour + ':' + (currentMinute < 10 ? '0' : '') + currentMinute;
+//         // Gán giờ bắt đầu vào thẻ input giờ
+//         document.getElementById('timepicker').value = startTime;
+//     }
+//     var startTime = 7 * 60; // 7:00 AM tính bằng phút
+//     var endTime = 21 * 60; // 9:00 PM tính bằng phút
+//     var interval = 15; // Khoảng thời gian giữa mỗi tùy chọn, tính bằng phút
+//
+//     // Parse unavailableHoursString thành một mảng JavaScript
+//     var unavailableHours = JSON.parse(unavailableHoursString);
+//
+//     // Tạo một mảng chứa tất cả các giờ bắt đầu không bị ảnh hưởng bởi unavailableHours
+//     var availableStartTimes = [];
+//
+//     // Duyệt qua các giờ bắt đầu và lọc ra các giờ khả dụng
+//     for (var i = startTime; i < endTime; i += interval) {
+//         var hour = Math.floor(i / 60);
+//         var minute = i % 60;
+//
+//         var formattedHour = hour < 10 ? '0' + hour : hour;
+//         var formattedMinute = minute < 10 ? '0' + minute : minute;
+//
+//         var startTimeFormatted = formattedHour + ':' + formattedMinute;
+//
+//         // Nếu giờ bắt đầu không tồn tại trong unavailableHours, thêm vào mảng availableStartTimes
+//         if (!unavailableHours.includes(startTimeFormatted)) {
+//             var endTimeMinutes = i + interval;
+//             var endHour = Math.floor(endTimeMinutes / 60);
+//             var endMinute = endTimeMinutes % 60;
+//
+//             var formattedEndHour = endHour < 10 ? '0' + endHour : endHour;
+//             var formattedEndMinute = endMinute < 10 ? '0' + endMinute : endMinute;
+//
+//             var endTimeFormatted = formattedEndHour + ':' + formattedEndMinute;
+//
+//             availableStartTimes.push({value: i, text: startTimeFormatted + ' - ' + endTimeFormatted});
+//         }
+//     }
+//
+//     // Xóa các tùy chọn hiện có và thêm các tùy chọn mới vào select box
+//     $('#timepicker').empty().append(availableStartTimes.map(option => $('<option>', option)));
+// }
+
+function cancelAppointmentButton(appointment_booked_id) {
+    Swal.fire({
+        title: 'Xác nhận hủy lịch hẹn',
+        text: 'Bạn có chắc chắn muốn hủy lịch hẹn này không?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Đồng ý',
+        cancelButtonText: 'Hủy bỏ'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            cancelAppointment(appointment_booked_id);
+        }
+    });
+}
+
+function cancelAppointment(appointment_id) {
+    fetch("/api/update_appointment?appointment_id=" + appointment_id + "&status=cancelled", {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    })
+        .then(response => {
+            if (response.ok) {
+                // Reload trang khi nhận được mã trạng thái HTTP 200
+                window.location.reload();
+            } else {
+                console.error('Có lỗi khi hủy lịch hẹn:', response.statusText);
+            }
+        })
+        .catch(error => console.error('Có lỗi khi thực hiện fetch:', error));
 }

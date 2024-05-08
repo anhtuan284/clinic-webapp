@@ -45,7 +45,7 @@ class PrescriptionForm(FlaskForm):
     patient_cid = IntegerField("CCCD bệnh nhân", validators=[DataRequired(), Length(min=9, max=12), Regexp('^[0-9]*$', message="CCCD chỉ chứa số")])
     name = StringField("Họ tên", validators=[DataRequired()])
     diagnosis = TextAreaField("Chẩn đoán", validators=[DataRequired()])
-    scheduled_date = DateField("Ngày Khám", validators=[DataRequired()])
+    # scheduled_date = DateField("Ngày Khám", validators=[DataRequired()])
     appointment_id = IntegerField("Mã phiếu khám", validators=[DataRequired()])
     advice = TextAreaField("Lời dặn")
     symptoms = StringField("Triệu chứng", validators=[DataRequired()])
