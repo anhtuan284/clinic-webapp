@@ -99,7 +99,7 @@ function change_confirm(id, scheduled_date, scheduled_hour) {
 }
 
 function rejectAppointment(appointmentId, userId) {
-    fetch("/nurse/status-change?appointment_id=" + appointmentId + "&user_id=" + userId + "&status=cancelled", {
+    fetch("/api/update_appointment?appointment_id=" + appointmentId + "&user_id=" + userId + "&status=cancelled", {
         method: "PATCH", headers: {
             "Content-Type": "application/json"
         }
@@ -175,15 +175,11 @@ function card_data() {
 
 function create_list_for_date() {
     create_list_by_date()
-    var cardData = card_data
-    ()
-    console.log(cardData)
-    console.log(1)
-    console.log(1)
-    console.log(cardData)
+    var cardData = card_data()
+
     // Gửi dữ liệu cardData đến server
-    fetch('/nurse/process_card_data', {
-        method: 'POST', headers: {
+    fetch('/api/update_appointment?status=approved', {
+        method: 'PATC', headers: {
             'Content-Type': 'application/json'
         }, body: JSON.stringify(cardData)
     }).then(function (response) {
