@@ -179,7 +179,7 @@ function create_list_for_date() {
 
     // Gửi dữ liệu cardData đến server
     fetch('/api/update_appointment?status=approved', {
-        method: 'PATC', headers: {
+        method: 'PATCH', headers: {
             'Content-Type': 'application/json'
         }, body: JSON.stringify(cardData)
     }).then(function (response) {

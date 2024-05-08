@@ -416,8 +416,9 @@ def get_date_range():
 
 def get_approved_appointments_by_date(date):
     # Thực hiện join giữa bảng Appointment và User thông qua trường user_id
-    approved_appointments = db.session.query(Appointment, User).filter(Appointment.patient_id == User.id).filter(
-        Appointment.status == True, Appointment.scheduled_date == date).all()
+    approved_appointments = (db.session.query(Appointment, User)
+                             .filter(Appointment.patient_id == User.id)
+                             .filter(Appointment.status == True, Appointment.scheduled_date == date, Appointment.prescription == None).all())
     return approved_appointments
 
 

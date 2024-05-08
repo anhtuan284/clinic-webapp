@@ -1,0 +1,95 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Danh sách bệnh nhân{% endblock %}
+
+{% block content %}
+
+
+<div class="container ">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="row justify-content-center">
+        <div class="col-5">
+            <div class="input-group my-4 col-5">
+                <label class="input-group-text" for="datePicker">Chọn ngày:</label>
+                <input type="date" class="form-control" id="datePicker" name="date" value="{{current_date}}">
+                <button class="btn btn-primary" id="confirmBtn">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead class="table-primary">
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Tên bệnh nhân</th>
+                <th scope="col">CCCD</th>
+                <th scope="col">Số điện thoại</th>
+                <th scope="col">Ngày hẹn</th>
+                <th scope="col">Giờ hẹn</th>
+                <th scope=""></th>
+            </tr>
+            </thead>
+            <tbody id="appointmentsTableBody">
+            <!-- Dữ liệu sẽ được thêm vào đây bằng JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    document.getElementById('datePicker').valueAsDate = new Date();
+    $(document).ready(function () {
+        $('#confirmBtn').on('click', function () {
+            var selectedDate = $('#datePicker').val();
+
+            $.ajax({
+                url: '/api/appointment/approved',
+                method: 'GET',
+                data: {date: selectedDate},
+                success: function (response) {
+                    $('#appointmentsTableBody').empty();
+
+                    $.each(response.appointments, function (index, appointment) {
+                        var row = '<tr>' +
+                            '<td>' + appointment.appointment_id + '</td>' +
+                            '<td>' + appointment.name + '</td>' +
+                            '<td>' + appointment.cid + '</td>' +
+                            '<td>' + appointment.phone + '</td>' +
+                            '<td>' + appointment.scheduled_date + '</td>' +
+                            '<td>' + appointment.scheduled_hour + '</td>' +
+                            '<td><button class="btn btn-success createReceiptBtn" data-appointment=\'' + JSON.stringify(appointment) + '\'>Tạo Phiếu</button></td>'
+                        '</tr>';
+                        $('#appointmentsTableBody').append(row);
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
+                }
+            });
+        });
+    });
+
+    $(document).on('click', '.createReceiptBtn', function () {
+        var appointmentData = $(this).data('appointment');
+        console.log(appointmentData)
+        var form = $('<form action="/prescription" method="post">' +
+            '<input type="hidden" name="data" value=\'' + JSON.stringify(appointmentData).replace(/'/g, "&quot;") + '\'>' +
+            '</form>');
+
+        $('body').append(form);
+        form.submit();
+    });
+</script>
+
+{% endblock %}

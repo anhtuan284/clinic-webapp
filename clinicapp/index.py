@@ -1,9 +1,8 @@
 import datetime
 import hashlib
 import hmac
+import json
 import uuid
-import requests
-from datetime import date
 import cloudinary.uploader
 import requests
 from PIL import Image
@@ -109,6 +108,35 @@ def register_user():
     return render_template('auth/register.html', err_msg=err_msg)
 
 
+@app.route('/list-patient', methods=['GET', 'POST'])
+@login_required
+@roles_required([UserRole.DOCTOR])
+def list_patient():
+    return render_template('doctor/list_patient_on_date.html')
+
+
+@app.route('/api/appointment/approved', methods=['GET'])
+@login_required
+@roles_required([UserRole.DOCTOR])
+def appointment_approved():
+    date = request.args.get('date')
+    approved_appointments = dao.get_approved_appointments_by_date(date)
+    appointments_data = []
+    for appointment, user in approved_appointments:
+        if user and appointment:
+            appointment_data = {
+                'patient_id': user.id,
+                'name': user.name,
+                'cid': user.cid,
+                'phone': user.phone,
+                'appointment_id': appointment.id,
+                'scheduled_date': appointment.scheduled_date.strftime('%d-%m-%Y'),
+                'scheduled_hour': str(appointment.scheduled_hour)
+            }
+            appointments_data.append(appointment_data)
+    return jsonify({'appointments': appointments_data})
+
+
 @app.route('/api/patient/<int:patient_cid>', methods=['POST'])
 @cross_origin()
 @roles_required([UserRole.DOCTOR])
@@ -133,15 +161,17 @@ def get_patient_info(patient_cid):
 @login_required
 @roles_required([UserRole.DOCTOR])
 def prescription():
+    appointment_data = request.form.get('data')
+    if appointment_data:
+        appointment = json.loads(appointment_data)
+    else:
+        appointment = None
     form = PrescriptionForm()
     categories = dao.get_categories()
     medicines = dao.get_medicines()
     units = dao.get_units()
-    scheduled_date = request.args.get('scheduled_date')
-    if form.validate_on_submit():
-        print("Create Success")
-    return render_template('doctor/createprescription.html', form=form, medicines=medicines, cats=categories,
-                           units=units, scheduled_date=scheduled_date)
+    return render_template('doctor/createprescription.html', form=form, appointment=appointment, medicines=medicines, cats=categories,
+                           units=units)
 
 
 @app.route('/prescription/create', methods=['POST'])
@@ -163,7 +193,7 @@ def create_prescription():
                             symptoms=symptoms, usages=usages, quantities=quantities, medicines=medicines,
                             medicine_units=units, appointment_id=appointment_id)
     flash("Tạo phiếu khám cho bệnh nhân ID%s thành công!" % patient_id, "success")
-    return redirect(url_for('prescription'))
+    return redirect(url_for('list_patient'))
 
 
 @app.route('/api/medicines/category/<int:category_id>')
