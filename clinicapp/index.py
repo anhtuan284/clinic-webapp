@@ -183,8 +183,9 @@ def prescription():
 @roles_required([UserRole.DOCTOR])
 def create_prescription():
     doctor_id = current_user.id
-    date = request.form.get('scheduled_date')
+    date = datetime.datetime.strptime(request.form.get('date'), '%d-%m-%Y')
     patient_id = request.form.get('patient_id')
+    patient_name = request.form.get('name')
     symptoms = request.form.get('symptoms')
     diagnosis = request.form.get('diagnosis')
     appointment_id = request.form.get('appointment_id')
@@ -192,11 +193,10 @@ def create_prescription():
     units = request.form.getlist('list-unit')
     quantities = request.form.getlist('list-quantity')
     medicines = request.form.getlist('list-medicine_id')
-    dao.update_list_appointment(patient_id)
     dao.create_prescription(doctor_id=doctor_id, patient_id=patient_id, date=date, diagnosis=diagnosis,
                             symptoms=symptoms, usages=usages, quantities=quantities, medicines=medicines,
                             medicine_units=units, appointment_id=appointment_id)
-    flash("Tạo phiếu khám cho bệnh nhân ID%s thành công!" % patient_id, "success")
+    flash("Tạo phiếu khám cho bệnh nhân %s thành công!" % patient_name, "success")
     return redirect(url_for('list_patient'))
 
 
@@ -915,6 +915,10 @@ def create_list_by_date():
 #     card_data = request.json
 #     dao.make_the_list(card_data)
 #     return jsonify({'message': 'Card data processed successfully'}), 200
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('error/404.html'), 404
 
 
 if __name__ == '__main__':
