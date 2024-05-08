@@ -29,18 +29,18 @@
                         Danh sách khám bệnh
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink1">
-                        <li><a class="dropdown-item" href="#">Lập danh sách khám</a></li>
-                        <li><a class="dropdown-item" href="#">Đăng ký khám tại phòng</a></li>
+                        <li><a class="dropdown-item" href="/nurse/confirm_appointment">Xác nhận và lập danh sách</a></li>
+                        <li><a class="dropdown-item" href="/nurse/approved_appointment">Xem danh sách đã lập</a></li>
                     </ul>
                 </li>
                 {% elif current_user.role.value == 'patient' %}
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink3" role="button"
+                    <a class="nav-link dropdown-toggle" href="" id="navbarDropdownMenuLink3" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">
                         Khám bệnh
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink1">
-                        <li><a class="dropdown-item" href="#">Đăng ký khám online</a></li>
+                        <li><a class="dropdown-item" href="/patient/book">Đăng ký khám online</a></li>
                         <li><a class="dropdown-item" href="#">X</a></li>
                     </ul>
                 </li>

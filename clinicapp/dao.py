@@ -180,7 +180,7 @@ def get_value_policy(id):
 def get_policy_value_by_name(name):
     policy = Policy.query.filter_by(name=name).all()
     if policy:
-        return float(policy.first().value)
+        return float(policy[0].value)
     else:
         return None
 
@@ -291,7 +291,7 @@ def get_medicine_price_by_prescription_id(prescription_id):
         .filter(MedicineUnit.unit_id == Unit.id) \
         .filter(MedicineDetail.prescription_id == prescription_id)
 
-    total = total.first().sum
+    total = total[0].sum
     if not total:
         total = '0'
 
@@ -299,7 +299,11 @@ def get_medicine_price_by_prescription_id(prescription_id):
 
 
 def get_is_paid_by_prescription_id(prescription_id):
-    return Appointment.query.filter_by(id=prescription_id).first().is_paid
+    # Assuming Prescription and Appointment are SQLAlchemy model classes
+    appointment_id = Prescription.query.filter_by(id=prescription_id).first().appointment_id
+    if appointment_id:
+        return Appointment.query.filter_by(id=appointment_id).first().is_paid
+    return None  # Or any other default value indicating no information foun
 
 
 def create_bill(service_price, medicine_price, total, cashier_id, prescription_id):
@@ -320,9 +324,9 @@ def get_bill_by_prescription_id(prescription_id):
 
 def get_patient_info(patient_cid=None, scheduled_date=None):
     if patient_cid and scheduled_date:
-        patient = db.session.query(User.name, User.id, User.phone, User.email, Appointment.id)\
-            .filter(User.id == Appointment.patient_id)\
-            .filter(Appointment.scheduled_date == scheduled_date)\
+        patient = db.session.query(User.name, User.id, User.phone, User.email, Appointment.id) \
+            .filter(User.id == Appointment.patient_id) \
+            .filter(Appointment.scheduled_date == scheduled_date, Appointment.status == True) \
             .filter(User.cid == patient_cid).first()
 
         print(patient)
