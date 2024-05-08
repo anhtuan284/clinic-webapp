@@ -241,10 +241,10 @@ def get_prescriptions_by_scheduled_date(date):
     return prescriptions
 
 
-def get_unpaid_prescriptions_by_scheduled_date(date):
+def get_unpaid_prescriptions_by_scheduled_date(scheduled_date):
     prescriptions = db.session.query(Prescription, Appointment) \
         .filter(Prescription.appointment_id == Appointment.id) \
-        .filter(Prescription.date == date) \
+        .filter(Appointment.scheduled_date == scheduled_date) \
         .filter(
         Prescription.id.notin_(db.session.query(Bill.prescription_id))
     ).all()
@@ -298,9 +298,11 @@ def get_medicine_price_by_prescription_id(prescription_id):
 def get_is_paid_by_prescription_id(prescription_id):
     # Assuming Prescription and Appointment are SQLAlchemy model classes
     queryList = db.session.query(Appointment.id, Prescription.id, Appointment.is_paid) \
-        .filter(Appointment.id == Prescription.id) \
+        .filter(Appointment.id == Prescription.appointment_id) \
         .filter(Prescription.id == prescription_id) \
         .first()
+
+    print(queryList)
 
     return queryList[2]
 
@@ -430,6 +432,7 @@ def get_prescription_by_patient(patient_id):
 def get_patient_by_id(patient_id):
     return db.session.query(Patient).get(patient_id)
 
+
 def get_doctor_by_id(doctor_id):
     return User.query.get(id=doctor_id)
 
@@ -444,6 +447,7 @@ def get_all_doctor():
 
 def get_all_patient():
     return User.query.filter_by(role=UserRole.PATIENT).all()
+
 
 def get_appointment_booked_by_patient_id(patient_id):
     current_datetime = datetime.datetime.now()
@@ -469,4 +473,3 @@ def make_the_list(card_data):
             if appointment_list:
                 appointment.appointment_list_id = appointment_list.id
     db.session.commit()
-
