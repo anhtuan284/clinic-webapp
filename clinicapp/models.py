@@ -45,6 +45,9 @@ class Admin(db.Model):
 
     policies = relationship('Policy', backref='admin', lazy=True)
 
+    def __str__(self):
+        return User.query.get(self.id).name
+
 
 class Doctor(db.Model):
     id = Column(Integer, ForeignKey(User.id), primary_key=True)

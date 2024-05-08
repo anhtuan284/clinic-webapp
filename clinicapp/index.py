@@ -144,7 +144,8 @@ def prescription():
     scheduled_date = request.args.get('scheduled_date')
     if form.validate_on_submit():
         print("Create Success")
-    return render_template('doctor/createprescription.html', form=form, medicines=medicines, cats=categories,
+    return render_template('doctor/createprescription.html',
+                           form=form, medicines=medicines, cats=categories,
                            units=units, scheduled_date=scheduled_date)
 
 
@@ -566,8 +567,11 @@ def do_bill(prescription_id):
 
         # cai nay khi nao thong nhat policy xong thi replace value khac
         service_price = get_policy_value_by_name('tien_kham')
+        if not service_price:
+            service_price = 0
         total = medicine_price
         is_paid = get_is_paid_by_prescription_id(prescription_id)
+        print(total)
         print(is_paid)
         if not is_paid:
             total += service_price

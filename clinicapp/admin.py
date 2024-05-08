@@ -83,6 +83,7 @@ class PolicyAdminView(AuthenticatedView):
     }
 
 
+
 class MedicineAdminView(AuthenticatedView):
     column_list = ['name', 'gia', 'usage', 'exp']
     column_searchable_list = ['name']

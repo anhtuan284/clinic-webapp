@@ -6,7 +6,6 @@
 {% block content %}
 {%if scheduled_date %}
 <div class="container" style="min-height: 75vh">
-    {{scheduled_date}}
     <form action="/prescription/create" method="POST">
         {{ form.csrf_token }}
         <p>{{form.hidden_tag()}}</p>
