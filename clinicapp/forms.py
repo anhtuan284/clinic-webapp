@@ -45,18 +45,16 @@ class PrescriptionForm(FlaskForm):
     patient_cid = IntegerField("CCCD bệnh nhân", validators=[DataRequired(), Length(min=9, max=12), Regexp('^[0-9]*$', message="CCCD chỉ chứa số")])
     name = StringField("Họ tên", validators=[DataRequired()])
     diagnosis = TextAreaField("Chẩn đoán", validators=[DataRequired()])
-    # scheduled_date = DateField("Ngày Khám", validators=[DataRequired()])
-    appointment_id = IntegerField("Mã phiếu khám", validators=[DataRequired()])
+    date = StringField("Ngày Khám", validators=[DataRequired()])
+    appointment_id = IntegerField("Mã lịch hẹn", validators=[DataRequired()])
     advice = TextAreaField("Lời dặn")
     symptoms = StringField("Triệu chứng", validators=[DataRequired()])
 
-    # medicines = FieldList(FormField(MedicineForm), min_entries=0)
     usage = TextAreaField("Cách dùng")
     quantity = IntegerField("Số lượng", default=1, validators=[NumberRange(min=1, max=50)])
     unit = SelectField("Đơn vị", coerce=int)
     medicine_type = SelectField("Loại thuốc", choices=[], coerce=int)
     medicine_name = SelectField("Tên thuốc", choices=[], coerce=int)
-    # add_medicine = SubmitField("Thêm")
 
     submit = SubmitField("Tạo phiếu khám")
 
