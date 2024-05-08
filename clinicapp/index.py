@@ -551,7 +551,7 @@ def do_bill(prescription_id):
         service_price = get_policy_value_by_name('tien_kham')
         total = medicine_price
         is_paid = get_is_paid_by_prescription_id(prescription_id)
-
+        print(is_paid)
         if not is_paid:
             total += service_price
 
@@ -696,6 +696,19 @@ def profile_change_avatar():
     return redirect(url_for('profile'))
 
 
+@app.route('/nurse/approved_appointment', methods=['GET'])
+@login_required
+@roles_required([UserRole.NURSE])
+def approved_appointment():
+    date = request.args.get('approved-date')  # Lấy ngày từ
+    print(date)
+    approved_appointments = dao.get_approved_appointments_by_date(date)
+    print(approved_appointments)
+    return render_template("/appointment/approved_appointments.html", approved_appointments=approved_appointments)
+
+
+@roles_required([UserRole.NURSE])
+@login_required
 @app.route('/nurse/confirm_appointment', methods=['GET'])
 def confirm_appointment():
     date = request.args.get('date')  # Lấy ngày từ yêu cầu GET
@@ -705,15 +718,6 @@ def confirm_appointment():
 
     return render_template('nurse/confirm_appointment.html', appointments_no_confirm=get_list_appointment_no_confirm,
                            appointments_confirm=get_list_appointment_confirm)
-
-
-@app.route('/nurse/approved_appointment', methods=['GET'])
-def approved_appointment():
-    date = request.args.get('approved-date')  # Lấy ngày từ
-    print(date)
-    approved_appointments = dao.get_approved_appointments_by_date(date)
-    print(approved_appointments)
-    return render_template("/appointment/approved_appointments.html", approved_appointments=approved_appointments)
 
 
 @app.route('/nurse/change_confirm', methods=['POST'])

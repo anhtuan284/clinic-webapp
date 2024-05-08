@@ -62,10 +62,10 @@ class PrescriptionForm(FlaskForm):
 
 
 class EditProfileForm(FlaskForm):
-    name = StringField('Họ tên')
+    name = StringField('Họ tên', validators=[DataRequired()])
     cid = StringField('CMND', validators=[Length(min=9, max=12)])
-    dob = DateField('Ngày sinh')
-    phone = StringField('Điện thoại')
+    dob = DateField('Ngày sinh', validators=[DataRequired()])
+    phone = StringField('Điện thoại', validators=[DataRequired()])
     email = StringField('Email', validators=[Email()])
     gender = SelectField('Giới tính', choices=[(gender.name, gender.value) for gender in Gender])
     address = StringField('Địa chỉ')
