@@ -331,7 +331,7 @@ def patient_book_appointment():
                             is_paid=False,
                             status=False,
                             patient_id=current_user.id)
-        return redirect('/')
+        return redirect('/patient/book')
 
 
 def create_appoinment_done_payment():
@@ -364,7 +364,7 @@ def payment_return():
             create_appoinment_done_payment()
             dao.create_order_payment(amount=vnp_Amount, gateway='vnpay', patient_id=current_user.id, paid=True,
                                      response_code=trans_code)
-            return redirect('/')
+            return redirect('/patient/book')
         elif current_user.role.value == 'cashier':
             print(43434)
             dao.create_order_payment(amount=vnp_Amount, gateway='vnpay',
@@ -411,7 +411,7 @@ def payment_return_momo():
                                      response_code=trans_code)
 
             # create_appoinment_done_payment()
-            return redirect('/')
+            return redirect('/patient/book')
         elif current_user.role.value == 'cashier':
             amount = inputData["amount"]
             trans_code = inputData["transId"]
