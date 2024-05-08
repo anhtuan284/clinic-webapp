@@ -138,7 +138,7 @@ class Medicine(BaseModel):
     medicine_units = relationship("MedicineUnit", backref='medicine', lazy=True)
 
     def __str__(self):
-        return f"Thuoc {self.name}"
+        return f"Thuốc {self.name}"
 
 
 class Unit(db.Model):
@@ -146,6 +146,9 @@ class Unit(db.Model):
     name = Column(String(100), nullable=False)
 
     medicine_units = relationship("MedicineUnit", backref='unit', lazy=True)
+
+    def __str__(self):
+        return self.name
 
 
 class MedicineUnit(db.Model):
@@ -164,8 +167,7 @@ class MedicineDetail(db.Model):
     medicine_unit_id = Column(Integer, ForeignKey(MedicineUnit.id))
 
     def __str__(self):
-        return 'prescription_id: ' + str(self.prescription_id) + \
-            ' medicine_id: ' + str(self.medicine_id)
+        return 'Phiếu khám ngày: ' + str(self.prescription.date) + ', id: ' + str(self.prescription_id)
 
 
 class Bill(BaseModel):

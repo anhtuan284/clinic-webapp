@@ -38,6 +38,7 @@
                                         <i class="fas fa-lock fa-lg me-3 fa-fw"></i>
                                         <div class="form-floating flex-fill mb-0">
                                             <input type="password" id="password" name="password" class="form-control"
+                                                   onfocusout="validatePassword()"
                                                    required/>
                                             <label class="form-label" for="password">Password</label>
                                         </div>
@@ -72,7 +73,9 @@
                                     <div class="d-flex flex-row align-items-center mb-4">
                                         <i class="fas fa-envelope fa-lg me-3 fa-fw"></i>
                                         <div class="form-floating flex-fill mb-0">
-                                            <input type="email" id="email" name="email" class="form-control" required/>
+                                            <input type="email" id="email" name="email" class="form-control"
+
+                                                   required/>
                                             <label class="form-label" for="email">Your Email</label>
                                         </div>
                                     </div>
@@ -95,7 +98,8 @@
                                     <div class="d-flex flex-row align-items-center mb-4">
                                         <i class="fas fa-map-marker-alt fa-lg me-3 fa-fw"></i>
                                         <div class="form-floating flex-fill mb-0">
-                                            <input type="text" id="cid" name="cid" class="form-control" required/>
+                                            <input type="text" id="cid" name="cid" class="form-control"
+                                                   required/>
                                             <label class="form-label" for="cid">Your Citizen Identification Code</label>
                                         </div>
                                     </div>
@@ -142,6 +146,21 @@
         }
     };
 
+</script>
+
+<script src="../static/js/inputcheck.js"></script>
+
+<script>
+  var input = document.getElementById('cid');
+
+  input.addEventListener('input', function(event) {
+    var value = event.target.value;
+
+    if (isNaN(value)) {
+      alert("Chỉ được nhập giá trị số!");
+      event.target.value = ""; // Xóa giá trị đầu vào
+    }
+  });
 </script>
 
 

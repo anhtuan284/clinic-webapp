@@ -19,8 +19,9 @@ from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_h
     get_prescriptions_by_scheduled_date, get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
     get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, \
-    get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions_by_scheduled_date
-from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin
+    get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions_by_scheduled_date, get_doctor_by_id, \
+    get_patient_by_id, get_all_patient, get_all_doctor
+from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin, adminloggedin
 from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileForm, ChangeAvatarForm
 from clinicapp.models import UserRole, Gender, Appointment, AppointmentList
 from clinicapp.vnpay import vnpay
@@ -30,6 +31,7 @@ mail = Mail(app)
 
 
 @app.route('/')
+@adminloggedin
 def index():  # put application's code here
     return render_template('index.html')
 
@@ -47,6 +49,8 @@ def login_my_user():
             login_user(user)
 
             next = request.args.get('next')
+            if current_user and current_user.role == UserRole.ADMIN:
+                return redirect('/admin')
             return redirect(next if next else '/')
         else:
             err_msg = 'Username hoặc password không đúng!'
@@ -149,7 +153,7 @@ def prescription():
 @roles_required([UserRole.DOCTOR])
 def create_prescription():
     doctor_id = current_user.id
-    date = datetime.date.today().strftime('%Y-%m-%d')
+    date = request.form.get('scheduled_date')
     patient_id = request.form.get('patient_id')
     symptoms = request.form.get('symptoms')
     diagnosis = request.form.get('diagnosis')
@@ -527,12 +531,25 @@ def pay():
     prescriptions = None
     if q:
         prescriptions = get_unpaid_prescriptions_by_scheduled_date(date=q)
+        print(prescriptions)
         session['date'] = q
 
     return render_template('cashier/payment.html',
                            prescriptions=prescriptions,
-                           date=session['date'] if session.get('date') else None
+                           date=session['date'] if session.get('date') else None,
+                           allpatients=get_all_patient(),
+                           alldoctors=get_all_doctor(),
                            )
+
+
+@app.route('/api/get-doctor/<doctor_id>', methods=['POST'])
+def get_doctor(doctor_id):
+    return get_doctor_by_id(doctor_id)
+
+
+@app.route('/api/get-patient/<patient_id>', methods=['POST'])
+def get_patient(patient_id):
+    return get_patient_by_id(patient_id)
 
 
 @app.route('/bills/<prescription_id>', methods=['GET', 'POST'])

@@ -5,11 +5,11 @@
 {% block content %}
 <h1 class="text text-center text-primary">DANH SÁCH PHIẾU KHÁM THEO NGÀY</h1>
 <form class="d-flex" method="get" action="/payment">
-    <input class="form-control me-2" name="q" value="{{date}}" type="date" id="date" placeholder="Nhập ngày của danh sách">
-    <button class="btn btn-primary" type="submit">Tìm</button>
+    <input class="form-control ms-2" name="q" value="{{date}}" type="date" id="date" placeholder="Nhập ngày của danh sách">
+    <button class="btn btn-primary me-2" type="submit">Tìm</button>
 </form>
 
-<table class="table">
+<table class="table ms-4">
     <tr class="table-row">
         <th>Id</th>
         <th>Date</th>
@@ -20,12 +20,32 @@
     </tr>
     {%if prescriptions%}
         {%for P, A in prescriptions%}
-                <tr class="table-row">
+            <tr class="table-row">
                 <td>{{P.id}}</td>
                 <td>{{A.scheduled_date}}</td>
                 <td>{{P.symptoms}}</td>
-                <td>{{P.doctor_id}}</td>
-                <td>{{P.patient_id}}</td>
+                <td>
+                    {%if alldoctors%}
+                        {%for d in alldoctors%}
+                            {%if d.id == P.doctor_id%}
+                                {{d.name}}
+                            {%endif%}
+                        {%endfor%}
+                    {%else%}
+                        {{P.doctor_id}}
+                    {%endif%}
+                </td>
+                <td>
+                    {%if allpatients%}
+                        {%for p in allpatients%}
+                            {%if p.id == P.patient_id%}
+                                {{p.name}}
+                            {%endif%}
+                        {%endfor%}
+                    {%else%}
+                        {{P.patient_id}}
+                    {%endif%}
+                </td>
                 <td>
                     <a class="btn btn-success"
                        href="/bills/{{P.id}}">

@@ -20,6 +20,7 @@ class AuthenticatedBaseView(BaseView):
     def is_accessible(self):
         return current_user.is_authenticated and current_user.role == UserRole.ADMIN
 
+
 class MyUserView(AuthenticatedView):
     column_list = ['id', 'name', 'phone', 'username', 'email', 'address', 'role']
     column_searchable_list = ['username', 'name', 'phone']
@@ -163,7 +164,7 @@ class ThuocView(AuthenticatedBaseView):
             for dm in ds_danh_muc:
                 add_category_medicine(category_id=int(dm), medicine_id=thuocMoiId)
 
-        return self.render('admin/them_thuoc.html', danhmucs=get_categories())
+        return self.render('admin/them_thuoc.html', cates=get_categories())
 
     @expose('/thuocs/<id>', methods=['get', 'post'])
     def update_thuoc(self, id):
@@ -190,21 +191,34 @@ class MyDanhMucView(AuthenticatedView):
 class MyCategoryView(AuthenticatedView):
     column_list = ['id', 'name']
 
+    form_widget_args = {
+        'medicine_category': {
+            'disabled': True
+        }
+    }
+
 
 class MyMedicineUnitView(AuthenticatedView):
-    column_list = ['id', 'unit_id', 'medicine_id', 'quantity', 'medicine_details']
+    column_list = ['id', 'unit', 'medicine', 'quantity', 'medicine_details']
+
+    column_labels = {
+        'medicine_details': 'Phiếu khám tương ứng',
+    }
+
+    form_widget_args = {
+        'medicine_details': {
+            'disabled': True
+        }
+    }
 
 
 admin = Admin(app, name='Clinic Website', template_mode='bootstrap4')
 
-admin.add_view(MyCategoryView(Category, db.session, name='Danh mục'))
 admin.add_view(ThuocView(name="Thuốc"))
-admin.add_view(StatsView(name='Thống kê'))
-admin.add_view(MyUserView(User, db.session))
-admin.add_view(DoctorAdminView(Doctor, db.session, name="Bác sĩ"))
-admin.add_view(NurseAdminView(Nurse, db.session, name="Y tá"))
-admin.add_view(PatientAdminView(Patient, db.session, name="Bệnh nhân"))
-admin.add_view(PolicyAdminView(Policy, db.session, name="Quy Định"))
 admin.add_view(UnitAdminView(Unit, db.session, name="Đơn vị"))
 admin.add_view(MyMedicineUnitView(MedicineUnit, db.session, name="Thuốc-Đơn vị"))
+admin.add_view(MyCategoryView(Category, db.session, name='Danh mục'))
+admin.add_view(MyUserView(User, db.session))
+admin.add_view(PolicyAdminView(Policy, db.session, name="Quy Định"))
+admin.add_view(StatsView(name='Thống kê'))
 admin.add_view(LogoutView(name='Đăng xuất'))
