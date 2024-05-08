@@ -30,7 +30,11 @@
                     </div>
                     <div class="col-md-6">
                         {{ form.name.label(class="form-label fw-bold") }}
-                        {{ form.name(class="form-control", id="patient-name", readonly=True, disable=True, value=appointment.name) }}
+                        {{ form.name(class="form-control", id="patient-name", readonly=True, value=appointment.name) }}
+                    </div>
+                    <div class="col-md-5 my-2">
+                        {{ form.date.label(class="form-label fw-bold") }}
+                        {{ form.date(class="form-control", readonly=True, value=appointment.scheduled_date) }}
                     </div>
                     <div class="col-md-4 my-2">
                         <a class="btn btn-secondary" onclick="viewPatientHistory()">Xem lịch sử khám</a>
@@ -108,11 +112,11 @@
             <table class="table table-sm table-striped table-bordered">
                 <thead class="table-primary">
                 <tr>
-                    <th>STT</th>
+                    <th>#</th>
                     <th>Thuốc</th>
                     <th>Đơn Vị</th>
                     <th>Số lượng</th>
-                    <th>Cách dùng</th>
+                    <th class="col-5">Cách dùng</th>
                     <th></th>
                 </tr>
                 </thead>

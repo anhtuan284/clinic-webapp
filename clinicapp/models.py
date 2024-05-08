@@ -117,7 +117,7 @@ class Appointment(BaseModel):
 
 class Prescription(db.Model):
     id = Column(Integer, autoincrement=True, primary_key=True)
-    date = Column(Date, default=lambda: datetime.now().date())
+    date = Column(Date, default=datetime.date.today)
     symptoms = Column(String(1000))
     diagnosis = Column(String(1000))
 

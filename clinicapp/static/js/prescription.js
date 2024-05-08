@@ -41,23 +41,25 @@ function updateTable() {
     for (let i = 0; i < listMedicines.length; i++) {
         const row = document.createElement('tr');
         row.innerHTML = `
-                            <td>${i + 1}</td>
-                            <td style="width: 400px;">
+                            <td class="align-middle">${i + 1}</td>
+                            <td class="align-middle" style="width: 400px;">
                                 <input name="list-medicine_id" hidden value="${listMedicines[i].medicine_id}" />
                                 <div style="width:100%;">${listMedicines[i].medicine_name}<div/>
                             </td>
-                            <td>
+                            <td class="align-middle">
                                 <input name="list-unit" hidden value="${listMedicines[i].unit_id}"/>
                                 <div style="width:100%;">${listMedicines[i].unit_text}<div/>
                             </td>
-                            <td>
-                                <input class="border-0" style="outline: none; width:100%;" name="list-quantity" disabled value="${listMedicines[i].quantity}"/>
+                            <td class="align-middle">
+                                <input class="border-0" name="list-quantity" hidden value="${listMedicines[i].quantity}"/>
+                                <span>${listMedicines[i].quantity}<span/>
                             </td>
-                            <td>
-                                <input class="border-0" style="outline: none; width:100%;" name="list-usage" disabled value="${listMedicines[i].usage}"/>
+                            <td class="align-middle col-5">
+                                <input class="border-0" name="list-usage" hidden value="${listMedicines[i].usage}"/>
+                                <span>${listMedicines[i].usage}<span/>
                             </td>
-                            <td>
-                                <div class="m-auto"><input type="button" class="btn btn-danger py-1" onclick="deleteRow(this)" value="Xóa"/></div>
+                            <td class="align-middle">
+                                <div class="m-auto"><input type="button" class="btn btn-danger py-1 btn-sm" onclick="deleteRow(this)" value="Xóa"/></div>
                             </td>
 
         `;

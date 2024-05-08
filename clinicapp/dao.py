@@ -198,10 +198,6 @@ def get_units_by_medicine(medicine_id):
     return db.session.query(MedicineUnit).filter_by(medicine_id=medicine_id).all()
 
 
-def update_list_appointment(patient_id):
-    return None
-
-
 def create_prescription(doctor_id, patient_id, date, diagnosis, symptoms, usages, quantities, medicines,
                         medicine_units, appointment_id):
     new_pres = Prescription(date=date, diagnosis=diagnosis, symptoms=symptoms, patient_id=patient_id,
@@ -415,10 +411,12 @@ def get_date_range():
 
 
 def get_approved_appointments_by_date(date):
-    # Thực hiện join giữa bảng Appointment và User thông qua trường user_id
     approved_appointments = (db.session.query(Appointment, User)
                              .filter(Appointment.patient_id == User.id)
-                             .filter(Appointment.status == True, Appointment.scheduled_date == date, Appointment.prescription == None).all())
+                             .filter(Appointment.status)
+                             .filter(Appointment.scheduled_date == date)
+                             .filter(Appointment.prescription == None)
+                             .all())
     return approved_appointments
 
 
