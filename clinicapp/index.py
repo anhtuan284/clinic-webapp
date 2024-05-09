@@ -105,7 +105,7 @@ def register_user():
                          gender=gender
                          )
 
-            return redirect('/login')
+            return redirect(url_for('login_my_user',  success_msg="Tạo tài khoản thành công!!!"))
         else:
             err_msg = 'Mật khẩu không khớp!'
 

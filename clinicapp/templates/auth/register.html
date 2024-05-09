@@ -212,18 +212,47 @@ function validateForm(event) {
     // }
     // return isValid;
     var inputs = document.getElementsByClassName('form-control');
-    if (!validateUsername(inputs[0], false) || !validatePassword(inputs[1], false) || !validateInput(inputs[2], false) ||
-        !validateInput(inputs[3], false) || !validateInput(inputs[4], false) || !validateEmail(inputs[5], false) || 
-       !formatPhoneNumber(inputs[6], false) || !validateCid(inputs[7], false) || !validateInput(inputs[8], false))
+    if (!validateUsername(inputs[0], false)) {
+        event.preventDefault();
+        
+    }
+    if (!validatePassword(inputs[1], false)) {
+        event.preventDefault();
+    }
+    if (!validateInput(inputs[2], false))
     {
         event.preventDefault();
-
+    }
+    if (!validateInput(inputs[3], false))
+    {
+        event.preventDefault();
+    }
+    if (!validateInput(inputs[4], false)) 
+    {
+        event.preventDefault();
+    }
+    if (!validateEmail(inputs[5], false))
+    {
+        event.preventDefault();
+    }
+    if (!validatePhone(inputs[6], false)) 
+    {
+        event.preventDefault();
+    }
+    if (!validateCid(inputs[7], false)) 
+    {
+        event.preventDefault();
+    }
+    if (!validateInput(inputs[8], false))
+    {
+        event.preventDefault();
     }
     
     return true;
     
 }   
 var input = document.getElementById('cid');
+var formatted = false;
 
 input.addEventListener('input', function (event) {
     var value = event.target.value;
@@ -392,7 +421,7 @@ function validatePhone(input, fromSelf = true) {
     }
     
     // Kiểm tra sdt chi co số
-    if (!/^\d+$/.test(phone)) {
+    if (!/^\d+$/.test(phone) && !formatted) {
         input.classList.add('is-invalid');
         if (fromSelf)
             errorElement.textContent = 'Vui lòng chỉ nhập số cho mục này';
@@ -401,10 +430,11 @@ function validatePhone(input, fromSelf = true) {
         errorElement.style.display = 'block';
         input.value = "";
         return false;
+
     }
 
     // Kiểm tra độ dài sdt
-    if (phone.length < 9 || phone.length > 10) {
+    if ((phone.length < 9 || phone.length > 10) && !formatted) {
         input.classList.add('is-invalid');
         if (fromSelf)
             errorElement.textContent = 'Số điện thoại phải có từ 7 đến 8 số';
@@ -413,6 +443,7 @@ function validatePhone(input, fromSelf = true) {
         errorElement.style.display = 'block';
         input.value = "";
         return false;
+
     }
 
     input.classList.remove('is-invalid');
@@ -476,10 +507,7 @@ function formatPhoneNumber(input, fromSelf = true) {
 
     // Cập nhật giá trị của trường nhập (input)
     input.value = formattedPhoneNumber;
-
-    input.classList.remove('is-invalid');
-    errorElement.style.display = 'none';
-    return true;
+    formatted = true;
 }
 
 document.getElementsByTagName('form')[0].addEventListener('submit', validateForm)
