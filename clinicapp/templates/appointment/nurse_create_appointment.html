@@ -1,0 +1,24 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Đăng ký{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <form method="GET" action="/nurse/nurse_book" class="mb-4">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Nhập CCCD/CMND bệnh nhân" name="patient_cid">
+                    <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>console.log('{{current_patient}}')</script>
+{% if current_patient %}
+{% include '/appointment/form_book.html' %}
+{% elif patient_cid %}
+{% include '/auth/form_register.html' %}
+{% endif %}
+{% endblock %}

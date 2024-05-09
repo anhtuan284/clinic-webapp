@@ -453,6 +453,17 @@ def get_appointment_booked_by_patient_id(patient_id):
     current_datetime = datetime.datetime.now()
     current_date = current_datetime.date()
     current_time = current_datetime.time()
+    print(current_datetime)
+    print(current_date)
+    print(current_time)
+    print(patient_id)
+    print(Appointment.query.filter(
+        Appointment.patient_id == patient_id,
+        (Appointment.scheduled_date == current_date) &
+        (Appointment.scheduled_hour >= current_time) |
+        (Appointment.scheduled_date > current_date)
+    ).first()
+)
     return Appointment.query.filter(
         Appointment.patient_id == patient_id,
         (Appointment.scheduled_date == current_date) &
@@ -473,3 +484,8 @@ def make_the_list(card_data):
             if appointment_list:
                 appointment.appointment_list_id = appointment_list.id
     db.session.commit()
+
+
+def get_patient_by_cid(patient_cid):
+    user = User.query.filter(User.cid == patient_cid).first()
+    return user
