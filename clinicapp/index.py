@@ -36,9 +36,10 @@ def index():  # put application's code here
 
 
 @app.route('/login', methods=['get', 'post'])
-@loggedin
 def login_my_user():
-    err_msg = ''
+    err_msg = None
+    if current_user.is_authenticated:
+        return redirect('/')  # Đã đăng nhập, chuyển hướng đến trang chính
     if request.method.__eq__('POST'):
         username = request.form.get('username')
         password = request.form.get('password')
@@ -74,7 +75,6 @@ def logout_my_user():
 
 
 @app.route('/register', methods=['GET', 'POST'])
-@loggedin
 def register_user():
     err_msg = None
     if request.method.__eq__('POST'):
@@ -92,8 +92,8 @@ def register_user():
                 gender = Gender.MALE
             else:
                 gender = Gender.FEMALE
-
             try:
+                session['patient_cid'] = request.form.get('cid')
                 dao.add_user(name=request.form.get('name'),
                              username=request.form.get('username'),
                              password=password,
@@ -105,6 +105,8 @@ def register_user():
                              dob=request.form.get('dob'),
                              gender=gender
                              )
+                if current_user.role.value == 'nurse':
+                    return redirect('/nurse/nurse_book')
             except IntegrityError as ie:
                 if ie.orig.args[0] == 1062:
                     ieMessage = ie.orig.args[1].split()
@@ -119,6 +121,7 @@ def register_user():
                 return redirect(url_for('register_user', err_msg=f'Mã lỗi: {ie.orig.args[0]}; Lỗi: {ie.orig.args[1]}'))
             except Exception as e:
                 return redirect(url_for('register_user', err_msg=str(e)))
+
             return redirect(url_for('login_my_user', success_msg="Tạo tài khoản thành công!!!"))
         else:
             err_msg = 'Mật khẩu không khớp!'
@@ -256,9 +259,12 @@ def book():
     err_msg = None
     if request.method == 'GET':
         appointment_booked = dao.get_appointment_booked_by_patient_id(current_user.id)
+        print(appointment_booked)
+
         if appointment_booked:
+            current_patient = current_user
             return render_template('/appointment/patient_create_appoinment.html', appointment_booked=appointment_booked,
-                                   current_user=current_user)
+                                   current_patient=current_patient)
         date = session.pop('appointment_date', None)
         appointment_time = session.pop('appointment_time', None)
         payment_method_id = session.pop('payment_method_id', None)
@@ -269,7 +275,8 @@ def book():
                                    )
         else:
             appointment_date = datetime.datetime.now().date()
-    return render_template('/appointment/patient_create_appoinment.html', appointment_date=appointment_date)
+    return render_template('/appointment/patient_create_appoinment.html', appointment_date=appointment_date,
+                           current_user_role=current_user.role.value)
 
 
 def process_vnpay(amount, patient):
@@ -348,39 +355,59 @@ def process_vnpay(amount, patient):
 #     return redirect('/payment')  # Redirect to home page if gateway is invalid
 
 
-@app.route('/patient/book-appointment', methods=['POST'])
-@roles_required([UserRole.PATIENT])
-def patient_book_appointment():
-    pay_method = request.form.get('payment_method')
-    gateway = request.form.get('way')
-    if pay_method == 'direct':
-        session['appointment_date'] = request.form.get('appointment_date')
-        session['appointment_time'] = request.form.get('appointment_time')
-        session['payment_method'] = pay_method
-        session['way'] = gateway
-        amount = get_value_policy(TIENKHAM)
-
-    if gateway == 'vnpay':
-        return redirect(process_vnpay(amount, current_user))
-    elif gateway == 'momo':
-        return redirect(process_momo(amount))
-
-    elif pay_method == 'clinic':
+@app.route('/nurse/book_appointment', methods=['POST'])
+@roles_required([UserRole.NURSE])
+def nurse_book_appointment():
+    if current_user.role.value == 'nurse':
         scheduled_date = request.form.get('appointment_date')
         scheduled_minutes = int(request.form.get('appointment_time'))
         scheduled_h = scheduled_minutes // 60
         scheduled_m = scheduled_minutes % 60
-        print(scheduled_h)
-        print(scheduled_m)
-        print(current_user.id)
+        patient_id = session.pop('patient_id', None)
 
         dao.add_appointment(scheduled_date=scheduled_date,
                             scheduled_hour=datetime.time(scheduled_h, scheduled_m),
-                            is_confirm=False,
+                            is_confirm=True,
                             is_paid=False,
                             status=False,
-                            patient_id=current_user.id)
-        return redirect('/patient/book')
+                            patient_id=patient_id)
+        return redirect('/')
+
+
+@app.route('/patient/book_appointment', methods=['POST'])
+@roles_required([UserRole.PATIENT])
+def patient_book_appointment():
+    if current_user.role.value == 'patient':
+        pay_method = request.form.get('payment_method')
+        gateway = request.form.get('way')
+        if pay_method == 'direct':
+            session['appointment_date'] = request.form.get('appointment_date')
+            session['appointment_time'] = request.form.get('appointment_time')
+            session['payment_method'] = pay_method
+            session['way'] = gateway
+            amount = get_value_policy(TIENKHAM)
+
+        if gateway == 'vnpay':
+            return redirect(process_vnpay(amount, current_user))
+        elif gateway == 'momo':
+            return redirect(process_momo(amount))
+
+        elif pay_method == 'clinic':
+            scheduled_date = request.form.get('appointment_date')
+            scheduled_minutes = int(request.form.get('appointment_time'))
+            scheduled_h = scheduled_minutes // 60
+            scheduled_m = scheduled_minutes % 60
+            print(scheduled_h)
+            print(scheduled_m)
+            print(current_user.id)
+
+            dao.add_appointment(scheduled_date=scheduled_date,
+                                scheduled_hour=datetime.time(scheduled_h, scheduled_m),
+                                is_confirm=False,
+                                is_paid=False,
+                                status=False,
+                                patient_id=current_user.id)
+            return redirect('/patient/book')
 
 
 def create_appoinment_done_payment():
@@ -932,6 +959,28 @@ def create_list_by_date():
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('error/404.html'), 404
+
+
+@app.route('/nurse/nurse_book', methods=['GET'])
+def nure_book():
+    patient_cid = None
+    patient_cid = request.args.get('patient_cid')
+    if patient_cid is None:
+        patient_cid = session.pop('patient_cid', None)
+    current_patient = None
+    if patient_cid:
+        current_patient = dao.get_patient_by_cid(patient_cid)
+        print(current_patient)
+        if current_patient:
+            appointment_booked = dao.get_appointment_booked_by_patient_id(current_patient.id)
+            appointment_date = datetime.datetime.now().date()
+            current_user_role = current_user.role.value
+            session['patient_id'] = current_patient.id
+            return render_template('/appointment/nurse_create_appointment.html', current_patient=current_patient,
+                                   patient_cid=patient_cid, appointment_booked=appointment_booked,
+                                   appointment_date=appointment_date, current_user_role=current_user_role)
+    return render_template('/appointment/nurse_create_appointment.html', current_patient=current_patient,
+                           patient_cid=patient_cid)
 
 
 if __name__ == '__main__':
