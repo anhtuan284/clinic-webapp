@@ -1,6 +1,9 @@
 {% if err_msg %}
 <div class="alert alert-danger">{{ err_msg }}</div>
 {% endif %}
+{% if request.args.get('err_msg') %}
+<div class="alert alert-danger">{{ request.args.get('err_msg') }}</div>
+{% endif %}
 <p class="text-center h1 fw-bold mb-5 mx-1 mx-md-4 mt-4">Đăng ký</p>
 <form method="post" enctype="multipart/form-data" action="/register" novalidate>
     <div class="container h-100">
@@ -506,5 +509,10 @@ function formatPhoneNumber(input, fromSelf = true) {
 }
 
 document.getElementsByTagName('form')[0].addEventListener('submit', validateForm)
+window.onload = () => {
+    var dob = document.getElementById('dob');
+    dob.setAttribute('max', new Date().toLocaleDateString('fr-ca'))
+
+}
 
 </script>
