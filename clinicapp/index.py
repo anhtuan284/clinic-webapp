@@ -10,7 +10,7 @@ from flask import request, redirect, render_template, jsonify, url_for, session,
 from flask_cors import cross_origin
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import update
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
     TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, admin, db, utils
@@ -93,19 +93,33 @@ def register_user():
             else:
                 gender = Gender.FEMALE
 
-            dao.add_user(name=request.form.get('name'),
-                         username=request.form.get('username'),
-                         password=password,
-                         avatar=avatar_path,
-                         email=request.form.get('email'),
-                         phone=request.form.get('phone'),
-                         address=request.form.get('address'),
-                         cid=request.form.get('cid'),
-                         dob=request.form.get('dob'),
-                         gender=gender
-                         )
+            try:
+                dao.add_user(name=request.form.get('name'),
+                             username=request.form.get('username'),
+                             password=password,
+                             avatar=avatar_path,
+                             email=request.form.get('email'),
+                             phone=request.form.get('phone'),
+                             address=request.form.get('address'),
+                             cid=request.form.get('cid'),
+                             dob=request.form.get('dob'),
+                             gender=gender
+                             )
+            except IntegrityError as ie:
+                if ie.orig.args[0] == 1062:
+                    ieMessage = ie.orig.args[1].split()
+                    entry = ieMessage[len(ieMessage) - 1]
+                    if entry == '\'user.username\'':
+                        return redirect(url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Username có rồi!!!'))
+                    if entry == '\'user.ix_user_cid\'':
+                        return redirect(url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Căng Cước Công Dân này có rồi!!!'))
+                    if entry == '\'user.email\'':
+                        return redirect(url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Email này có rồi!!!'))
 
-            return redirect(url_for('login_my_user',  success_msg="Tạo tài khoản thành công!!!"))
+                return redirect(url_for('register_user', err_msg=f'Mã lỗi: {ie.orig.args[0]}; Lỗi: {ie.orig.args[1]}'))
+            except Exception as e:
+                return redirect(url_for('register_user', err_msg=str(e)))
+            return redirect(url_for('login_my_user', success_msg="Tạo tài khoản thành công!!!"))
         else:
             err_msg = 'Mật khẩu không khớp!'
 
@@ -174,7 +188,8 @@ def prescription():
     categories = dao.get_categories()
     medicines = dao.get_medicines()
     units = dao.get_units()
-    return render_template('doctor/createprescription.html', form=form, appointment=appointment, medicines=medicines, cats=categories,
+    return render_template('doctor/createprescription.html', form=form, appointment=appointment, medicines=medicines,
+                           cats=categories,
                            units=units)
 
 
