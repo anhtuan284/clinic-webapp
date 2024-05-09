@@ -107,7 +107,7 @@ def register_user():
             if current_user.role.value == 'nurse':
                 return redirect('/nurse/nurse_book')
 
-            return redirect('/login')
+            return redirect(url_for('login_my_user',  success_msg="Tạo tài khoản thành công!!!"))
         else:
             err_msg = 'Mật khẩu không khớp!'
 
