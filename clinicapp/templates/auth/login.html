@@ -3,6 +3,9 @@
 {% block title %}Đăng nhập{% endblock %}
 
 {% block content %}
+{%if request.args.get('success_msg')%}
+<div class="alert alert-success">{{ request.args.get('success_msg') }}</div>
+{%endif%}
 <div class="container">
     <div class="row justify-content-center mt-5">
         <div class="col-md-6 mb-5">
