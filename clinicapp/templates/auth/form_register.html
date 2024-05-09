@@ -1,0 +1,283 @@
+{% if err_msg %}
+<div class="alert alert-danger">{{ err_msg }}</div>
+{% endif %}
+<p class="text-center h1 fw-bold mb-5 mx-1 mx-md-4 mt-4">Đăng ký</p>
+<form method="post" enctype="multipart/form-data" action="/register" onsubmit="return validateForm()">
+    <div class="container h-100">
+        <div class="row justify-content-center align-items-center h-100">
+            <div class="col-lg-12 col-xl-11">
+                <div class="card text-black" style="border-radius: 25px;">
+                    <div class="card-body p-md-5">
+                        <div class="row justify-content-center">
+                            <div class="col-md-6 mb-4" style="margin-top: -40px;">
+                                <div class="d-flex flex-column mb-4">
+                                    <label for="avatar"
+                                           class="avatar-container d-flex justify-content-center align-items-center">
+                                        <img id="avatar-preview" style="width: 220px; height: 220px; object-fit: cover;"
+                                             class="rounded-circle avatar-img"
+                                             src="https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg"
+                                             alt="Avatar">
+                                        <input type="file" id="avatar" name="avatar" class="d-none">
+                                    </label>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <div class="d-flex flex-row align-items-center mb-4">
+                                        <i class="fas fa-user fa-lg me-3 fa-fw"></i>
+                                        <div class="form-floating flex-fill mb-0">
+                                            <input type="text" id="username" name="username" class="form-control"
+                                                   required onblur="validateUsername(this)">
+                                            <label class="form-label" for="username">Tên đăng nhập</label>
+                                            <div id="username-error" class="invalid-feedback">Vui lòng nhập tên đăng
+                                                nhập của bạn.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-row align-items-center mb-4">
+                                        <i class="fas fa-lock fa-lg me-3 fa-fw"></i>
+                                        <div class="form-floating flex-fill mb-0" id="div-password">
+                                            <input type="password" id="password" name="password" class="form-control"
+                                                   required onblur="validatePassword(this)">
+                                            <label class="form-label" for="password">Mật khẩu</label>
+                                            <div id="password-error" class="invalid-feedback">Vui lòng nhập mật khẩu của
+                                                bạn.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex flex-row align-items-center mb-4">
+                                        <i class="fas fa-key fa-lg me-3 fa-fw"></i>
+                                        <div class="form-floating flex-fill mb-0">
+                                            <input type="password" id="confirm" name="confirm" class="form-control"
+                                                   required onblur="validateInput(this)">
+                                            <label class="form-label" for="confirm">Nhập lại mật khẩu</label>
+                                            <div id="confirm-error" class="invalid-feedback">Vui lòng xác nhận lại mật
+                                                khẩu của bạn.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-row align-items-center mb-4">
+                                        <i class="fas fa-envelope fa-lg me-3 fa-fw"></i>
+                                        <div class="form-floating flex-fill mb-0">
+                                            <input type="date" id="dob" name="dob" class="form-control" required
+                                                   onblur="validateInput(this)">
+                                            <label class="form-label" for="dob">Ngày sinh của bạn</label>
+                                            <div id="dob-error" class="invalid-feedback">Vui lòng nhập ngày sinh của
+                                                bạn.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6" style="margin-top: 40px;">
+                                <div class="d-flex flex-column mb-4">
+                                    <div class="d-flex flex-row align-items-center mb-4">
+                                        <i class="fas fa-user fa-lg me-3 fa-fw"></i>
+                                        <div class="form-floating flex-fill mb-0">
+                                            <input type="text" id="name" name="name" class="form-control" required
+                                                   onblur="validateInput(this)">
+                                            <label class="form-label" for="name">Tên của bạn</label>
+                                            <div id="name-error" class="invalid-feedback">Vui lòng nhập tên của bạn.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-row align-items-center mb-4">
+                                        <i class="fas fa-envelope fa-lg me-3 fa-fw"></i>
+                                        <div class="form-floating flex-fill mb-0">
+                                            <input type="email" id="email" name="email" class="form-control" required
+                                                   onblur="validateInput(this)">
+                                            <label class="form-label" for="email">Email của bạn</label>
+                                            <div id="email-error" class="invalid-feedback">Vui lòng nhập địa chỉ email
+                                                của bạn.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex flex-row align-items-center mb-4">
+                                        <i class="fas fa-phone fa-lg me-3 fa-fw"></i>
+                                        <div class="form-floating flex-fill mb-0">
+                                            <input type="tel" id="phone" name="phone" class="form-control" required
+                                                   maxlength="10" pattern="[0-9]{10}" onblur="validateInput(this)">
+                                            <label class="form-label" for="phone">Số điện thoại của bạn </label>
+                                            <div id="phone-error" class="invalid-feedback">Vui lòng nhập số điện thoại
+                                                của bạn.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex flex-row align-items-center mb-4">
+                                        <i class="fas fa-map-marker-alt fa-lg me-3 fa-fw"></i>
+                                        <div class="form-floating flex-fill mb-0" id="div-cid">
+                                            <input type="text" id="cid" name="cid" class="form-control" required
+                                                   maxlength="12" onblur="validateInput(this)">
+                                            <label class="form-label" for="cid">Số CMND/CCCD của bạn</label>
+                                            <div id="cid-error" class="invalid-feedback">Vui lòng nhập số CMND/CCCD của
+                                                bạn.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-row align-items-center mb-4">
+                                        <i class="fas fa-map-marker-alt fa-lg me-3 fa-fw"></i>
+                                        <div class="form-floating flex-fill mb-0">
+                                            <input type="text" id="address" name="address" class="form-control" required
+                                                   onblur="validateInput(this)">
+                                            <label class="form-label" for="address">Địa chỉ của bạn</label>
+                                            <div id="address-error" class="invalid-feedback">Vui lòng nhập địa chỉ của
+                                                bạn.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4 d-flex justify-content-center">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="gender" id="male"
+                                                   value="male" required>
+                                            <label class="form-check-label" for="male">Nam</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="gender" id="female"
+                                                   value="female" required>
+                                            <label class="form-check-label" for="female">Nữ</label>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-row align-items-center mb-4">
+                                        <i class="fas fa-map-marker-alt fa-lg me-3 fa-fw"></i>
+                                        <div class="form-floating flex-fill">
+                                            <input type="submit" value="Đăng ký"
+                                                   class="form-control btn btn-outline-primary p-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    const avatarInput = document.getElementById('avatar');
+    const avatarPreview = document.getElementById('avatar-preview');
+
+    avatarInput.onchange = () => {
+        const file = avatarInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                avatarPreview.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    function validateInput(input) {
+        var errorElement = document.getElementById(input.id + '-error');
+        if (!input.value) {
+            input.classList.add('is-invalid');
+            errorElement.style.display = 'block';
+            return false;
+        } else {
+            input.classList.remove('is-invalid');
+            errorElement.style.display = 'none';
+            return true;
+        }
+    }
+
+    function validateForm() {
+        var inputs = document.querySelectorAll('input[required]');
+        var isValid = true;
+        for (var i = 0; i < inputs.length; i++) {
+            if (!validateInput(inputs[i])) {
+                isValid = false;
+            }
+
+            // Kiểm tra mật khẩu hợp lệ
+            if (inputs[i].id === 'password') {
+                if (!validatePassword(inputs[i])) {
+                    isValid = false;
+                }
+            }
+
+            // Kiểm tra tên đăng nhập hợp lệ
+            if (inputs[i].id === 'username') {
+                if (!validateUsername(inputs[i])) {
+                    isValid = false;
+                }
+            }
+        }
+        return isValid;
+    }
+
+    var input = document.getElementById('cid');
+
+    input.addEventListener('input', function (event) {
+        var value = event.target.value;
+        var divCid = document.getElementById('div-cid');
+        var cidError = document.getElementById('cid-error');
+        if (cidError) {
+            cidError.remove();
+        }
+
+        if (isNaN(value)) {
+            var divError = document.createElement('div');
+            divError.setAttribute('id', 'cid-error');
+            divError.setAttribute('class', 'alert alert-danger mt-2');
+            divError.innerHTML = 'Chỉ được nhập dữ liệu số';
+            divCid.appendChild(divError);
+            event.target.value = ""; // Xóa giá trị đầu vào
+        }
+
+    });
+
+    function validatePassword(input) {
+        var password = input.value;
+        var errorElement = document.getElementById('password-error');
+
+        // Kiểm tra độ dài mật khẩu
+        if (password.length < 9) {
+            input.classList.add('is-invalid');
+            errorElement.textContent = 'Mật khẩu phải có ít nhất 9 ký tự.';
+            errorElement.style.display = 'block';
+            return false;
+        }
+
+        // Kiểm tra ký tự hoa
+        if (!/[A-Z]/.test(password)) {
+            input.classList.add('is-invalid');
+            errorElement.textContent = 'Mật khẩu phải chứa ít nhất một ký tự viết hoa.';
+            errorElement.style.display = 'block';
+            return false;
+        }
+
+        // Kiểm tra ký tự đặc biệt
+        if (!/[\W_]/.test(password)) {
+            input.classList.add('is-invalid');
+            errorElement.textContent = 'Mật khẩu phải chứa ít nhất một ký tự đặc biệt.';
+            errorElement.style.display = 'block';
+            return false;
+        }
+
+        // Nếu mật khẩu hợp lệ, ẩn thông báo lỗi và trả về true
+        input.classList.remove('is-invalid');
+        errorElement.style.display = 'none';
+        return true;
+    }
+
+    function validateUsername(input) {
+        var username = input.value;
+        var errorElement = document.getElementById('username-error');
+
+        // Kiểm tra độ dài username
+        if (username.length < 6) {
+            input.classList.add('is-invalid');
+            errorElement.textContent = 'Tên đăng nhập phải có ít nhất 6 ký tự.';
+            errorElement.style.display = 'block';
+            return false;
+        }
+        input.classList.remove('is-invalid');
+        errorElement.style.display = 'none';
+        return true;
+    }
+
+</script>

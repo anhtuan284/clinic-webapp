@@ -1,0 +1,117 @@
+
+
+{% if err_msg %}
+<div class="alert alert-danger">{{ err_msg }}</div>
+{% endif %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }}">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+{% if appointment_booked %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="card" style="width: 30rem;">
+        <div class="card-header bg-primary text-white justify-content-center d-flex">
+            <h5 class="card-title">THÔNG TIN LỊCH HẸN ĐANG CÓ</h5>
+        </div>
+        <div class="card-body">
+            <p class="card-text"><b>Tên:</b> {{ current_patient.name }}</p>
+            <p class="card-text"><b>Số CCCD:</b> {{ current_patient.cid }}</p>
+            <p class="card-text"><b>Ngày Sinh:</b> {{ current_patient.dob }}</p>
+            <p class="card-text"><b>Địa Chỉ:</b> {{ current_patient.address }}</p>
+            <p class="card-text"><b>Số Điện Thoại:</b> {{ current_patient.phone }}</p>
+            <p class="card-text"><b>Email:</b> {{ current_patient.email }}</p>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Ngày Khám:</b> {{ appointment_booked.scheduled_date }}</li>
+            <li class="list-group-item"><b>Giờ Khám:</b> {{ appointment_booked.scheduled_hour }}</li>
+        </ul>
+        <div class="card-body text-center"> <!-- Thêm lớp text-center để căn giữa -->
+            <button type="button" class="btn btn-danger"
+                    onclick="cancelAppointmentButton('{{ appointment_booked.id }}')">
+                Hủy Lịch Hẹn
+            </button>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <form method="post" action="book_appointment" id="appointmentForm">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-4">Đăng ký lịch hẹn</h5>
+                    <div class="mb-3">
+                        <label for="datepicker" class="form-label">Chọn ngày</label>
+                        <input type="date" id="datepicker" name="appointment_date" class="form-control"
+                               placeholder="Chọn ngày" value="{{appointment_date}}">
+                    </div>
+                    <div id="unavailableMessage" class="alert alert-warning" style="display: none;">
+                        Ngày này không khả dụng. Vui lòng chọn ngày khác.
+                    </div>
+
+                    <div class="mb-3" id="paymentMethodSection" style="display: none;">
+                        <p class="mb-2">Phương thức thanh toán:</p>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="payDirect"
+                                   value="direct">
+                            <label class="form-check-label" for="payDirect">Thanh toán trực tuyến</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="payClinic"
+                                   value="clinic">
+                            <label class="form-check-label" for="payClinic">Thanh toán tại phòng khám</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="class-timepicker" style="display: none;">
+                        <label for="timepicker" class="form-label">Chọn giờ</label>
+                        <select id="timepicker" name="appointment_time" class="form-select">
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="gateway" style="display: none;">
+                        <p class="mb-2">Cổng thanh toán:</p>
+                        <div class="d-flex justify-content-center mb-3">
+                            <div class="form-check me-3" style="padding: 5px 50px 0 0;">
+                                <label class="form-check-label" for="vnpay">VNPAY</label>
+                                <img src="/static/img/vnpay.png" style="width: 50px" alt="VNPAY"
+                                     class="payment-icon">
+                                <input class="form-check-input" type="radio" name="way" id="vnpay" value="vnpay">
+                            </div>
+                            <div class="form-check" style="padding: 5px 0 0 50px;">
+                                <label class="form-check-label" for="momo">MOMO</label>
+                                <img src="/static/img/momo.png" style="width: 50px" alt="MOMO" class="payment-icon">
+                                <input class="form-check-input" type="radio" name="way" id="momo" value="momo">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" id="bookAppointmentButton" class="btn btn-primary"
+                                style="display: none;">Đặt lịch hẹn
+                        </button>
+                        <button type="submit" id="payAndBookAppointmentButton" class="btn btn-primary"
+                                style="display: none;">Thanh toán để đặt lịch hẹn
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% if current_user_role == 'patient' %}
+<script src="/static/js/patient/patient_create_appointment.js"></script>
+{% elif current_user_role == 'nurse'  %}
+<script src="/static/js/nurse/nurse_create_appointment.js"></script>
+
+{% endif %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
