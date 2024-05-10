@@ -241,6 +241,8 @@ def get_units_by_medicine(medicine_id):
 
 
 @app.route("/patient/<int:patient_id>/history")
+@login_required
+@roles_required([UserRole.DOCTOR, UserRole.PATIENT])
 def patient_history(patient_id):
     patient = dao.get_user_by_id(patient_id)
     prescriptions = dao.get_prescription_by_patient(patient.id)
