@@ -249,6 +249,24 @@ def patient_history(patient_id):
     return render_template('doctor/disease_history.html', patient=patient, prescriptions=prescriptions)
 
 
+@app.route("/api/medicines/")
+@login_required
+@roles_required([UserRole.DOCTOR])
+def get_medicines():
+    kw = request.args.get('name')
+    medicines = dao.get_medicines(name=kw)
+    medicine_list = []
+    for medicine in medicines:
+        medicine_list.append({
+            'id': medicine.id,
+            'name': medicine.name,
+            'usage': medicine.usage
+        })
+
+    return jsonify(medicine_list)
+
+
+
 @login.user_loader
 def load_user(user_id):
     return dao.get_user_by_id(user_id)

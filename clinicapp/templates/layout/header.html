@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top">
+<nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top shadow">
     <div class="container-fluid">
         <a class="navbar-brand fw-bolder" href="/">THT Clinic</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
@@ -12,10 +12,10 @@
                 {% if current_user.is_authenticated %}
                 {% if current_user.role.value == 'doctor' %}
                 <li class="nav-item">
-                    <a class="nav-link active" href="/list-patient">Danh sách bệnh nhân</a>
+                    <a class="nav-link " href="/list-patient">Danh sách bệnh nhân</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" href="#">Tra cứu thuốc</a>
+                    <a class="nav-link " href="#">Tra cứu thuốc</a>
                 </li>
                 {% elif current_user.role.value == 'nurse' %}
                 <li class="nav-item dropdown">
@@ -43,7 +43,7 @@
                     <a class="nav-link active" href="/patient/{{current_user.id}}/history">Lịch sử khám của tôi</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" href="#">Dự đoán bệnh</a>
+                    <a class="nav-link " href="#">Dự đoán bệnh</a>
                 </li>
                 </li>
                 {% elif current_user.role.value == 'cashier' %}
