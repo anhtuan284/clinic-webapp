@@ -213,8 +213,12 @@ function cancelAppointmentButton(appointment_booked_id) {
         }
     });
 }
+function showLoadingIcon() {
+    document.getElementById('spin').style.display = 'block';
+}
 
 function cancelAppointment(appointment_id) {
+    showLoadingIcon();
     fetch("/api/update_appointment?appointment_id=" + appointment_id + "&status=cancelled", {
         method: "PATCH",
         headers: {

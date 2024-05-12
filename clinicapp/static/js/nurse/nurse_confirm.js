@@ -99,24 +99,46 @@ function change_confirm(id, scheduled_date, scheduled_hour) {
 }
 
 function rejectAppointment(appointmentId, userId) {
-    fetch("/api/update_appointment?appointment_id=" + appointmentId + "&user_id=" + userId + "&status=cancelled", {
-        method: "PATCH", headers: {
-            "Content-Type": "application/json"
+    Swal.fire({
+        title: 'Xác nhận hủy lịch hẹn',
+        text: 'Bạn có chắc chắn muốn hủy lịch hẹn này không?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Đồng ý',
+        cancelButtonText: 'Hủy bỏ'
+    }).then((result) => {
+            if (result.isConfirmed) {
+                showLoadingIcon();
+
+                fetch("/api/update_appointment?appointment_id=" + appointmentId + "&user_id=" + userId + "&status=cancelled", {
+                    method: "PATCH", headers: {
+                        "Content-Type": "application/json"
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to reject appointment.');
+                        }
+                        // If successful, remove the card from the UI
+                        document.getElementById('spin').style.display = 'none';
+
+                        const card = document.querySelector(`.card[data-appointment-id="${appointmentId}"]`);
+                        if (card) {
+                            card.remove();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
         }
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to reject appointment.');
-            }
-            // If successful, remove the card from the UI
-            const card = document.querySelector(`.card[data-appointment-id="${appointmentId}"]`);
-            if (card) {
-                card.remove();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+    )
+}
+
+function showLoadingIcon() {
+    document.getElementById('spin').style.display = 'block';
 }
 
 function get_date_confirm() {
@@ -184,13 +206,22 @@ function create_list_for_date() {
         }, body: JSON.stringify(cardData)
     }).then(function (response) {
         if (response.ok) {
+
             fetch('/nurse/send_list_email', {
                 method: 'POST', headers: {
                     'Content-Type': 'application/json'
                 }, body: JSON.stringify(cardData)
             })
-            console.log('Card data sent successfully');
-            location.reload();
+            Swal.fire({
+                title: 'Thành công',
+                text: 'Danh sách lịch hẹn đã được lập thành công!',
+                icon: 'success',
+                showConfirmButton: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    location.reload(); // Tải lại trang khi người dùng xác nhận
+                }
+            });
 
         } else {
             console.error('Failed to send card data');
@@ -199,3 +230,4 @@ function create_list_for_date() {
         console.error('Error:', error);
     });
 }
+
