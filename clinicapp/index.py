@@ -114,7 +114,8 @@ def register_user():
                     if entry == '\'user.username\'':
                         return redirect(url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Username có rồi!!!'))
                     if entry == '\'user.ix_user_cid\'':
-                        return redirect(url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Căng Cước Công Dân này có rồi!!!'))
+                        return redirect(
+                            url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Căng Cước Công Dân này có rồi!!!'))
                     if entry == '\'user.email\'':
                         return redirect(url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Email này có rồi!!!'))
 
@@ -391,7 +392,8 @@ def nurse_book_appointment():
                             is_paid=False,
                             status=False,
                             patient_id=patient_id)
-        return redirect('/')
+        flash("Đăng ký lịch hẹn khám thành công!", "success")
+        return redirect('/nurse/confirm_appointment')
 
 
 @app.route('/patient/book_appointment', methods=['POST'])
@@ -406,11 +408,10 @@ def patient_book_appointment():
             session['payment_method'] = pay_method
             session['way'] = gateway
             amount = get_value_policy(TIENKHAM)
-
-        if gateway == 'vnpay':
-            return redirect(process_vnpay(amount, current_user))
-        elif gateway == 'momo':
-            return redirect(process_momo(amount))
+            if gateway == 'vnpay':
+                return redirect(process_vnpay(amount, current_user))
+            elif gateway == 'momo':
+                return redirect(process_momo(amount))
 
         elif pay_method == 'clinic':
             scheduled_date = request.form.get('appointment_date')
@@ -427,6 +428,8 @@ def patient_book_appointment():
                                 is_paid=False,
                                 status=False,
                                 patient_id=current_user.id)
+            flash("Đăng ký lịch hẹn khám thành công!", "success")
+
             return redirect('/patient/book')
 
 
@@ -460,6 +463,7 @@ def payment_return():
             create_appoinment_done_payment()
             dao.create_order_payment(amount=vnp_Amount, gateway='vnpay', patient_id=current_user.id, paid=True,
                                      response_code=trans_code)
+            flash("Đăng ký lịch hẹn khám thành công!", "success")
             return redirect('/patient/book')
         elif current_user.role.value == 'cashier':
             print(43434)
@@ -507,6 +511,7 @@ def payment_return_momo():
                                      response_code=trans_code)
 
             # create_appoinment_done_payment()
+            flash("Đăng ký lịch hẹn khám thành công!", "success")
             return redirect('/patient/book')
         elif current_user.role.value == 'cashier':
             amount = inputData["amount"]
@@ -985,6 +990,8 @@ def page_not_found(error):
 def nure_book():
     patient_cid = None
     patient_cid = request.args.get('patient_cid')
+    session['current_user_role'] = current_user.role.value
+
     if patient_cid is None:
         patient_cid = session.pop('patient_cid', None)
     current_patient = None
