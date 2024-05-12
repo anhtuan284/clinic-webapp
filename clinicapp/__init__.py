@@ -12,7 +12,7 @@ import cloudinary
 app = Flask(__name__)
 
 app.secret_key = '^%^&%^(*^^&&*^$%((^^&$$&^'
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/clinicdb?charset=utf8mb4" % quote('Baopro123')
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://admin:%s@flask-db.cle2w2q6enml.ap-southeast-2.rds.amazonaws.com/clinicdb?charset=utf8mb4" % quote('httclinic')
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app.config["PAGE_SIZE"] = 8
