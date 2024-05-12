@@ -77,15 +77,23 @@ def logout_my_user():
 @app.route('/register', methods=['GET', 'POST'])
 def register_user():
     err_msg = None
+    avatar_url = None
     if request.method.__eq__('POST'):
         password = request.form.get('password')
         confirm = request.form.get('confirm')
         if password.__eq__(confirm):
-            avatar_path = None
             avatar = request.files.get('avatar')
             if avatar:
-                res = cloudinary.uploader.upload(avatar)
-                avatar_path = res['secure_url']
+                if avatar.filename != '':
+                    img = Image.open(avatar)
+                    img_cropped = utils.crop_to_square(img)
+                    avatar_url = utils.upload_image_to_cloudinary(img_cropped)
+                    if avatar_url:
+                        pass
+                    else:
+                        flash('Đã xảy ra lỗi khi tải lên hình ảnh.', 'danger')
+                        avatar_url = "https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg"
+                        return redirect(url_for('register_user'))
 
             gender = None
             if request.form.get('gender') == 'male':
@@ -94,10 +102,11 @@ def register_user():
                 gender = Gender.FEMALE
             try:
                 session['patient_cid'] = request.form.get('cid')
+                current_user_role = session.pop('current_user_role', None)
                 dao.add_user(name=request.form.get('name'),
                              username=request.form.get('username'),
                              password=password,
-                             avatar=avatar_path,
+                             avatar=avatar_url,
                              email=request.form.get('email'),
                              phone=request.form.get('phone'),
                              address=request.form.get('address'),
@@ -105,7 +114,7 @@ def register_user():
                              dob=request.form.get('dob'),
                              gender=gender
                              )
-                if current_user.role.value == 'nurse':
+                if current_user_role == 'nurse':
                     return redirect('/nurse/nurse_book')
             except IntegrityError as ie:
                 if ie.orig.args[0] == 1062:
@@ -265,7 +274,6 @@ def get_medicines():
         })
 
     return jsonify(medicine_list)
-
 
 
 @login.user_loader
