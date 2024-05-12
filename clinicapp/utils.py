@@ -15,13 +15,20 @@ def verify_password(password, hashed_password):
 
 def crop_to_square(image):
     min_size = min(image.size)
-    return image.crop((0, 0, min_size, min_size))
+
+    left = (image.width - min_size) / 2
+    top = (image.height - min_size) / 2
+    right = (image.width + min_size) / 2
+    bottom = (image.height + min_size) / 2
+
+    return image.crop((left, top, right, bottom))
 
 
 def upload_image_to_cloudinary(image):
     try:
         img_buffer = BytesIO()
-        image.save(img_buffer, format='JPEG')
+        RGB_img = image.convert('RGB')
+        RGB_img.save(img_buffer, format='JPEG')
         img_buffer.seek(0)
 
         upload_result = cloudinary.uploader.upload(img_buffer, folder="avatars")
