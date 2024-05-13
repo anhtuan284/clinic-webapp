@@ -26,6 +26,23 @@
                             <input type="password" class="form-control" id="password" name="password" placeholder="Mật khẩu"
                                    required>
                         </div>
+<h2>Quên mật khẩu</h2>
+    <style>
+        h2 {
+            font-size: 13px;
+        }
+    </style>
+
+    <form method="post">
+        {{csrf_token}}
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email" required><br><br>
+        <input type="submit" value="Gửi yêu cầu đặt lại mật khẩu">
+    </form>
+    <div class="form-floating mt-3 mb-3">
+        <button class="btn btn-success" type="submit">Đăng nhập</button>
+    </div>
+
 
                         <div class="text-center">
                             <button type="submit" class="btn btn-outline-primary btn-lg px-5">Đăng nhập</button>

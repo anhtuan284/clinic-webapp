@@ -217,7 +217,7 @@ class HistoryOnlinePayment(BaseModel):
 
 if __name__ == '__main__':
     with app.app_context():
-        # db.create_all()
+        db.create_all()
         # new_appointment4 = Appointment(
         #     scheduled_date=datetime.date(2024, 4, 30),  # Ngày đặt cuộc hẹn
         #     scheduled_hour=datetime.time(9, 30),  # Giờ đặt cuộc hẹn
@@ -231,21 +231,22 @@ if __name__ == '__main__':
         # order = HistoryOnlinePayment(amount=200000, response_code="aadasdasdasdas", gateway_name="vnpay", patient_id=1)
         # db.session.add(order)
         # db.session.commit()
+        #
+        # new_user4 = User(
+        #     name='Thao Van',
+        #     phone='0123456759',
+        #     avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+        #     email='cashier11@example.com',
+        #     address='Clinic',
+        #     username='cashier',
+        #     password=str(utils.hash_password("123")),
+        #     cid='68543151894',
+        #     gender=Gender.FEMALE,
+        #     role=UserRole.CASHIER,
+        # )
+        # db.session.add(new_user4)
+        # db.session.commit()
 
-        new_user4 = User(
-            name='Thao Van',
-            phone='0123456759',
-            avatar='https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
-            email='cashier11@example.com',
-            address='Clinic',
-            username='cashier',
-            password=str(utils.hash_password("123")),
-            cid='68543151894',
-            gender=Gender.FEMALE,
-            role=UserRole.CASHIER,
-        )
-        db.session.add(new_user4)
-        db.session.commit()
 
         # db.create_all()
         # new_user1 = User(

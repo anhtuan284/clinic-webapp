@@ -25,6 +25,7 @@ from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileFor
 from clinicapp.models import UserRole, Gender, Appointment, AppointmentList
 from clinicapp.vnpay import vnpay
 from flask_mail import Mail, Message
+from flask import Flask, render_template, request
 
 mail = Mail(app)
 
@@ -919,7 +920,6 @@ def test_mail():  # Renamed the function to avoid naming conflict
     mail.send(msg)
     return "success"
 
-
 @app.route('/nurse/create_list_by_date', methods=['POST'])
 def create_list_by_date():
     data = request.json
@@ -959,9 +959,9 @@ def create_list_by_date():
 #     return jsonify({'message': 'Card data processed successfully'}), 200
 
 @app.errorhandler(404)
+
 def page_not_found(error):
     return render_template('error/404.html'), 404
-
 
 @app.route('/nurse/nurse_book', methods=['GET'])
 def nure_book():
@@ -988,3 +988,74 @@ def nure_book():
 if __name__ == '__main__':
     with app.app_context():
         app.run(debug=True)
+# views.py
+from django.shortcuts import render
+from django.core.mail import send_mail
+from django.contrib.auth.models import User
+
+def forgot_password(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        user = User.objects.filter(email=email).first()
+        if user:
+
+            send_mail(
+                'Yêu cầu đặt lại mật khẩu',
+                'Vui lòng truy cập link sau để đặt lại mật khẩu: http://example.com/reset-password/',
+                'from@example.com',
+                [email],
+                fail_silently=False,
+            )
+            return render(request, 'password_reset_email_sent.html')
+        else:
+            return render(request, 'password_reset_failed.html')
+    return render(request, 'forgot_password.html')
+
+#Tienneeee
+from flask import Flask
+from flask_mail import Mail
+app.config['MAIL_SERVER'] = 'smtp.example.com'  # Thay 'smtp.example.com' bằng máy chủ SMTP của bạn
+app.config['MAIL_PORT'] = 587  # Thay 587 bằng cổng SMTP của bạn
+app.config['MAIL_USE_TLS'] = True  # Sử dụng TLS (Transport Layer Security) để mã hóa kết nối
+app.config['MAIL_USERNAME'] = 'your_email@example.com'  # Thay 'your_email@example.com' bằng địa chỉ email của bạn
+app.config['MAIL_PASSWORD'] = 'your_email_password'  # Thay 'your_email_password' bằng mật khẩu email của bạn
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_mail import Mail, Message
+import secrets
+mail = Mail(app)
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        if is_valid_email(email):
+            send_reset_email(email)
+            flash('Một email đã được gửi đến địa chỉ email của bạn để đặt lại mật khẩu.')
+            return redirect(url_for('login'))
+        else:
+            flash('Email không tồn tại trong hệ thống.')
+    return render_template('forgot_password.html')
+def is_valid_email(email):
+    return True
+def send_reset_email(email):
+    token = generate_reset_token()  # Tạo token đặt lại mật khẩu
+    msg = Message('Đặt lại mật khẩu', sender='your_email@example.com', recipients=[email])
+    msg.body = f"Để đặt lại mật khẩu của bạn, vui lòng truy cập đường dẫn sau: {url_for('reset_password', token=token, _external=True)}"
+    mail.send(msg)
+def generate_reset_token():
+    return secrets.token_hex(16)
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    # Xử lý yêu cầu đặt lại mật khẩu tại đây
+    if request.method == 'POST':
+        # Lấy mật khẩu mới từ form và cập nhật vào cơ sở dữ liệu
+        # Hiển thị thông báo mật khẩu đã được cập nhật thành công
+        flash('Mật khẩu đã được cập nhật thành công.')
+    return redirect(url_for('login'))  # Chuyển hướng đến trang đăng nhập
+
+    # Trang đặt lại mật khẩu với form cho người dùng nhập mật khẩu mới
+    return render_template('reset_password.html', token=token)
+if __name__ == '__main__':
+    app.run(debug=True)
+mail = Mail(app)
+if __name__ == '__main__':
+    app.run(debug=True)
