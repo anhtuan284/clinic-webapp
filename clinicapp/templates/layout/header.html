@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top">
+<nav class="navbar navbar-expand-sm bg-dark navbar-dark sticky-top shadow">
     <div class="container-fluid">
         <a class="navbar-brand fw-bolder" href="/">THT Clinic</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
@@ -12,39 +12,32 @@
                 {% if current_user.is_authenticated %}
                 {% if current_user.role.value == 'doctor' %}
                 <li class="nav-item">
-                    <a class="nav-link active" href="/list-patient">Danh sách bệnh nhân</a>
+                    <a class="nav-link " href="/list-patient">Danh sách bệnh nhân</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" href="#">Tra cứu thuốc</a>
+                    <a class="nav-link " href="#">Tra cứu thuốc</a>
                 </li>
                 {% elif current_user.role.value == 'nurse' %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink2" role="button"
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        Danh sách khám bệnh
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink1">
-                        <li><a class="dropdown-item" href="/nurse/confirm_appointment">Xác nhận và lập danh sách</a>
-                        </li>
-                        <li><a class="dropdown-item" href="/nurse/approved_appointment">Xem danh sách đã lập</a></li>
-                    </ul>
+
+                <li class="nav-item">
+                    <a class="nav-link active" href="/nurse/confirm_appointment">Xác nhận và lập danh sách</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/nurse/approved_appointment">Xem danh sách đã lập</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link active" href="/nurse/nurse_book">Đăng ký lich hẹn cho bệnh nhân</a>
                 </li>
                 {% elif current_user.role.value == 'patient' %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="" id="navbarDropdownMenuLink3" role="button"
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        Khám bệnh
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink1">
-                        <li><a class="dropdown-item" href="/patient/book">Đăng ký khám online</a></li>
-                        <li><a class="dropdown-item" href="#">X</a></li>
-                    </ul>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/patient/book">Đăng ký khám online</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link active" href="/patient/{{current_user.id}}/history">Lịch sử khám của tôi</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link active" href="#">Dự đoán bệnh</a>
-                </li>
                 </li>
                 {% elif current_user.role.value == 'cashier' %}
                 <li class="nav-item">

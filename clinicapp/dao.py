@@ -1,12 +1,13 @@
 import hashlib
 
+import pytz
 from sqlalchemy import func, desc, update
 from sqlalchemy.orm import sessionmaker, joinedload
 
 from clinicapp import db
 from clinicapp.models import *
 
-from clinicapp.utils import hash_password, verify_password
+from clinicapp.utils import hash_password, verify_password, datetime_now_vn
 
 
 def get_user_by_id(id):
@@ -504,20 +505,12 @@ def get_all_patient():
 
 
 def get_appointment_booked_by_patient_id(patient_id):
-    current_datetime = datetime.datetime.now()
-    current_date = current_datetime.date()
-    current_time = current_datetime.time()
-    print(current_datetime)
-    print(current_date)
-    print(current_time)
-    print(patient_id)
-    print(Appointment.query.filter(
-        Appointment.patient_id == patient_id,
-        (Appointment.scheduled_date == current_date) &
-        (Appointment.scheduled_hour >= current_time) |
-        (Appointment.scheduled_date > current_date)
-    ).first()
-          )
+
+    vn_time = datetime_now_vn()
+    # current_datetime = datetime.datetime.now()
+    current_date = vn_time.date()
+    current_time = vn_time.time()
+
     return Appointment.query.filter(
         Appointment.patient_id == patient_id,
         (Appointment.scheduled_date == current_date) &
