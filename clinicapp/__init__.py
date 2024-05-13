@@ -17,7 +17,7 @@ app.config[
 app.secret_key = '^%^&%^(*^^&&*^$%((^^&$$&^'
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
-app.config["PAGE_SIZE"] = 8
+app.config["PAGE_SIZE"] = 4
 
 cloudinary.config(cloud_name='dwvkjyixu', api_key='536683637118642', api_secret='FskS9miJ-HPA2-27m4vqpokOov4')
 db = SQLAlchemy(app)

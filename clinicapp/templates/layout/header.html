@@ -66,7 +66,7 @@
             <ul class="navbar-nav ms-auto">
                 {% if current_user.is_authenticated %}
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink4" role="button"
+                    <a class="nav-link dropdown-toggle me-3" href="#" id="navbarDropdownMenuLink4" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">
                         <img src="{{ current_user.avatar }}" width="25" class="rounded-circle img-fluid me-2"/> {{
                         current_user.username }}
@@ -77,12 +77,12 @@
                     </ul>
                 </li>
                 {% else %}
-                <li class="nav-item">
-                    <a class="nav-link rounded fw-bold" href="/login" style="color: white; background-color: #0c73cd;">Đăng
+                <li class="nav-item navbar-btn">
+                    <a class="nav-link navbar-btn rounded fw-bold" href="/login" style="color: white; background-color: #0c73cd;">Đăng
                         nhập</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link bg-secondary rounded mx-2 fw-bold" href="/register">Đăng ký</a>
+                <li class="nav-item navbar-btn">
+                    <a class="nav-link navbar-btn bg-secondary rounded mx-2 fw-bold" href="/register" >Đăng ký</a>
                 </li>
                 {% endif %}
             </ul>

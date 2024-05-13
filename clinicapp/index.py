@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import hmac
 import json
+import math
 import uuid
 import cloudinary.uploader
 import requests
@@ -22,7 +23,7 @@ from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_h
     get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions_by_scheduled_date, get_doctor_by_id, \
     get_patient_by_id, get_all_patient, get_all_doctor
 from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin, adminloggedin
-from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileForm, ChangeAvatarForm
+from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileForm, ChangeAvatarForm, ChangeUsernameForm
 from clinicapp.models import UserRole, Gender, Appointment, AppointmentList
 from clinicapp.vnpay import vnpay
 from flask_mail import Mail, Message
@@ -73,6 +74,21 @@ def process_admin_login():
 def logout_my_user():
     logout_user()
     return redirect('/login')
+
+
+@app.route('/check_username', methods=['POST'])
+def check_username():
+    data = request.json
+
+    if 'username' not in data:
+        return jsonify({'error': 'Missing username parameter'}), 400
+
+    username = data['username']
+
+    if dao.get_user_by_username(username) is not None:
+        return jsonify({'message': 'Username exists'}), 409
+    else:
+        return jsonify({'message': 'Username valid'}), 200
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -255,9 +271,14 @@ def get_units_by_medicine(medicine_id):
 @login_required
 @roles_required([UserRole.DOCTOR, UserRole.PATIENT])
 def patient_history(patient_id):
+    page = request.args.get('page', 1, type=int)
+    diagnosis = request.args.get('diagnosis', None, type=str)
+
     patient = dao.get_user_by_id(patient_id)
-    prescriptions = dao.get_prescription_by_patient(patient.id)
-    return render_template('doctor/disease_history.html', patient=patient, prescriptions=prescriptions)
+    prescriptions = dao.get_prescription_by_patient(patient_id=patient.id, page=page, diagnosis=diagnosis)
+
+    return render_template('doctor/disease_history.html', patient=patient, prescriptions=prescriptions,
+                           pages=math.ceil(dao.count_prescription_by_patient(patient_id)/app.config['PAGE_SIZE']))
 
 
 @app.route("/api/medicines/")
@@ -765,6 +786,7 @@ def profile_edit():
         current_user.gender = form.gender.data
         current_user.address = form.address.data
         db.session.commit()
+        flash("Cập nhật thông tin người dùng thành công!", "success")
         return redirect(url_for('profile'))
     form.name.data = current_user.name
     form.cid.data = current_user.cid
@@ -790,6 +812,20 @@ def profile_change_password():
             return redirect(url_for('profile'))
         flash('Mật khẩu không đúng!', 'danger')
     return render_template('profile/change_password.html', form=form)
+
+
+@app.route('/profile/change_username', methods=['GET', 'POST'])
+@login_required
+def profile_change_username():
+    form = ChangeUsernameForm()
+    if form.validate_on_submit():
+        current_user.username = form.new_username.data.strip()
+        db.session.commit()
+        flash('Đổi tên tài khoản thành công!', 'success')
+        return redirect(url_for('profile'))
+
+    form.old_username.data = current_user.username
+    return render_template('profile/change_username.html', form=form)
 
 
 @app.route('/profile/change_avatar', methods=['POST'])
