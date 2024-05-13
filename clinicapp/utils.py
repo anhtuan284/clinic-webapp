@@ -1,6 +1,10 @@
+import datetime
+
 import bcrypt
 import cloudinary
 from io import BytesIO
+
+import pytz
 
 
 def hash_password(password, rounds=12):
@@ -39,3 +43,13 @@ def upload_image_to_cloudinary(image):
     except Exception as e:
         print("Error uploading image to Cloudinary:", e)
         return None
+
+
+def datetime_now_vn():
+    utc_time = datetime.datetime.utcnow()
+    # Tạo đối tượng múi giờ UTC
+    utc_timezone = pytz.timezone('UTC')
+    # Chuyển đổi thời gian từ UTC sang múi giờ Việt Nam
+    vn_timezone = pytz.timezone('Asia/Ho_Chi_Minh')
+    vn_time = utc_time.replace(tzinfo=utc_timezone).astimezone(vn_timezone)
+    return vn_time
