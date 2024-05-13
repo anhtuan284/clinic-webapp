@@ -283,6 +283,7 @@ def patient_history(patient_id):
                            pages=pages)
 
 
+
 @app.route("/api/medicines/")
 @login_required
 @roles_required([UserRole.DOCTOR])
