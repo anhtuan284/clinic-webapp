@@ -896,7 +896,7 @@ def update_appointment():
             new_appointment = dao.get_appointment_by_id(appointment_id)
             if new_appointment is None:
                 return jsonify({'error': 'Appointment not found.'}), 404
-            send_notification_email(current_user, new_appointment, "TỪ CHỐI")
+            send_notification_email(current_user, new_appointment, "ĐƯỢC HUỶ")
             dao.delete_appointment(new_appointment)
             flash("Huỷ lịch hẹn khám thành công!", "success")
             return jsonify({'message': 'Card data processed successfully'}), 200
