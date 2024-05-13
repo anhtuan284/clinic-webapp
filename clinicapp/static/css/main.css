@@ -10,7 +10,7 @@ body {
   position: relative;
 }
 
-.nav-link::before {
+.nav-link:not(.navbar-btn)::before {
   content: "";
   position: absolute;
   bottom: 0;
@@ -23,7 +23,7 @@ body {
   transition: 0.3s ease-in-out;
 }
 
-.nav-link:hover::before {
+.nav-link:not(.navbar-btn):hover::before {
   width: 90%;
   visibility: visible;
 }

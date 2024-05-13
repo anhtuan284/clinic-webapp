@@ -4,15 +4,16 @@
 
 {% block content %}
 <div class="row gx-5 mb-4">
-    <h1 class="text-primary text-center font-weight-bold mt-3" >LỊCH SỬ KHÁM BỆNH</h1>
+    <h1 class="text-primary text-center font-weight-bold mt-3">LỊCH SỬ KHÁM BỆNH</h1>
 </div>
+
 <div class="container-fluid py-3">
     <div class="container">
         {% if patient %}
         <div class="row rounded shadow py-3 bg-light">
             <div class="form-group mt-2 col-md-3 col-sm-12">
                 <label><b>Mã bệnh nhân:</b></label>
-                <input  disabled type="text" class="form-control" value="{{ patient.id }}">
+                <input disabled type="text" class="form-control" value="{{ patient.id }}">
             </div>
             <div class="form-group mt-2 col-md-3 col-sm-12">
                 <label><b>Họ tên bệnh nhân:</b></label>
@@ -27,6 +28,15 @@
                 <input disabled type="text" class="form-control" value="{{ patient.phone }}">
             </div>
         </div>
+        {% if pages > 1 %}
+        <div class="row justify-content-center align-content-center mt-5">
+            <ul class="pagination mt-1 justify-content-center align-content-center">
+                {% for i in range(1, pages+1) %}
+                <li class="page-item"><a class="page-link" href="/patient{{patienti.id}}/history/?page={{i}}">{{i}}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
         {% if prescriptions %}
         <div class="d-flex row justify-content-md-between">
             {% for prescription in prescriptions %}
@@ -46,22 +56,22 @@
                 <div class="form-group mt-2 col-md-12 col-sm-12">
                     <table class="table table-sm table-bordered">
                         <thead class="table-primary">
-                            <tr>
-                                <th scope="col">Tên thuốc</th>
-                                <th scope="col">Số lượng</th>
-                                <th scope="col">Đơn vị</th>
-                                <th scope="col">Cách sử dụng</th>
-                            </tr>
+                        <tr>
+                            <th scope="col">Tên thuốc</th>
+                            <th scope="col">Số lượng</th>
+                            <th scope="col">Đơn vị</th>
+                            <th scope="col">Cách sử dụng</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {% for medicine_detail in prescription.medicine_details %}
-                                <tr>
-                                    <td>{{ medicine_detail.medicine.name }}</td>
-                                    <td>{{ medicine_detail.quantity }}</td>
-                                    <td>{{ medicine_detail.medicine_unit.unit.name }}</td>
-                                    <td>{{ medicine_detail.usage }}</td>
-                                </tr>
-                            {% endfor %}
+                        {% for medicine_detail in prescription.medicine_details %}
+                        <tr>
+                            <td>{{ medicine_detail.medicine.name }}</td>
+                            <td>{{ medicine_detail.quantity }}</td>
+                            <td>{{ medicine_detail.medicine_unit.unit.name }}</td>
+                            <td>{{ medicine_detail.usage }}</td>
+                        </tr>
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>

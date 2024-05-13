@@ -36,7 +36,7 @@ class User(db.Model, UserMixin):
     gender = Column(EnumType(Gender))
     address = Column(String(100), default="Địa chỉ")
     avatar = Column(String(100),
-                    default="https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg")
+                    default="https://res.cloudinary.com/dwvkjyixu/image/upload/v1715592288/avatars/pzh51raolcegilwmhm4g.jpg")
 
     def __str__(self):
         return self.username
