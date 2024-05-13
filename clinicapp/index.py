@@ -4,18 +4,15 @@ import hmac
 import json
 import math
 import uuid
-import cloudinary.uploader
 import requests
 from PIL import Image
 from flask import request, redirect, render_template, jsonify, url_for, session, flash
 from flask_cors import cross_origin
 from flask_login import login_user, logout_user, login_required, current_user
-from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
-    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, admin, db, utils, MAIL_SENDER, \
-    MAIL_SENDER_EMAIL
+    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, admin, db, utils
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
     get_prescriptions_by_scheduled_date, get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
@@ -272,7 +269,7 @@ def get_units_by_medicine(medicine_id):
 @roles_required([UserRole.DOCTOR, UserRole.PATIENT])
 @resources_owner(resource_user_id_param='patient_id', allowed_roles=[UserRole.PATIENT, UserRole.DOCTOR])
 def patient_history(patient_id):
-    page = request.args.get('page', None, type=int)
+    page = request.args.get('page', 1, type=int)
     diagnosis = request.args.get('diagnosis', None, type=str)
     date = request.args.get('start_date', None, type=str)
 
@@ -975,7 +972,7 @@ def send_notification_email(user, appointment, status):
     }
     print(data)
     # Gửi email
-    msg = Message(subject, sender=(MAIL_SENDER, MAIL_SENDER_EMAIL),
+    msg = Message(subject, sender=(app.config["MAIL_SENDER"], app.config["MAIL_SENDER_EMAIL"]),
                   recipients=[user.email, '2151013029huy@ou.edu.vn'])
     # msg.body = body
     msg.html = render_template('nurse/email.html', user=user, appointment=appointment, status=status)
