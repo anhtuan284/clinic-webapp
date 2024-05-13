@@ -49,9 +49,11 @@ EMAIL_HOST_USER = 'peteralwaysloveu@gmail.com'
 EMAIL_HOST_PASSWORD = "uvbc jfpm udxt apwv"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-
+MAIL_SENDER = f"PHÒNG KHÁM AN TÂM "
+MAIL_SENDER_EMAIL = "phongkhamantam@example.com"
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_USERNAME'] = 'peteralwaysloveu@gmail.com'
 app.config['MAIL_PASSWORD'] = "uvbc jfpm udxt apwv"
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_PORT'] = 587
+app.config['MAIL_SENDER'] = MAIL_SENDER
