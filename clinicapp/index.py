@@ -10,10 +10,11 @@ from flask import request, redirect, render_template, jsonify, url_for, session,
 from flask_cors import cross_origin
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import update
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
-    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, admin, db, utils
+    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, admin, db, utils, MAIL_SENDER, \
+    MAIL_SENDER_EMAIL
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
     get_prescriptions_by_scheduled_date, get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
@@ -77,37 +78,62 @@ def logout_my_user():
 @app.route('/register', methods=['GET', 'POST'])
 def register_user():
     err_msg = None
+    avatar_url = None
     if request.method.__eq__('POST'):
         password = request.form.get('password')
         confirm = request.form.get('confirm')
         if password.__eq__(confirm):
-            avatar_path = None
             avatar = request.files.get('avatar')
             if avatar:
-                res = cloudinary.uploader.upload(avatar)
-                avatar_path = res['secure_url']
+                if avatar.filename != '':
+                    img = Image.open(avatar)
+                    img_cropped = utils.crop_to_square(img)
+                    avatar_url = utils.upload_image_to_cloudinary(img_cropped)
+                    if avatar_url:
+                        pass
+                    else:
+                        flash('Đã xảy ra lỗi khi tải lên hình ảnh.', 'danger')
+                        avatar_url = "https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg"
+                        return redirect(url_for('register_user'))
 
             gender = None
             if request.form.get('gender') == 'male':
                 gender = Gender.MALE
             else:
                 gender = Gender.FEMALE
-            session['patient_cid'] = request.form.get('cid')
-            dao.add_user(name=request.form.get('name'),
-                         username=request.form.get('username'),
-                         password=password,
-                         avatar=avatar_path,
-                         email=request.form.get('email'),
-                         phone=request.form.get('phone'),
-                         address=request.form.get('address'),
-                         cid=request.form.get('cid'),
-                         dob=request.form.get('dob'),
-                         gender=gender
-                         )
-            if current_user.role.value == 'nurse':
-                return redirect('/nurse/nurse_book')
+            try:
+                session['patient_cid'] = request.form.get('cid')
+                current_user_role = session.pop('current_user_role', None)
+                dao.add_user(name=request.form.get('name'),
+                             username=request.form.get('username'),
+                             password=password,
+                             avatar=avatar_url,
+                             email=request.form.get('email'),
+                             phone=request.form.get('phone'),
+                             address=request.form.get('address'),
+                             cid=request.form.get('cid'),
+                             dob=request.form.get('dob'),
+                             gender=gender
+                             )
+                if current_user_role == 'nurse':
+                    return redirect('/nurse/nurse_book')
+            except IntegrityError as ie:
+                if ie.orig.args[0] == 1062:
+                    ieMessage = ie.orig.args[1].split()
+                    entry = ieMessage[len(ieMessage) - 1]
+                    if entry == '\'user.username\'':
+                        return redirect(url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Username có rồi!!!'))
+                    if entry == '\'user.ix_user_cid\'':
+                        return redirect(
+                            url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Căng Cước Công Dân này có rồi!!!'))
+                    if entry == '\'user.email\'':
+                        return redirect(url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Email này có rồi!!!'))
 
-            return redirect(url_for('login_my_user',  success_msg="Tạo tài khoản thành công!!!"))
+                return redirect(url_for('register_user', err_msg=f'Mã lỗi: {ie.orig.args[0]}; Lỗi: {ie.orig.args[1]}'))
+            except Exception as e:
+                return redirect(url_for('register_user', err_msg=str(e)))
+
+            return redirect(url_for('login_my_user', success_msg="Tạo tài khoản thành công!!!"))
         else:
             err_msg = 'Mật khẩu không khớp!'
 
@@ -226,10 +252,29 @@ def get_units_by_medicine(medicine_id):
 
 
 @app.route("/patient/<int:patient_id>/history")
+@login_required
+@roles_required([UserRole.DOCTOR, UserRole.PATIENT])
 def patient_history(patient_id):
     patient = dao.get_user_by_id(patient_id)
     prescriptions = dao.get_prescription_by_patient(patient.id)
     return render_template('doctor/disease_history.html', patient=patient, prescriptions=prescriptions)
+
+
+@app.route("/api/medicines/")
+@login_required
+@roles_required([UserRole.DOCTOR])
+def get_medicines():
+    kw = request.args.get('name')
+    medicines = dao.get_medicines(name=kw)
+    medicine_list = []
+    for medicine in medicines:
+        medicine_list.append({
+            'id': medicine.id,
+            'name': medicine.name,
+            'usage': medicine.usage
+        })
+
+    return jsonify(medicine_list)
 
 
 @login.user_loader
@@ -356,7 +401,8 @@ def nurse_book_appointment():
                             is_paid=False,
                             status=False,
                             patient_id=patient_id)
-        return redirect('/')
+        flash("Đăng ký lịch hẹn khám thành công!", "success")
+        return redirect('/nurse/confirm_appointment')
 
 
 @app.route('/patient/book_appointment', methods=['POST'])
@@ -371,11 +417,10 @@ def patient_book_appointment():
             session['payment_method'] = pay_method
             session['way'] = gateway
             amount = get_value_policy(TIENKHAM)
-
-        if gateway == 'vnpay':
-            return redirect(process_vnpay(amount, current_user))
-        elif gateway == 'momo':
-            return redirect(process_momo(amount))
+            if gateway == 'vnpay':
+                return redirect(process_vnpay(amount, current_user))
+            elif gateway == 'momo':
+                return redirect(process_momo(amount))
 
         elif pay_method == 'clinic':
             scheduled_date = request.form.get('appointment_date')
@@ -392,6 +437,8 @@ def patient_book_appointment():
                                 is_paid=False,
                                 status=False,
                                 patient_id=current_user.id)
+            flash("Đăng ký lịch hẹn khám thành công!", "success")
+
             return redirect('/patient/book')
 
 
@@ -425,6 +472,7 @@ def payment_return():
             create_appoinment_done_payment()
             dao.create_order_payment(amount=vnp_Amount, gateway='vnpay', patient_id=current_user.id, paid=True,
                                      response_code=trans_code)
+            flash("Đăng ký lịch hẹn khám thành công!", "success")
             return redirect('/patient/book')
         elif current_user.role.value == 'cashier':
             print(43434)
@@ -472,6 +520,7 @@ def payment_return_momo():
                                      response_code=trans_code)
 
             # create_appoinment_done_payment()
+            flash("Đăng ký lịch hẹn khám thành công!", "success")
             return redirect('/patient/book')
         elif current_user.role.value == 'cashier':
             amount = inputData["amount"]
@@ -843,12 +892,13 @@ def update_appointment():
                 dao.make_the_list(card_data)
                 return jsonify({'message': 'Card data processed successfully'}), 200
     elif current_user.role.value == 'patient':
+        print(123123123123123123)
         if new_status == 'cancelled':
             appointment_id = request.args.get('appointment_id')
             new_appointment = dao.get_appointment_by_id(appointment_id)
             if new_appointment is None:
                 return jsonify({'error': 'Appointment not found.'}), 404
-            send_notification_email(current_user, new_appointment, "TỪ CHỐI")
+            send_notification_email(current_user, new_appointment, "ĐƯỢC HUỶ")
             dao.delete_appointment(new_appointment)
             flash("Huỷ lịch hẹn khám thành công!", "success")
             return jsonify({'message': 'Card data processed successfully'}), 200
@@ -886,7 +936,7 @@ def send_notification_email(user, appointment, status):
     }
     print(data)
     # Gửi email
-    msg = Message(subject, sender='peteralwaysloveu@gmail.com',
+    msg = Message(subject, sender=(MAIL_SENDER, MAIL_SENDER_EMAIL),
                   recipients=[user.email, '2151013029huy@ou.edu.vn'])
     # msg.body = body
     msg.html = render_template('nurse/email.html', user=user, appointment=appointment, status=status)
@@ -894,13 +944,13 @@ def send_notification_email(user, appointment, status):
     return jsonify({'message': 'Appointment status updated successfully.'}), 200
 
 
-@app.route('/test')
-def test_mail():  # Renamed the function to avoid naming conflict
-    msg = Message('ssdasdasd', sender='peteralwaysloveu@gmail.com',
-                  recipients=['baoempro2003@gmail.com', '2151013029huy@ou.dedu.vn', ])
-    msg.body = "clinic asdasdasdasd"
-    mail.send(msg)
-    return "success"
+# @app.route('/test')
+# def test_mail():  # Renamed the function to avoid naming conflict
+#     msg = Message('ssdasdasd', sender='peteralwaysloveu@gmail.com',
+#                   recipients=['baoempro2003@gmail.com', '2151013029huy@ou.dedu.vn', ])
+#     msg.body = "clinic asdasdasdasd"
+#     mail.send(msg)
+#     return "success"
 
 
 @app.route('/nurse/create_list_by_date', methods=['POST'])
@@ -950,6 +1000,8 @@ def page_not_found(error):
 def nure_book():
     patient_cid = None
     patient_cid = request.args.get('patient_cid')
+    session['current_user_role'] = current_user.role.value
+
     if patient_cid is None:
         patient_cid = session.pop('patient_cid', None)
     current_patient = None

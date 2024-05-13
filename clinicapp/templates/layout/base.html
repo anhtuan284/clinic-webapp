@@ -20,23 +20,35 @@
           rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-timepicker/0.5.2/js/bootstrap-timepicker.min.js"></script>
+    <link href="{{url_for('static', filename='css/main.css')}}" rel="stylesheet">
 
+    <!-- Vendor CSS Files -->
+    <link href="{{url_for('static', filename='vendor/fontawesome-free/css/all.min.css')}}" rel="stylesheet">
+    <link href="{{url_for('static', filename='vendor/animate.css/animate.min.css')}}" rel="stylesheet">
+    <link href="{{url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css')}}" rel="stylesheet">
+    <link href="{{url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css')}}" rel="stylesheet">
+    <link href="{{url_for('static', filename='vendor/boxicons/css/boxicons.min.css')}}" rel="stylesheet">
+<!--    <link href="{{url_for('static', filename='vendor/glightbox/css/glightbox.min.css')}}" rel="stylesheet">-->
+<!--    <link href="{{url_for('static', filename='vendor/remixicon/remixicon.css')}}" rel="stylesheet">-->
+<!--    <link href="{{url_for('static', filename='vendor/swiper/swiper-bundle.min.css')}}" rel="stylesheet">-->
 </head>
 
 <body>
 
-    {% block header %}
-    {% include 'layout/header.html' %}
-    {% endblock %}
+{% block header %}
+{% include 'layout/header.html' %}
+{% endblock %}
 
 
-
-        {% block content required %}{% endblock %}
-
-
-
+<div class="main-container">
+    {% block content required %}{% endblock %}
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
+</div>
 
 
 <!--    <script src="{{ url_for('static', filename='js/') }}"></script>-->
+{% include 'layout/footer.html' %}
+
 </body>
 </html>

@@ -11,7 +11,7 @@ document.getElementById("datepicker").addEventListener("change", function () {
     var selectedDate = new Date(this.value);
     var currentDate = new Date();
     if (selectedDate < currentDate) {
-        this.disabled = true;
+        this.disabled = false;
     } else {
         this.disabled = false;
     }
@@ -39,10 +39,8 @@ function resetData() {
 function checkAppointmentDate() {
     var selectedDate = document.getElementById("datepicker").value;
     if (!selectedDate) {
-        // Không có ngày nào được chọn
         return;
     }
-    // Gửi yêu cầu kiểm tra ngày thông qua fetch
     fetch(`/check-appointment-date?date=${selectedDate}`)
         .then(response => response.json())
         .then(data => {
@@ -213,8 +211,12 @@ function cancelAppointmentButton(appointment_booked_id) {
         }
     });
 }
+function showLoadingIcon() {
+    document.getElementById('spin').style.display = 'block';
+}
 
 function cancelAppointment(appointment_id) {
+    showLoadingIcon();
     fetch("/api/update_appointment?appointment_id=" + appointment_id + "&status=cancelled", {
         method: "PATCH",
         headers: {

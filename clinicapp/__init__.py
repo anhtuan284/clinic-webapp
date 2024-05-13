@@ -10,9 +10,11 @@ from flask_cors import CORS
 import cloudinary
 
 app = Flask(__name__)
+app.config[
+    "SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://admin:%s@flask-db.cle2w2q6enml.ap-southeast-2.rds.amazonaws.com" \
+                                 "/clinicdb?charset=utf8mb4" % quote('httclinic')
 
 app.secret_key = '^%^&%^(*^^&&*^$%((^^&$$&^'
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:%s@localhost/clinicdb?charset=utf8mb4" % quote('Baopro123')
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app.config["PAGE_SIZE"] = 8
@@ -47,9 +49,11 @@ EMAIL_HOST_USER = 'peteralwaysloveu@gmail.com'
 EMAIL_HOST_PASSWORD = "uvbc jfpm udxt apwv"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-
+MAIL_SENDER = f"PHÒNG KHÁM AN TÂM "
+MAIL_SENDER_EMAIL = "phongkhamantam@example.com"
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_USERNAME'] = 'peteralwaysloveu@gmail.com'
 app.config['MAIL_PASSWORD'] = "uvbc jfpm udxt apwv"
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_PORT'] = 587
+app.config['MAIL_SENDER'] = MAIL_SENDER

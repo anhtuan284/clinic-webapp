@@ -22,28 +22,33 @@
         <div class="row">
             <div class="col-md-6 shadow">
                 <h2 class="text-center">Bệnh nhân</h2>
+                <div class="row">
+                    <div class="col-md-5 my-2">
+                        <a class="btn btn-secondary" onclick="viewPatientHistory()">Xem lịch sử khám bệnh</a>
+                    </div>
+                    <div class="col-md-3 py-2 my-2">
+                        {{ form.date.label(class="form-label fw-bold") }}
+                    </div>
+                    <div class="col-md-4 my-2">
+                        {{ form.date(class="form-control", readonly=True, value=appointment.scheduled_date) }}
+                    </div>
+                </div>
                 <div class="row my-2">
                     <div class="col-md-6">
                         {{ form.patient_cid.label(class="form-label fw-bold") }}
-                        {{ form.patient_cid(class="form-control", onblur="fetchPatientInfo()", value=appointment.cid)}}
+                        {{ form.patient_cid(class="form-control", onblur="fetchPatientInfo()", value=appointment.cid, readonly=True)}}
                         <input id="patient_id" name="patient_id" value="{{appointment.patient_id}}" hidden/>
                     </div>
                     <div class="col-md-6">
                         {{ form.name.label(class="form-label fw-bold") }}
                         {{ form.name(class="form-control", id="patient-name", readonly=True, value=appointment.name) }}
                     </div>
-                    <div class="col-md-5 my-2">
-                        {{ form.date.label(class="form-label fw-bold") }}
-                        {{ form.date(class="form-control", readonly=True, value=appointment.scheduled_date) }}
-                    </div>
-                    <div class="col-md-4 my-2">
-                        <a class="btn btn-secondary" onclick="viewPatientHistory()">Xem lịch sử khám</a>
-                    </div>
+
                 </div>
 
                 <div class="mb-3 my-2">
-                    {{ form.appointment_id.label(class="form-label fw-bold") }}
-                    {{ form.appointment_id(class="form-control", id="appointment_id", value=appointment.appointment_id) }}
+<!--                    {{ form.appointment_id.label(class="form-label fw-bold") }}-->
+                    {{ form.appointment_id(class="form-control", id="appointment_id", value=appointment.appointment_id, readonly=True, hidden=True) }}
                 </div>
                 <div class="mb-3 my-2">
                     {{ form.symptoms.label(class="form-label fw-bold") }}
@@ -61,6 +66,7 @@
             <div class="col-md-6 shadow bg-light">
                 <div class="mb-3">
                     <h2 class="text-center">Thêm thuốc</h2>
+
                     <div class="row">
                         <div class="col-md-6 my-2">
                             {{ form.medicine_type.label(class="form-label fw-bold") }}
@@ -93,7 +99,6 @@
                         <div class="col-md-6 my-2">
                             {{ form.quantity.label(class="form-label fw-bold") }}
                             {{ form.quantity(class="form-control") }}
-                            <!--                        <input type="range" id="quantity" class="form-control" min="1" max="50"/>-->
                         </div>
                         <div class="col-md-12 my-2">
                             {{ form.usage.label(class="form-label fw-bold") }}
@@ -101,6 +106,10 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-center my-5">
+                        <input id="lookupMedicineBtn" type="button"
+                               class="btn btn-outline-primary align-self-center mx-2 px-4"
+                               onclick=""
+                               value="Tra cứu thuốc"></input>
                         <input type="button" class="btn btn-primary align-self-center px-4" onclick="add()"
                                value="Thêm thuốc"></input>
                     </div>
@@ -126,11 +135,90 @@
             </table>
         </div>
         <div class="mb-3 d-flex justify-content-center">
-            <input class="btn-sm btn-danger mx-2" type="button" value="Hủy lập phiếu khám" onclick="cancelCreatePres()"/>
+            <input class="btn-sm btn-danger mx-2" type="button" value="Hủy lập phiếu khám"
+                   onclick="cancelCreatePres()"/>
             {{ form.submit(class="btn btn-primary") }}
         </div>
     </form>
 
+    <!-- Modal -->
+    <div class="modal fade" id="medicineLookupModal" tabindex="-1" aria-labelledby="medicineLookupModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="medicineLookupModalLabel">Tra cứu thuốc</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <div id="medicineDropdown">
+                        <input type="text" class="form-control" id="medicineSearchInput"
+                               placeholder="Nhập tên thuốc...">
+                        <ul id="medicineList" class="list-group">
+
+                        </ul>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="../static/js/prescription.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#lookupMedicineBtn").click(function () {
+                // Mở modal khi nút được bấm
+                $("#medicineLookupModal").modal("show");
+            });
+        });
+
+        function searchMedicines() {
+            var searchQuery = document.getElementById("medicineSearchInput").value;
+
+            $.ajax({
+                url: "/api/medicines/",
+                method: "GET",
+                data: {name: searchQuery},
+                success: function (data) {
+                    // Gọi hàm để hiển thị kết quả
+                    addMedicineResultsToDropdown(data);
+                }
+            });
+        }
+
+        function addMedicineResultsToDropdown(results) {
+            const medicineList = document.getElementById("medicineList");
+            medicineList.innerHTML = '';
+
+            results.forEach(function (medicine) {
+                const listItem = document.createElement("li");
+                listItem.className = "list-group-item";
+                listItem.value = medicine.id
+                listItem.textContent = medicine.name;
+                listItem.style.height = 5;
+                listItem.onclick = function () {
+                    document.getElementById("medicineSearchInput").value = medicine.name; // Dán tên thuốc vào ô tìm kiếm
+                    $("#medicineLookupModal").modal("hide"); // Ẩn modal
+                    var medicineTypeDropdown = $('#selected-medicine'); // Chọn dropdown
+                    medicineTypeDropdown.val(this.value);
+                    $("#medicineSearchInput").val('');
+                    medicineList.innerHTML = '';
+                    fetchMedicineUnits(this.value)
+                };
+                medicineList.appendChild(listItem);
+            });
+        }
+
+        // Bắt sự kiện khi người dùng nhập vào ô tìm kiếm
+        document.getElementById("medicineSearchInput").addEventListener("input", function () {
+            searchMedicines();
+        });
+
+    </script>
 </div>
+
 {% endblock %}

@@ -3,16 +3,22 @@
 {% block title %}Lập danh sách{% endblock %}
 
 {% block content %}
-{% if err_msg %}
-<div class="alert alert-danger">{{ err_msg }}</div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }}">
+    {{ message }}
+</div>
+{% endfor %}
 {% endif %}
+{% endwith %}
 
 
 <style>
     .list-container {
         float: left;
         width: 45vw;
-        height:70vh;
+        height: 70vh;
         margin: 40px;
         background-color: #dbd6d6;
         border-radius: 10px;
@@ -95,7 +101,59 @@
         z-index: 9999; /* Đảm bảo nút hiển thị trên tất cả các phần khác */
     }
 
+    .spin {
+        display: flex;
+        position: absolute;
+        z-index: 9999;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5); /* Một lớp mờ */
+
+    }
+
+    .spinner {
+        animation: rotate 2s linear infinite;
+        z-index: 2;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin: -25px 0 0 -25px;
+        width: 50px;
+        height: 50px;
+    }
+
+    .spinner .path {
+        stroke: hsl(210, 70%, 75%);
+        stroke-linecap: round;
+        animation: dash 1.5s ease-in-out infinite;
+    }
+
+    @keyframes rotate {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes dash {
+        0% {
+            stroke-dasharray: 1, 150;
+            stroke-dashoffset: 0;
+        }
+        50% {
+            stroke-dasharray: 90, 150;
+            stroke-dashoffset: -35;
+        }
+        100% {
+            stroke-dasharray: 90, 150;
+            stroke-dashoffset: -124;
+        }
+    }
 </style>
+<div class="spin" id="spin" style="display: none;">
+    <svg id="loadingIcon" class="spinner" viewBox="0 0 50 50">
+        <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+    </svg>
+</div>
 <div class="overlay" id="overlay">
     <button class="btn close-button" onclick="hideOverlay()" style="background-color: #dbd6d6; color: white;"> Close
     </button>
@@ -131,10 +189,10 @@
 </div>
 
 
-
- <div class="list-container">
+<div class="list-container">
     <div class="list_confirm">
-        <button class="btn btn-primary create-list-btn" onclick="create_list_for_date()">Lập danh sách cho tất cả</button>
+        <button class="btn btn-primary create-list-btn" onclick="create_list_for_date()">Lập danh sách cho tất cả
+        </button>
         <!-- Danh sách đã xác nhận -->
         {% for appointment, user in appointments_confirm %}
         <div class="card" data-appointment-id="{{ appointment.id }}" data-user-id="{{ user.id }}">
@@ -158,8 +216,8 @@
 </div>
 
 
-<script src="/static/js/nurse/nurse_confirm.js">
-</script>
+<script src="/static/js/nurse/nurse_confirm.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
 {% endblock %}
