@@ -36,7 +36,7 @@
                 <div class="row my-2">
                     <div class="col-md-6">
                         {{ form.patient_cid.label(class="form-label fw-bold") }}
-                        {{ form.patient_cid(class="form-control", onblur="fetchPatientInfo()", value=appointment.cid)}}
+                        {{ form.patient_cid(class="form-control", onblur="fetchPatientInfo()", value=appointment.cid, readonly=True)}}
                         <input id="patient_id" name="patient_id" value="{{appointment.patient_id}}" hidden/>
                     </div>
                     <div class="col-md-6">
