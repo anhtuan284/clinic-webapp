@@ -3,7 +3,7 @@ name: CI/CD for Flask App
 on:
   push:
     branches:
-      - main
+      - tbat
 
 jobs:
   build:
@@ -32,7 +32,25 @@ jobs:
     - name: Deploy to production
       run: |
         docker pull anhtuan284/clinic-flask
-        docker run -d -p 5000:5000 anhtuan284/clinic-flask
+        docker run -d \
+          -e SQLALCHEMY_DATABASE_URI="${{ secrets.SQLALCHEMY_DATABASE_URI }}" \
+          -e MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}" \
+          -e MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}" \
+          -e CLOUDINARY_CLOUD_NAME="${{ env.CLOUDINARY_CLOUD_NAME }}" \
+          -e CLOUDINARY_API_KEY="${{ env.CLOUDINARY_API_KEY }}" \
+          -e CLOUDINARY_API_SECRET="${{ secrets.CLOUDINARY_API_SECRET }}" \
+          -e VNPAY_RETURN_URL="${{ env.VNPAY_RETURN_URL }}" \
+          -e VNPAY_PAYMENT_URL="${{ env.VNPAY_PAYMENT_URL }}" \
+          -e VNPAY_API_URL="${{ env.VNPAY_API_URL }}" \
+          -e VNPAY_TMN_CODE="${{ secrets.VNPAY_TMN_CODE }}" \
+          -e VNPAY_HASH_SECRET_KEY="${{ secrets.VNPAY_HASH_SECRET_KEY }}" \
+          -e MOMO_ENDPOINT="${{ env.MOMO_ENDPOINT }}" \
+          -e MOMO_ACCESS_KEY="${{ secrets.MOMO_ACCESS_KEY }}" \
+          -e MOMO_SECRET_KEY="${{ secrets.MOMO_SECRET_KEY }}" \
+          -e MOMO_REDIRECT_URL="${{ env.MOMO_REDIRECT_URL }}" \
+          -e MOMO_IPN_URL="${{ env.MOMO_IPN_URL }}" \
+          -p 5000:5000 anhtuan284/clinic-flask
+    
 
     - name: Trigger Deploy on Render
       run: curl ${{ secrets.RENDER_DEPLOY_HOOK}}
