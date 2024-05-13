@@ -437,14 +437,17 @@ def get_prescription_by_patient(patient_id, page=None, start_date=None, diagnosi
         q = q.filter(Prescription.date >= start_date)
 
     if diagnosis:
-        q = q.filter(Prescription.diagnosis == diagnosis)
+        q = q.filter(Prescription.diagnosis.contains(diagnosis))
+
+    count_record = q.count()
 
     if page:
         page_size = app.config['PAGE_SIZE']
         start = (int(page) - 1) * page_size
         q = q.slice(start, start + page_size)
 
-    return q.all()
+    return q.all(), count_record
+
 
 def get_patient_by_id(patient_id):
     return db.session.query(Patient).get(patient_id)
@@ -500,3 +503,9 @@ def get_patient_by_cid(patient_cid):
 
 def count_prescription_by_patient(patient_id):
     return Prescription.query.filter(Prescription.patient_id == patient_id).count()
+
+
+if __name__ == '__main__':
+    with app.app_context():
+        print(count_prescription_by_patient(patient_id=2))
+

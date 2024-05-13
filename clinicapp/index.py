@@ -22,7 +22,7 @@ from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_h
     get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, \
     get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions_by_scheduled_date, get_doctor_by_id, \
     get_patient_by_id, get_all_patient, get_all_doctor
-from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin, adminloggedin
+from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin, adminloggedin, resources_owner
 from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileForm, ChangeAvatarForm, ChangeUsernameForm
 from clinicapp.models import UserRole, Gender, Appointment, AppointmentList
 from clinicapp.vnpay import vnpay
@@ -267,18 +267,21 @@ def get_units_by_medicine(medicine_id):
     return jsonify(units_json)
 
 
-@app.route("/patient/<int:patient_id>/history")
+@app.route("/patient/<int:patient_id>/history/")
 @login_required
 @roles_required([UserRole.DOCTOR, UserRole.PATIENT])
+@resources_owner(resource_user_id_param='patient_id', allowed_roles=[UserRole.PATIENT, UserRole.DOCTOR])
 def patient_history(patient_id):
-    page = request.args.get('page', 1, type=int)
+    page = request.args.get('page', None, type=int)
     diagnosis = request.args.get('diagnosis', None, type=str)
+    date = request.args.get('start_date', None, type=str)
 
     patient = dao.get_user_by_id(patient_id)
-    prescriptions = dao.get_prescription_by_patient(patient_id=patient.id, page=page, diagnosis=diagnosis)
-
+    prescriptions, count_records = dao.get_prescription_by_patient(patient_id=patient.id, page=page, diagnosis=diagnosis, start_date=date)
+    pages = math.ceil(count_records/app.config['PAGE_SIZE'])
     return render_template('doctor/disease_history.html', patient=patient, prescriptions=prescriptions,
-                           pages=math.ceil(dao.count_prescription_by_patient(patient_id)/app.config['PAGE_SIZE']))
+                           pages=pages)
+
 
 
 @app.route("/api/medicines/")

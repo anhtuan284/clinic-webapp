@@ -28,21 +28,43 @@
                 <input disabled type="text" class="form-control" value="{{ patient.phone }}">
             </div>
         </div>
-        {% if pages > 1 %}
+        <div class="container">
+            <form action="{{ url_for('patient_history', patient_id=patient.id) }}" method="GET">
+                <div class="row py-3 mt-3 ">
+                    <div class="form-group mt-2 col-md-5 col-sm-12">
+                        <label><b>Chẩn đoán:</b></label>
+                        <input name="diagnosis" type="text" class="form-control" placeholder="Nhập chuẩn đoán">
+                    </div>
+                    <div class="form-group mt-2 col-md-3 col-sm-12">
+                        <label><b>Từ ngày:</b></label>
+                        <input name="start_date" type="date" class="form-control">
+                    </div>
+                    <div class="form-group mt-2 col-md-3 col-sm-12">
+                        <button type="submit" class="btn btn-primary mt-4">Tìm kiếm</button>
+                    </div>
+                </div>
+            </form>
+            <!-- Rest of your content -->
+        </div>
+
+      {% if pages > 1 %}
         <div class="row justify-content-center align-content-center mt-5">
             <ul class="pagination mt-1 justify-content-center align-content-center">
                 {% for i in range(1, pages+1) %}
-                <li class="page-item"><a class="page-link" href="/patient{{patienti.id}}/history/?page={{i}}">{{i}}</a></li>
+                <li class="page-item"><a class="page-link" href="/patient/{{patient.id}}/history/?page={{i}}">{{i}}</a>
+                </li>
                 {% endfor %}
             </ul>
         </div>
-        {% endif %}
+      {% endif %}
+      
         {% if prescriptions %}
         <div class="d-flex row justify-content-md-between">
             {% for prescription in prescriptions %}
-            <div class="row shadow my-5 py-2 rounded col-md-6">
+            <div class="row shadow my-3 py-2 rounded col-md-6">
                 <div style="max-width: 100%; margin-top:20px">
-                    <h5 class="d-inline-block text-primary text-uppercase text-center border-5"><b>{{ prescription.date }}</b></h5>
+                    <h5 class="d-inline-block text-primary text-uppercase text-center border-5"><b>{{ prescription.date
+                        }}</b></h5>
                 </div>
                 <div class="form-group mt-2 col-md-6 col-sm-12">
                     <label><b>Triệu chứng:</b></label>
