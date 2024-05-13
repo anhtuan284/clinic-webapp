@@ -3,7 +3,7 @@ name: CI/CD for Flask App
 on:
   push:
     branches:
-      - tbat
+      - main
 
 jobs:
   build:
