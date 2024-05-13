@@ -16,7 +16,6 @@ app.config[
 
 app.secret_key = '^%^&%^(*^^&&*^$%((^^&$$&^'
 
-
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 app.config["PAGE_SIZE"] = 8
 
@@ -25,6 +24,7 @@ db = SQLAlchemy(app)
 login = LoginManager(app)
 Babel(app)
 cors = CORS(app)
+
 
 # VNPAY CONFIG
 VNPAY_RETURN_URL = 'http://127.0.0.1:5000/payment_return_vnpay'  # get from config
