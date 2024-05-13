@@ -2,10 +2,12 @@ import datetime
 import hashlib
 import hmac
 import json
+import locale
 import uuid
 import cloudinary.uploader
 import requests
 from PIL import Image
+from babel.numbers import format_decimal
 from flask import request, redirect, render_template, jsonify, url_for, session, flash
 from flask_cors import cross_origin
 from flask_login import login_user, logout_user, login_required, current_user
@@ -18,7 +20,7 @@ from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_h
     get_prescriptions_by_scheduled_date, get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
     get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, \
-    get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions_by_scheduled_date, get_doctor_by_id, \
+    get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions, get_doctor_by_id, \
     get_patient_by_id, get_all_patient, get_all_doctor
 from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin, adminloggedin
 from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileForm, ChangeAvatarForm
@@ -27,6 +29,11 @@ from clinicapp.vnpay import vnpay
 from flask_mail import Mail, Message
 
 mail = Mail(app)
+
+
+@app.template_filter()
+def numberFormat(value):
+    return format(int(value), ',d')
 
 
 @app.route('/')
@@ -114,7 +121,8 @@ def register_user():
                     if entry == '\'user.username\'':
                         return redirect(url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Username có rồi!!!'))
                     if entry == '\'user.ix_user_cid\'':
-                        return redirect(url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Căng Cước Công Dân này có rồi!!!'))
+                        return redirect(
+                            url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Căng Cước Công Dân này có rồi!!!'))
                     if entry == '\'user.email\'':
                         return redirect(url_for('register_user', err_msg=f'Mã lỗi: 409; Lỗi: Email này có rồi!!!'))
 
@@ -267,6 +275,7 @@ def book():
             current_patient = current_user
             return render_template('/appointment/patient_create_appoinment.html', appointment_booked=appointment_booked,
                                    current_patient=current_patient)
+
         date = session.pop('appointment_date', None)
         appointment_time = session.pop('appointment_time', None)
         payment_method_id = session.pop('payment_method_id', None)
@@ -602,11 +611,22 @@ def process_momo(amount):
 @cashiernotloggedin
 def pay():
     q = request.args.get('q') or session.get('date')
-    prescriptions = None
-    if q:
-        prescriptions = get_unpaid_prescriptions_by_scheduled_date(scheduled_date=q)
-        print(prescriptions)
-        session['date'] = q
+    prescriptions = get_unpaid_prescriptions(scheduled_date=q)
+
+    session['date'] = q
+
+    return render_template('cashier/payment.html',
+                           prescriptions=prescriptions,
+                           date=session['date'] if session.get('date') else None,
+                           allpatients=get_all_patient(),
+                           alldoctors=get_all_doctor(),
+                           )
+
+
+@app.route('/payment/all', methods=['GET'])
+@cashiernotloggedin
+def pay_all():
+    prescriptions = get_unpaid_prescriptions(scheduled_date=None)
 
     return render_template('cashier/payment.html',
                            prescriptions=prescriptions,
@@ -698,15 +718,15 @@ def do_bill(prescription_id):
                                         ))
         q_error = request.args.get('error')
         q_created = request.args.get('created')
-
+        print(format_decimal(medicine_price, locale='de_DE'))
         return render_template('cashier/bill.html',
                                prescription=current_prescription,
                                medicines=current_medicines,
                                patient=current_patient,
-                               medicine_price=medicine_price,
-                               service_price=service_price,
+                               medicine_price=format_decimal(medicine_price, locale='de_DE'),
+                               service_price=format_decimal(service_price, locale='de_DE'),
                                is_paid=is_paid,
-                               total=total,
+                               total=format_decimal(total, locale='de_DE'),
                                error=q_error,
                                created=q_created
                                )

@@ -1,13 +1,20 @@
-from flask import redirect, request
+import logging
+
+from flask import redirect, request, url_for, flash
 from flask_admin import BaseView, Admin
 from flask_admin import expose
+from flask_admin.babel import gettext
 from flask_admin.contrib.sqla import ModelView
 from flask_login import logout_user, current_user
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.base import instance_state
 
 from clinicapp import app, db, utils
 from clinicapp.dao import get_medicines, get_categories, get_category_medicines, add_or_update_medicine, \
     delete_all_category_medicine_by_medicine_id, add_category_medicine, get_medicine_by_id, delete_medicine_by_id, \
-    get_categories_by_medicine_id
+    get_categories_by_medicine_id, get_units, delete_all_medicine_unit_by_medicine_id, add_medicine_unit, \
+    get_medicine_unit_by_medicine_id, get_medicine_unit, get_unit_by_medicine_id, get_unit_name_and_quantity, \
+    delete_admin_by_id, delete_doctor_by_id, delete_patient_by_id, delete_nurse_by_id, delete_cashier_by_id
 from clinicapp.models import UserRole, User, Doctor, Nurse, Patient, Policy, Medicine, Unit, Category, MedicineUnit
 
 
@@ -51,6 +58,42 @@ class MyUserView(AuthenticatedView):
         # Thực hiện cùng một băm mật khẩu khi hiển thị form để chỉnh sửa
         form.password.data = ''
 
+    def delete_model(self, model):
+        """
+            Delete model.
+            :param model:
+                Model to delete
+        """
+        try:
+            self.on_model_delete(model)
+            if model.role == UserRole.ADMIN:
+                delete_admin_by_id(model.id)
+            if model.role == UserRole.DOCTOR:
+                delete_doctor_by_id(model.id)
+            if model.role == UserRole.PATIENT:
+                delete_patient_by_id(model.id)
+            if model.role == UserRole.NURSE:
+                delete_nurse_by_id(model.id)
+            if model.role == UserRole.CASHIER:
+                delete_cashier_by_id(model.id)
+            super().delete_model(model)
+        except IntegrityError as ie:
+            if ie.orig.args[0] == 1451:
+                ieMessage = ie.orig.args[1].split()
+                entry = ieMessage[len(ieMessage) - 1]
+                flash(gettext('Không xoá được. %(error)s',
+                              error="Dòng dữ liệu đã được tham chiếu bởi các dòng dữ liệu khác"), 'error')
+            else:
+                flash(gettext('Failed to delete record. %(error)s', error=str(ie)), 'error')
+            return False
+        except Exception as e:
+            flash(gettext('Failed to delete record. %(error)s', error=str(e)), 'error')
+            return False
+        else:
+            self.after_model_delete(model)
+
+        return True
+
 
 class DoctorAdminView(AuthenticatedView):
     column_list = ['id']
@@ -82,6 +125,65 @@ class PolicyAdminView(AuthenticatedView):
         'value': 'Giá Trị'
     }
 
+    def build_new_instance(self):
+        model = self._manager.new_instance()
+
+        # TODO: We need a better way to create model instances and stay compatible with
+        model.admin_id = current_user.id
+        state = instance_state(model)
+        self._manager.dispatch.init(state, [], {})
+
+        return model
+
+    def create_model(self, form):
+        """
+            Create model from form.
+
+            :param form:
+                Form instance
+        """
+        try:
+            model = self.build_new_instance()
+
+            form.populate_obj(model)
+            self.session.add(model)
+            self._on_model_change(form, model, True)
+            self.session.commit()
+        except Exception as ex:
+            flash(gettext('Không tạo được dữ liệu. %(error)s', error=str(ex)), 'error')
+            return False
+        else:
+            self.after_model_change(form, model, True)
+
+        return model
+
+    def delete_model(self, model):
+        """
+            Delete model.
+            :param model:
+                Model to delete
+        """
+        try:
+            self.on_model_delete(model)
+            super().delete_model(model)
+        except IntegrityError as ie:
+            if ie.orig.args[0] == 1451:
+                ieMessage = ie.orig.args[1].split()
+                entry = ieMessage[len(ieMessage) - 1]
+                flash(gettext('Không xoá được. %(error)s',
+                              error="Dòng dữ liệu đã được tham chiếu bởi các dòng dữ liệu khác"), 'error')
+
+            else:
+                flash(gettext('Failed to delete record. %(error)s', error=str(ie)), 'error')
+            return False
+        except Exception as e:
+            flash(gettext('Failed to delete record. %(error)s', error=str(e)), 'error')
+            return False
+        else:
+            self.after_model_delete(model)
+
+        return True
+
 
 class MedicineAdminView(AuthenticatedView):
     column_list = ['name', 'gia', 'usage', 'exp']
@@ -91,6 +193,7 @@ class MedicineAdminView(AuthenticatedView):
 
 class CategoryAdminView(AuthenticatedView):
     column_list = ['name', 'medicine']
+    can_delete = False
 
 
 # class MedicineCategoryAdminView(ModelView):
@@ -103,6 +206,7 @@ class CategoryAdminView(AuthenticatedView):
 
 class UnitAdminView(AuthenticatedView):
     column_list = ['id', 'name']
+    can_delete = False
 
 
 class StatsView(AuthenticatedBaseView):
@@ -139,11 +243,13 @@ class ThuocView(AuthenticatedBaseView):
                 category_id=danhmuc_id
             ),
             danhmucs=get_categories(),
-            danhmucthuocs=get_category_medicines()
+            danhmucthuocs=get_category_medicines(),
+            unit_name_and_quantity=get_unit_name_and_quantity()
         )
 
     @expose('/thuocs/', methods=['get', 'post'])
-    def add_thuoc(self):
+    def add_thuoc(self, id=None):
+        units = get_units()
         if request.method.__eq__('POST'):
             id = request.form.get('id')
             gia = request.form.get('gia')
@@ -151,35 +257,99 @@ class ThuocView(AuthenticatedBaseView):
             cach_dung = request.form.get('cach_dung')
             han_su_dung = request.form.get('han_su_dung')
             ds_danh_muc = request.form.getlist('ds_danh_muc')
+            dict_quantity_per_unit = {}
+            # {
+            #     1: 14,
+            #     2: 1,
+            #     3: 20
+            #
+            # }
+            for u in units:
+                dict_quantity_per_unit[u.id] = request.form.get(f"quantity-per-unit-{u.id}")
 
             thuocMoiId = add_or_update_medicine(
                 id=id,
                 price=gia,
                 name=name,
                 usage=cach_dung,
-                exp=han_su_dung
+                exp=han_su_dung,
+                dict_quantity_per_unit=dict_quantity_per_unit
             )
 
-            delete_all_category_medicine_by_medicine_id(thuocMoiId)
             for dm in ds_danh_muc:
                 add_category_medicine(category_id=int(dm), medicine_id=thuocMoiId)
 
-        return self.render('admin/them_thuoc.html', cates=get_categories())
+            return self.render('admin/them_thuoc.html', cates=get_categories(), units=units,
+                               success_msg='Thêm thuốc thành công!!!')
 
-    @expose('/thuocs/<id>', methods=['get', 'post'])
-    def update_thuoc(self, id):
+        return self.render('admin/them_thuoc.html', cates=get_categories(), units=units)
+
+    @expose('/thuocs/<id>', methods=['post'])
+    def delete_thuoc(self, id):
         thuoc = get_medicine_by_id(id)
 
         if request.method.__eq__('POST'):
-            delete_medicine_by_id(id)
-            return redirect('/admin/thuocview/')
-        else:
-            return self.render(
-                'admin/them_thuoc.html',
-                cates=get_categories(),
-                thuoc=thuoc,
-                currentcates=get_categories_by_medicine_id(id)
+            try:
+                delete_medicine_by_id(id)
+                return redirect('/admin/thuocview/')
+            except IntegrityError as ie:
+                if ie.orig.args[0] == 1451:
+                    return redirect(url_for('thuocview.index',
+                                            err_msg=f'Mã lỗi: 149; Lỗi: Thuốc được xài trong phiếu khám nào đó rồi, nên không xoá được!!!'))
+            except Exception as e:
+                return redirect(url_for('thuocview.index', err_msg=str(e)))
+
+    @expose('/thuocs/update/<id>', methods=['get', 'post'])
+    def update_thuoc(self, id):
+        thuoc = get_medicine_by_id(id)
+        units = get_units()
+
+        if request.method.__eq__('POST'):
+            id = request.form.get('id')
+            gia = request.form.get('gia')
+            name = request.form.get('name')
+            cach_dung = request.form.get('cach_dung')
+            han_su_dung = request.form.get('han_su_dung')
+            ds_danh_muc = request.form.getlist('ds_danh_muc')
+            dict_quantity_per_unit = {}
+            # {
+            #     1: 14,
+            #     2: 1,
+            #     3: 20
+            #
+            # }
+            for u in units:
+                dict_quantity_per_unit[u.id] = request.form.get(f"quantity-per-unit-{u.id}")
+
+            thuocMoiId = add_or_update_medicine(
+                id=id,
+                price=gia,
+                name=name,
+                usage=cach_dung,
+                exp=han_su_dung,
+                dict_quantity_per_unit=dict_quantity_per_unit
             )
+
+            delete_all_category_medicine_by_medicine_id(thuocMoiId)
+            delete_all_medicine_unit_by_medicine_id(thuocMoiId)
+            for dm in ds_danh_muc:
+                add_category_medicine(category_id=int(dm), medicine_id=thuocMoiId)
+            for key in dict_quantity_per_unit.keys():
+                if dict_quantity_per_unit[key]:
+                    add_medicine_unit(unit_id=key, medicine_id=thuocMoiId, quantity=dict_quantity_per_unit[key])
+
+            return redirect(url_for('thuocview.index', success_msg='Sửa thuốc thành công!!!'))
+
+        print(get_medicine_unit_by_medicine_id(id))
+        return self.render(
+            'admin/them_thuoc.html',
+            cates=get_categories(),
+            thuoc=thuoc,
+            currentcates=get_categories_by_medicine_id(id),
+            units=units,
+            currentunits=get_unit_by_medicine_id(id),
+            current_med_units=get_medicine_unit_by_medicine_id(id)
+        )
 
 
 class MyDanhMucView(AuthenticatedView):
@@ -190,25 +360,18 @@ class MyDanhMucView(AuthenticatedView):
 
 class MyCategoryView(AuthenticatedView):
     column_list = ['id', 'name']
+    can_delete = False
 
     form_widget_args = {
         'medicine_category': {
             'disabled': True
-        }
-    }
-
-
-class MyMedicineUnitView(AuthenticatedView):
-    column_list = ['id', 'unit', 'medicine', 'quantity', 'medicine_details']
-
-    column_labels = {
-        'medicine_details': 'Phiếu khám tương ứng',
-    }
-
-    form_widget_args = {
-        'medicine_details': {
+        },
+        'created_date': {
             'disabled': True
-        }
+        },
+        'updated_date': {
+            'disabled': True
+        },
     }
 
 
@@ -216,7 +379,6 @@ admin = Admin(app, name='Clinic Website', template_mode='bootstrap4')
 
 admin.add_view(ThuocView(name="Thuốc"))
 admin.add_view(UnitAdminView(Unit, db.session, name="Đơn vị"))
-admin.add_view(MyMedicineUnitView(MedicineUnit, db.session, name="Thêm đơn vị cho thuốc"))
 admin.add_view(MyCategoryView(Category, db.session, name='Danh mục'))
 admin.add_view(MyUserView(User, db.session))
 admin.add_view(PolicyAdminView(Policy, db.session, name="Quy Định"))

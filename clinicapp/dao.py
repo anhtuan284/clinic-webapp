@@ -113,7 +113,8 @@ def delete_medicine_by_id(id):
     db.session.commit()
 
 
-def add_or_update_medicine(id: object, price: object, name: object, usage: object, exp: object) -> object:
+def add_or_update_medicine(id: object, price: object, name: object, usage: object, exp: object,
+                           dict_quantity_per_unit: dict) -> object:
     if id:
         medicine = get_medicine_by_id(id)
         medicine.price = price
@@ -121,6 +122,7 @@ def add_or_update_medicine(id: object, price: object, name: object, usage: objec
         medicine.usage = usage
         medicine.exp = exp
         db.session.commit()
+
         return medicine.id
     else:
         medicineMoi = Medicine(
@@ -131,6 +133,17 @@ def add_or_update_medicine(id: object, price: object, name: object, usage: objec
         )
         db.session.add(medicineMoi)
         db.session.commit()
+
+        for key in dict_quantity_per_unit.keys():
+            if dict_quantity_per_unit[key]:
+                mu = MedicineUnit(
+                    unit_id=key,
+                    medicine_id=medicineMoi.id,
+                    quantity=dict_quantity_per_unit[key]
+                )
+                db.session.add(mu)
+        db.session.commit()
+
         return medicineMoi.id
 
 
@@ -142,12 +155,25 @@ def get_category_medicines():
     return MedicineCategory.query.all()
 
 
+def get_medicine_unit_by_medicine_id(medicine_id):
+    return MedicineUnit.query.filter_by(medicine_id=medicine_id).all()
+
+
 def get_category_medicine_by_category_va_medicine(category_id, medicine_id):
     return MedicineCategory.query.filter_by(category_id=category_id, medicine_id=medicine_id).all()
 
 
+def get_medicine_unit_by_unit_va_medicine(unit_id, medicine_id):
+    return MedicineUnit.query.filter_by(unit_id=unit_id, medicine_id=medicine_id).all()
+
+
 def delete_all_category_medicine_by_medicine_id(medicine_id):
     db.session.query(MedicineCategory).filter(MedicineCategory.medicine_id == medicine_id).delete()
+    db.session.commit()
+
+
+def delete_all_medicine_unit_by_medicine_id(medicine_id):
+    db.session.query(MedicineUnit).filter(MedicineUnit.medicine_id == medicine_id).delete()
     db.session.commit()
 
 
@@ -163,10 +189,38 @@ def add_category_medicine(category_id, medicine_id):
     db.session.commit()
 
 
-def get_categories_by_medicine_id(id):
-    categories = Category.query.join(Category.medicine_category).filter_by(medicine_id=id).all()
+def add_medicine_unit(unit_id, medicine_id, quantity):
+    if get_medicine_unit_by_unit_va_medicine(unit_id, medicine_id):
+        return
+
+    medicineUniteMoi = MedicineUnit(
+        unit_id=unit_id,
+        medicine_id=medicine_id,
+        quantity=quantity
+    )
+    db.session.add(medicineUniteMoi)
+    db.session.commit()
+
+
+def get_categories_by_medicine_id(medicine_id):
+    categories = Category.query.join(Category.medicine_category).filter_by(medicine_id=medicine_id).all()
 
     return categories
+
+
+def get_unit_name_and_quantity():
+    return db.session.query(Unit.name, MedicineUnit.quantity, MedicineUnit.medicine_id) \
+        .filter(MedicineUnit.unit_id == Unit.id) \
+        .all()
+
+
+def get_unit_by_medicine_id(medicine_id):
+    return Unit.query.join(MedicineUnit, MedicineUnit.unit_id == Unit.id).filter(
+        MedicineUnit.medicine_id == medicine_id).all()
+
+
+def get_medicine_unit():
+    return MedicineUnit.query.all()
 
 
 def get_value_policy(id):
@@ -241,17 +295,17 @@ def get_prescriptions_by_scheduled_date(date):
     return prescriptions
 
 
-def get_unpaid_prescriptions_by_scheduled_date(scheduled_date):
+def get_unpaid_prescriptions(scheduled_date):
     prescriptions = db.session.query(Prescription, Appointment) \
-        .filter(Prescription.appointment_id == Appointment.id) \
-        .filter(Appointment.scheduled_date == scheduled_date) \
+        .filter(Prescription.appointment_id == Appointment.id)\
         .filter(
-        Prescription.id.notin_(db.session.query(Bill.prescription_id))
-    ).all()
+            Prescription.id.notin_(db.session.query(Bill.prescription_id))
+        )
 
-    print(db.session.query(Bill.prescription_id))
+    if scheduled_date:
+        prescriptions = prescriptions.filter(Appointment.scheduled_date == scheduled_date) \
 
-    return prescriptions
+    return prescriptions.all()
 
 
 def get_prescription_by_id(prescription_id):
@@ -463,7 +517,7 @@ def get_appointment_booked_by_patient_id(patient_id):
         (Appointment.scheduled_hour >= current_time) |
         (Appointment.scheduled_date > current_date)
     ).first()
-)
+          )
     return Appointment.query.filter(
         Appointment.patient_id == patient_id,
         (Appointment.scheduled_date == current_date) &
@@ -487,5 +541,30 @@ def make_the_list(card_data):
 
 
 def get_patient_by_cid(patient_cid):
-    user = User.query.filter(User.cid == patient_cid).first()
+    user = User.query.filter_by(User.cid == patient_cid).first()
     return user
+
+
+def delete_patient_by_id(patient_id):
+    Patient.query.filter_by(id=patient_id).delete()
+    db.session.commit()
+
+
+def delete_admin_by_id(admin_id):
+    Admin.query.filter_by(id=admin_id).delete()
+    db.session.commit()
+
+
+def delete_doctor_by_id(doctor_id):
+    Doctor.query.filter_by(id=doctor_id).delete()
+    db.session.commit()
+
+
+def delete_nurse_by_id(nurse_id):
+    Nurse.query.filter_by(id=nurse_id).delete()
+    db.session.commit()
+
+
+def delete_cashier_by_id(cashier_id):
+    Cashier.query.filter_by(id=cashier_id).delete()
+    db.session.commit()
