@@ -13,7 +13,8 @@ from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
-    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, admin, db, utils
+    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, admin, db, utils, MAIL_SENDER, \
+    MAIL_SENDER_EMAIL
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
     get_prescriptions_by_scheduled_date, get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
@@ -891,12 +892,13 @@ def update_appointment():
                 dao.make_the_list(card_data)
                 return jsonify({'message': 'Card data processed successfully'}), 200
     elif current_user.role.value == 'patient':
+        print(123123123123123123)
         if new_status == 'cancelled':
             appointment_id = request.args.get('appointment_id')
             new_appointment = dao.get_appointment_by_id(appointment_id)
             if new_appointment is None:
                 return jsonify({'error': 'Appointment not found.'}), 404
-            send_notification_email(current_user, new_appointment, "TỪ CHỐI")
+            send_notification_email(current_user, new_appointment, "ĐƯỢC HUỶ")
             dao.delete_appointment(new_appointment)
             flash("Huỷ lịch hẹn khám thành công!", "success")
             return jsonify({'message': 'Card data processed successfully'}), 200
@@ -934,7 +936,7 @@ def send_notification_email(user, appointment, status):
     }
     print(data)
     # Gửi email
-    msg = Message(subject, sender='peteralwaysloveu@gmail.com',
+    msg = Message(subject, sender=(MAIL_SENDER, MAIL_SENDER_EMAIL),
                   recipients=[user.email, '2151013029huy@ou.edu.vn'])
     # msg.body = body
     msg.html = render_template('nurse/email.html', user=user, appointment=appointment, status=status)
@@ -942,13 +944,13 @@ def send_notification_email(user, appointment, status):
     return jsonify({'message': 'Appointment status updated successfully.'}), 200
 
 
-@app.route('/test')
-def test_mail():  # Renamed the function to avoid naming conflict
-    msg = Message('ssdasdasd', sender='peteralwaysloveu@gmail.com',
-                  recipients=['baoempro2003@gmail.com', '2151013029huy@ou.dedu.vn', ])
-    msg.body = "clinic asdasdasdasd"
-    mail.send(msg)
-    return "success"
+# @app.route('/test')
+# def test_mail():  # Renamed the function to avoid naming conflict
+#     msg = Message('ssdasdasd', sender='peteralwaysloveu@gmail.com',
+#                   recipients=['baoempro2003@gmail.com', '2151013029huy@ou.dedu.vn', ])
+#     msg.body = "clinic asdasdasdasd"
+#     mail.send(msg)
+#     return "success"
 
 
 @app.route('/nurse/create_list_by_date', methods=['POST'])
