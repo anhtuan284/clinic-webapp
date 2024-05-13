@@ -54,3 +54,6 @@ jobs:
 
     - name: Trigger Deploy on Render
       run: curl ${{ secrets.RENDER_DEPLOY_HOOK}}
+
+    - name: Debug
+      run: echo ${{ secrets.SQLALCHEMY_DATABASE_URI }}
