@@ -1,5 +1,40 @@
 {% extends 'admin/master.html' %}
 
 {% block body %}
-<h1 class="text-center text-info mt-1">THỐNG KÊ BÁO CÁO</h1>
+<h1 class="text-center text-primary mt-1">THỐNG KÊ BÁO CÁO</h1>
+<h3 class="text-primary mt-1">Doanh Thu Và Tỉ Lệ </h3>
+<div class="form-floating mb-3 mt-3">
+    <label for="month">Tháng cần thống kê: </label>
+    <input type="month" class="form-control" id="month" placeholder="Nhap thang can thong ke" name="month" onchange="get_revenue_percentage_by_month(this)">
+</div>
+<table class="table table-dark table-hover">
+    <thead>
+        <tr>
+            <td><strong>Ngày</strong></td>
+            <td><strong>Số Bệnh Nhân</strong></td>
+            <td><strong>Doanh Thu</strong></td>
+            <td><strong>Tỉ Lệ</strong></td>
+        </tr>
+    </thead>
+    <tbody id="revenue-table">
+    </tbody>
+</table>
+<canvas id="countChart"></canvas>
+<canvas id="revenueChart"></canvas>
+<canvas id="percentChart"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{url_for('static', filename='js/admin.js')}}"></script>
+<script>
+    // Lấy tháng và năm hiện tại
+    var currentDate = new Date();
+    var year = currentDate.getFullYear();
+    var month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    var formattedMonth = year + '-' + month;
+
+    // Đặt giá trị vào trường input
+    document.getElementById('month').value = formattedMonth;
+
+    get_revenue_percentage_by_month(document.getElementById('month'))
+</script>
 {% endblock %}

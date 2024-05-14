@@ -22,8 +22,8 @@ function displayOfflinePayment() {
     inputTienNhan.addEventListener("input", () => {
         var total = document.getElementById("total");
         var inputTienThoi = document.getElementById("tien_thoi");
-        inputTienNhan.setAttribute("value", inputTienNhan.value.toLocaleString("de-DE"));
-        inputTienThoi.setAttribute("value", (inputTienNhan.value - total.value).toLocaleString("de-DE"));
+        inputTienNhan.setAttribute("value", inputTienNhan.value);
+        inputTienThoi.setAttribute("value", (inputTienNhan.value - total.value));
     });
     divTienNhan.appendChild(inputTienNhan);
 
