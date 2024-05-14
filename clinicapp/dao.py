@@ -1,10 +1,8 @@
-import hashlib
 
+from sqlalchemy import func, desc, update, distinct, extract, select, join, and_, asc
 import pytz
-from sqlalchemy import func, desc, update, asc
 from sqlalchemy.orm import sessionmaker, joinedload
-
-from clinicapp import db
+from clinicapp import TIENKHAM
 from clinicapp.models import *
 
 from clinicapp.utils import hash_password, verify_password, datetime_now_vn
@@ -118,7 +116,8 @@ def delete_medicine_by_id(id):
     db.session.commit()
 
 
-def add_or_update_medicine(id: object, price: object, name: object, usage: object, exp: object) -> object:
+def add_or_update_medicine(id: object, price: object, name: object, usage: object, exp: object,
+                           dict_quantity_per_unit: dict) -> object:
     if id:
         medicine = get_medicine_by_id(id)
         medicine.price = price
@@ -126,6 +125,7 @@ def add_or_update_medicine(id: object, price: object, name: object, usage: objec
         medicine.usage = usage
         medicine.exp = exp
         db.session.commit()
+
         return medicine.id
     else:
         medicineMoi = Medicine(
@@ -136,6 +136,17 @@ def add_or_update_medicine(id: object, price: object, name: object, usage: objec
         )
         db.session.add(medicineMoi)
         db.session.commit()
+
+        for key in dict_quantity_per_unit.keys():
+            if dict_quantity_per_unit[key]:
+                mu = MedicineUnit(
+                    unit_id=key,
+                    medicine_id=medicineMoi.id,
+                    quantity=dict_quantity_per_unit[key]
+                )
+                db.session.add(mu)
+        db.session.commit()
+
         return medicineMoi.id
 
 
@@ -147,12 +158,25 @@ def get_category_medicines():
     return MedicineCategory.query.all()
 
 
+def get_medicine_unit_by_medicine_id(medicine_id):
+    return MedicineUnit.query.filter_by(medicine_id=medicine_id).all()
+
+
 def get_category_medicine_by_category_va_medicine(category_id, medicine_id):
     return MedicineCategory.query.filter_by(category_id=category_id, medicine_id=medicine_id).all()
 
 
+def get_medicine_unit_by_unit_va_medicine(unit_id, medicine_id):
+    return MedicineUnit.query.filter_by(unit_id=unit_id, medicine_id=medicine_id).all()
+
+
 def delete_all_category_medicine_by_medicine_id(medicine_id):
     db.session.query(MedicineCategory).filter(MedicineCategory.medicine_id == medicine_id).delete()
+    db.session.commit()
+
+
+def delete_all_medicine_unit_by_medicine_id(medicine_id):
+    db.session.query(MedicineUnit).filter(MedicineUnit.medicine_id == medicine_id).delete()
     db.session.commit()
 
 
@@ -168,10 +192,38 @@ def add_category_medicine(category_id, medicine_id):
     db.session.commit()
 
 
-def get_categories_by_medicine_id(id):
-    categories = Category.query.join(Category.medicine_category).filter_by(medicine_id=id).all()
+def add_medicine_unit(unit_id, medicine_id, quantity):
+    if get_medicine_unit_by_unit_va_medicine(unit_id, medicine_id):
+        return
+
+    medicineUniteMoi = MedicineUnit(
+        unit_id=unit_id,
+        medicine_id=medicine_id,
+        quantity=quantity
+    )
+    db.session.add(medicineUniteMoi)
+    db.session.commit()
+
+
+def get_categories_by_medicine_id(medicine_id):
+    categories = Category.query.join(Category.medicine_category).filter_by(medicine_id=medicine_id).all()
 
     return categories
+
+
+def get_unit_name_and_quantity():
+    return db.session.query(Unit.name, MedicineUnit.quantity, MedicineUnit.medicine_id) \
+        .filter(MedicineUnit.unit_id == Unit.id) \
+        .all()
+
+
+def get_unit_by_medicine_id(medicine_id):
+    return Unit.query.join(MedicineUnit, MedicineUnit.unit_id == Unit.id).filter(
+        MedicineUnit.medicine_id == medicine_id).all()
+
+
+def get_medicine_unit():
+    return MedicineUnit.query.all()
 
 
 def get_value_policy(id):
@@ -246,17 +298,15 @@ def get_prescriptions_by_scheduled_date(date):
     return prescriptions
 
 
-def get_unpaid_prescriptions_by_scheduled_date(scheduled_date):
+def get_unpaid_prescriptions(scheduled_date):
     prescriptions = db.session.query(Prescription, Appointment) \
         .filter(Prescription.appointment_id == Appointment.id) \
-        .filter(Appointment.scheduled_date == scheduled_date) \
-        .filter(
-        Prescription.id.notin_(db.session.query(Bill.prescription_id))
-    ).all()
+        .filter(Prescription.id.notin_(db.session.query(Bill.prescription_id)))
 
-    print(db.session.query(Bill.prescription_id))
-
-    return prescriptions
+    if scheduled_date:
+        prescriptions = prescriptions.filter(Appointment.scheduled_date == scheduled_date)
+    print(prescriptions.all())
+    return prescriptions.all()
 
 
 def get_prescription_by_id(prescription_id):
@@ -289,9 +339,8 @@ def get_unit_by_name(name):
 def get_medicine_price_by_prescription_id(prescription_id):
     total = db.session.query(func.sum(MedicineDetail.quantity * MedicineUnit.quantity * Medicine.price).label('sum')) \
         .filter(MedicineUnit.id == MedicineDetail.medicine_unit_id) \
-        .filter(MedicineUnit.medicine_id == Medicine.id) \
-        .filter(MedicineUnit.unit_id == Unit.id) \
-        .filter(MedicineDetail.prescription_id == prescription_id)
+        .filter(MedicineDetail.prescription_id == prescription_id) \
+        .filter(MedicineDetail.medicine_id == Medicine.id)
 
     total = total[0].sum
     if not total:
@@ -474,6 +523,7 @@ def get_appointment_booked_by_patient_id(patient_id):
     # current_datetime = datetime.datetime.now()
     current_date = vn_time.date()
     current_time = vn_time.time()
+
     return Appointment.query.filter(
         Appointment.patient_id == patient_id,
         (Appointment.scheduled_date == current_date) &
@@ -497,10 +547,125 @@ def make_the_list(card_data):
 
 
 def get_patient_by_cid(patient_cid):
-    user = User.query.filter(User.cid == patient_cid).first()
+    user = User.query.filter_by(User.cid == patient_cid).first()
     return user
 
 
+def delete_patient_by_id(patient_id):
+    Patient.query.filter_by(id=patient_id).delete()
+    db.session.commit()
+
+
+def delete_admin_by_id(admin_id):
+    Admin.query.filter_by(id=admin_id).delete()
+    db.session.commit()
+
+
+def delete_doctor_by_id(doctor_id):
+    Doctor.query.filter_by(id=doctor_id).delete()
+    db.session.commit()
+
+
+def delete_nurse_by_id(nurse_id):
+    Nurse.query.filter_by(id=nurse_id).delete()
+    db.session.commit()
+
+
+def delete_cashier_by_id(cashier_id):
+    Cashier.query.filter_by(id=cashier_id).delete()
+    db.session.commit()
+
+
+def get_revenue_percentage_stats(month_str):
+    # Chuyển chuỗi thành đối tượng datetime
+    date_object = datetime.datetime.strptime(month_str, "%Y-%m")
+
+    # Lấy năm và tháng từ đối tượng datetime
+    year = date_object.year
+    month = date_object.month
+
+    #danh sach tong tien thuoc moi prescription-co-thuoc theo thang
+    month_medicine_revenue_by_drug_assigned_prescription = \
+        db.session.query(extract('month', Prescription.date).label("month"),
+                         extract('year', Prescription.date).label("year"), Prescription.id,
+                         func.sum(MedicineDetail.quantity * MedicineUnit.quantity * Medicine.price).label(
+                             "total_month_medicine_revenue")) \
+            .filter(MedicineDetail.medicine_id.__eq__(Medicine.id)) \
+            .filter(MedicineDetail.prescription_id.__eq__(Prescription.id)) \
+            .filter(MedicineDetail.medicine_unit_id.__eq__(MedicineUnit.id)) \
+            .filter(extract('month', Prescription.date) == month) \
+            .filter(extract('year', Prescription.date) == year) \
+            .group_by(extract('month', Prescription.date)) \
+            .group_by(extract('year', Prescription.date)) \
+            .group_by(Prescription.id).all()
+
+    #tong-tien-cac-prescription-co-thuoc theo thang
+    month_revenue_by_drug_assigned_prescription = 0
+    for item in month_medicine_revenue_by_drug_assigned_prescription:
+        month_revenue_by_drug_assigned_prescription += item.total_month_medicine_revenue + 100000
+
+    #so prescription khong co thuoc theo thang
+    drugless_prescription_by_month_count = db.session.query(func.count(Prescription.id)).filter(
+        Prescription.id.notin_(db.session.query(MedicineDetail.prescription_id))
+    ).filter(extract('month', Prescription.date) == month) \
+            .filter(extract('year', Prescription.date) == year).all()
+    print(drugless_prescription_by_month_count)
+
+    #tong-tien-kham cac-prescription-ko-thuoc theo thang
+    month_revenue_by_drugless_prescription = drugless_prescription_by_month_count[0][0] * 100000
+
+    #tong-tien theo thang
+    month_revenue = month_revenue_by_drugless_prescription + month_revenue_by_drug_assigned_prescription
+    print(month_revenue)
+
+    # danh sach tong tien thuoc cac prescription-co-thuoc theo ngay
+    date_medicine_revenue_by_drug_assigned_prescription = \
+        db.session.query(Prescription.date, func.count(distinct(Patient.id)).label('patient_count'),
+                         (func.sum(MedicineDetail.quantity * MedicineUnit.quantity * Medicine.price)).label(
+                             "total_date_medicine_revenue"), (100 * ((func.sum(MedicineDetail.quantity * MedicineUnit.quantity * Medicine.price)) / month_revenue)).label('percentage')) \
+            .filter(Prescription.patient_id == Patient.id)\
+            .filter(MedicineDetail.medicine_id.__eq__(Medicine.id)) \
+            .filter(MedicineDetail.prescription_id.__eq__(Prescription.id)) \
+            .filter(MedicineDetail.medicine_unit_id.__eq__(MedicineUnit.id)) \
+            .filter(extract('month', Prescription.date) == month) \
+            .filter(extract('year', Prescription.date) == year) \
+            .group_by(Prescription.date).all()
+    print(date_medicine_revenue_by_drug_assigned_prescription)
+
+    # danh sach tong tien kham  cac prescription theo ngay
+    date_revenue_by_drugless_prescription = \
+        db.session.query(Prescription.date,
+                         (func.sum(get_value_policy(TIENKHAM))).label(
+                             "total_date_revenue"), (100 * (func.sum(get_value_policy(TIENKHAM)) / month_revenue)).label('percentage')) \
+            .filter(extract('month', Prescription.date) == month) \
+            .filter(extract('year', Prescription.date) == year) \
+            .group_by(Prescription.date).all()
+
+    print(date_revenue_by_drugless_prescription[0])
+
+    date_medicine_revenue_by_drug_assigned_prescription_list = []
+    for row in date_medicine_revenue_by_drug_assigned_prescription:
+        date_medicine_revenue_by_drug_assigned_prescription_list.append({
+            'prescription_date': row[0],
+            'patient_count': row.patient_count,
+            "total_date_medicine_revenue": row.total_date_medicine_revenue,
+            "percentage": row.percentage
+        })
+    print(date_medicine_revenue_by_drug_assigned_prescription_list)
+
+    date_revenue_by_drugless_prescription_list = []
+    for row in date_revenue_by_drugless_prescription:
+        date_revenue_by_drugless_prescription_list.append({
+            'prescription_date': row[0],
+            'total_date_revenue': row.total_date_revenue,
+            "percentage": row.percentage
+        })
+    print(date_revenue_by_drugless_prescription_list)
+
+    return [
+            date_medicine_revenue_by_drug_assigned_prescription_list,
+            date_revenue_by_drugless_prescription_list
+    ]
 def count_prescription_by_patient(patient_id):
     return Prescription.query.filter(Prescription.patient_id == patient_id).count()
 

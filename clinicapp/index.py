@@ -2,10 +2,12 @@ import datetime
 import hashlib
 import hmac
 import json
+import locale
 import math
 import uuid
 import requests
 from PIL import Image
+from babel.numbers import format_decimal
 from flask import request, redirect, render_template, jsonify, url_for, session, flash
 from flask_cors import cross_origin
 from flask_login import login_user, logout_user, login_required, current_user
@@ -17,8 +19,8 @@ from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_h
     get_prescriptions_by_scheduled_date, get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
     get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, \
-    get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions_by_scheduled_date, get_doctor_by_id, \
-    get_patient_by_id, get_all_patient, get_all_doctor
+    get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions, get_doctor_by_id, \
+    get_patient_by_id, get_all_patient, get_all_doctor, get_revenue_percentage_stats
 from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin, adminloggedin, resources_owner
 from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileForm, ChangeAvatarForm, ChangeUsernameForm
 from clinicapp.models import UserRole, Gender, Appointment, AppointmentList
@@ -26,6 +28,11 @@ from clinicapp.vnpay import vnpay
 from flask_mail import Mail, Message
 
 mail = Mail(app)
+
+
+@app.template_filter()
+def numberFormat(value):
+    return format(int(value), ',d')
 
 
 @app.route('/')
@@ -316,6 +323,7 @@ def book():
             current_patient = current_user
             return render_template('/appointment/patient_create_appoinment.html', appointment_booked=appointment_booked,
                                    current_patient=current_patient)
+
         date = session.pop('appointment_date', None)
         appointment_time = session.pop('appointment_time', None)
         payment_method_id = session.pop('payment_method_id', None)
@@ -655,11 +663,22 @@ def process_momo(amount):
 @cashiernotloggedin
 def pay():
     q = request.args.get('q') or session.get('date')
-    prescriptions = None
-    if q:
-        prescriptions = get_unpaid_prescriptions_by_scheduled_date(scheduled_date=q)
-        print(prescriptions)
-        session['date'] = q
+    prescriptions = get_unpaid_prescriptions(scheduled_date=q)
+
+    session['date'] = q
+
+    return render_template('cashier/payment.html',
+                           prescriptions=prescriptions,
+                           date=session['date'] if session.get('date') else None,
+                           allpatients=get_all_patient(),
+                           alldoctors=get_all_doctor(),
+                           )
+
+
+@app.route('/payment/all', methods=['GET'])
+@cashiernotloggedin
+def pay_all():
+    prescriptions = get_unpaid_prescriptions(scheduled_date=None)
 
     return render_template('cashier/payment.html',
                            prescriptions=prescriptions,
@@ -751,15 +770,15 @@ def do_bill(prescription_id):
                                         ))
         q_error = request.args.get('error')
         q_created = request.args.get('created')
-
+        print(format_decimal(medicine_price, locale='de_DE'))
         return render_template('cashier/bill.html',
                                prescription=current_prescription,
                                medicines=current_medicines,
                                patient=current_patient,
-                               medicine_price=medicine_price,
-                               service_price=service_price,
+                               medicine_price=format_decimal(medicine_price, locale='de_DE'),
+                               service_price=format_decimal(service_price, locale='de_DE'),
                                is_paid=is_paid,
-                               total=total,
+                               total=format_decimal(total, locale='de_DE'),
                                error=q_error,
                                created=q_created
                                )
@@ -1054,6 +1073,15 @@ def nure_book():
                                    appointment_date=appointment_date, current_user_role=current_user_role)
     return render_template('/appointment/nurse_create_appointment.html', current_patient=current_patient,
                            patient_cid=patient_cid)
+
+
+@app.route('/api/revenue_percentage_stats/', methods=['POST'])
+def revenue_percentage_stats():
+    month_str = request.json.get('month')
+    print(month_str)
+    if month_str:
+        stats_list = get_revenue_percentage_stats(month_str=month_str)
+        return stats_list
 
 
 if __name__ == '__main__':

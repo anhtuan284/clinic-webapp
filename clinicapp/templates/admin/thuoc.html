@@ -1,6 +1,12 @@
 {% extends 'admin/master.html' %}
 
 {% block body %}
+{% if request.args.get('err_msg') %}
+<div class="alert alert-danger">{{ request.args.get('err_msg') }}</div>
+{% endif %}
+{%if request.args.get('success_msg')%}
+<div class="alert alert-success">{{ request.args.get('success_msg') }}</div>
+{%endif%}
 <h1 class="text-center text-info mt-1">QUẢN LÝ THUỐC</h1>
 <form class="container" method="get" action="/admin/thuocview">
     <div class="d-flex container flex-row justify-content-between">
@@ -9,7 +15,7 @@
             <input class="form-control me-2" id="gia_bat_dau" name="gia_bat_dau" type="number">
         </div>
         <div class="form-group mb-3 mt-3">
-            <label for="gia_ket_thuc"><b>Giá bắt kết thúc</b></label>
+            <label for="gia_ket_thuc"><b>Giá kết thúc</b></label>
             <input class="form-control me-2" id="gia_ket_thuc" name="gia_ket_thuc" type="number">
         </div>
         <div class="form-group mb-3 mt-3">
@@ -38,17 +44,18 @@
         </div>
     </nav>
 
-    <div class="d-flex container flex-row justify-content-between">
+    <div class="d-flex container flex-row justify-content-between mt-3">
         <a class="btn btn-success" href="/admin/thuocview/thuocs/">Thêm thuốc</a>
         <button class="btn btn-primary" type="submit">Tìm</button>
     </div>
 </form>
 
-<table class="table table-striped mt-1">
+<table class="table table-striped mt-3">
     <tr>
         <th>Id</th>
         <th>Tên</th>
         <th>Loại Thuốc</th>
+        <th>Đơn vị</th>
         <th>Giá</th>
         <th>Cách Dùng</th>
         <th>Hạn Sử Dụng</th>
@@ -69,13 +76,20 @@
                     {%endif%}
                 {%endfor%}
             </td>
+            <td>
+                {%for item in unit_name_and_quantity%}
+                    {%if item[2] == t.id%}
+                        <a>{{item[1]}} trên 1 {{item[0]}}; </a>
+                    {%endif%}
+                {%endfor%}
+            </td>
             <td>{{t.price}} VNĐ</td>
             <td>{{t.usage}}</td>
             <td>{{t.exp}}</td>
             <td>
-                <a class="btn btn-info" href="/admin/thuocview/thuocs/{{t.id}}">Cập nhật</a>
+                <a class="btn btn-info" href="/admin/thuocview/thuocs/update/{{t.id}}">Cập nhật</a>
                 <form method="post" action="/admin/thuocview/thuocs/{{t.id}}">
-                    <button class="btn btn-danger" type="submit">Xoá</button>
+                    <button class="btn btn-danger mt-2" type="submit">Xoá</button>
                 </form>
             </td>
         </tr>

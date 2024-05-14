@@ -3,9 +3,8 @@
 {% block body %}
 
 {% if current_user.is_authenticated and current_user.role.value == 'admin'%}
-<h1 class="text-info">CHÀO MỪNG BẠN ĐẾN TRANG QUẢN TRỊ!</h1>
-<h2 class="text-success">Chào mừng bạn <span>{{current_user.name}} đã quay lại!</span></h2>
-<h3 class="text text-info text-center">Chọn các mục quản trị sau đây: </span></h3>
+<h1 class="text-success">CHÀO MỪNG BẠN <span>{{current_user.name.upper()}} ĐÃ QUAY TRỞ LẠI!</span></h1>
+<h3 class="text text-info text-center">Chọn các mục dưới đây để quản trị: </h3>
 <div class="container">
     <div class="d-flex row justify-content-space-between">
         <a class="col col-5 btn btn-outline-danger m-3" href="/admin/thuocview/">
@@ -13,9 +12,6 @@
         </a>
         <a class="col col-5 btn btn-outline-danger m-3" href="/admin/unit/">
             Đơn Vị
-        </a>
-        <a class="col col-5 btn btn-outline-danger m-3"  href="/admin/medicineunit/">
-            Thuốc-Đơn Vị
         </a>
         <a class="col col-5 btn btn-outline-danger m-3" href="/admin/category/">
             Danh Mục

@@ -194,7 +194,7 @@ class Bill(BaseModel):
 class Category(BaseModel):
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String(100))
-    medicine_category = relationship("MedicineCategory", backref='category', lazy=True)
+    medicine_category = relationship("MedicineCategory", backref='category', cascade="all, delete-orphan", lazy="joined")
 
 
 class MedicineCategory(BaseModel):

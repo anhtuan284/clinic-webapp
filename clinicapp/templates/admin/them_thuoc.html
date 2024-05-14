@@ -1,68 +1,131 @@
 {% extends 'admin/master.html' %}
 
 {% block body %}
-<h1 class="text-center text-info mt-1">THÊM THUỐC</h1>
-<form method="post" action="/admin/thuocview/thuocs/">
+{%if success_msg%}
+<div class="alert alert-success">{{ success_msg }}</div>
+{%endif%}
+<h1 class="text-center text-info mt-1">
     {%if thuoc%}
-    <div class="form-group mb-3 mt-3">
-        <label for="id">Id</label>
-        <input type="number" class="form-control" id="id" name="id" value="{{thuoc.id}}" readonly>
-    </div>
+    SỬA THUỐC
+    {%else%}
+    THÊM THUỐC
     {%endif%}
+</h1>
+{%if thuoc%}
+<form method="post" action="/admin/thuocview/thuocs/update/{{thuoc.id}}">
+{%else%}
+    <form method="post" action="/admin/thuocview/thuocs/">
+        {%endif%}
+        {%if thuoc%}
+        <div class="form-group mb-3 mt-3">
+            <label for="id" ><strong>Id</strong></label>
+            <input type="number" class="form-control" id="id" name="id" value="{{thuoc.id}}" readonly>
+        </div>
+        {%endif%}
 
-    <div class="form-group mb-3 mt-3">
-        <label for="gia">Giá</label>
-        <input type="number" class="form-control" id="gia" name="gia"
-               {%if thuoc%}value="{{thuoc.price}}"{%endif%}
-               required>
-    </div>
+        <div class="form-group mb-3 mt-3">
+            <label for="gia"><strong>Giá</strong></label>
+            <input type="number" class="form-control" id="gia" name="gia"
+                   {%if thuoc%}value="{{thuoc.price}}" {%endif%}
+                   required>
+        </div>
 
-    <div class="form-group mt-3 mb-3">
-        <label for="name">Tên</label>
-        <input type="text" class="form-control" id="name" name="name"
-               {%if thuoc%}value="{{thuoc.name}}"{%endif%}
-               required>
-    </div>
+        <div class="form-group mt-3 mb-3">
+            <label for="name"><strong>Tên</strong></label>
+            <input type="text" class="form-control" id="name" name="name"
+                   {%if thuoc%}value="{{thuoc.name}}" {%endif%}
+                   required>
+        </div>
 
-    <div class="form-group mt-3 mb-3">
-        <label for="cach_dung">Cách dùng</label>
-        <input type="text" class="form-control" id="cach_dung" name="cach_dung"
-               {%if thuoc%}value="{{thuoc.usage}}"{%endif%}
-        required>
-    </div>
+        <div class="form-group mt-3 mb-3">
+            <label for="cach_dung"><strong>Cách dùng</strong></label>
+            <input type="text" class="form-control" id="cach_dung" name="cach_dung"
+                   {%if thuoc%}value="{{thuoc.usage}}" {%endif%}
+                   required>
+        </div>
 
-    <div class="form-group mt-3 mb-3">
-        <label for="han_su_dung">Hạn sử dụng</label>
-        <input type="date" class="form-control" id="han_su_dung" name="han_su_dung"
-               {%if thuoc%}value="{{thuoc.exp}}" {%endif%}
-               required>
-    </div>
+        <div class="form-group mt-3 mb-3">
+            <label for="han_su_dung"><strong>Hạn sử dụng</strong></label>
+            <input type="date" class="form-control" id="han_su_dung" name="han_su_dung"
+                   {%if thuoc%}value="{{thuoc.exp}}" {%endif%}
+                   required>
+        </div>
 
-    <div class="form-group mt-3 mb-3">
-        <label for="ds_danh_muc">Danh mục:</label>
-        <select class="form-control" id="ds_danh_muc" name="ds_danh_muc" multiple>
-            {%for c in cates%}
+        <div class="form-group mt-3 mb-3">
+            <label for="ds_danh_muc"><strong>Danh mục:</strong></label>
+            <select class="form-control" id="ds_danh_muc" name="ds_danh_muc" multiple>
+                {%for c in cates%}
                 {%if currentcates%}
-                    {%if c in currentcates%}
-                        <option value="{{c.id}}" selected>{{c.name}}</option>
-                    {%else%}
-                        <option value="{{c.id}}" >{{c.name}}</option>
-                    {%endif%}
+                {%if c in currentcates%}
+                <option value="{{c.id}}" selected>{{c.name}}</option>
                 {%else%}
-                    <option value="{{c.id}}" >{{c.name}}</option>
+                <option value="{{c.id}}">{{c.name}}</option>
                 {%endif%}
-            {%endfor%}
-        </select>
-    </div>
+                {%else%}
+                <option value="{{c.id}}">{{c.name}}</option>
+                {%endif%}
+                {%endfor%}
+            </select>
+        </div>
 
-    <div class="form-floating mt-3 mb-3">
-        <button class="btn btn-success" type="submit">
-            {%if thuoc%}
+        <div class="d-flex row justify-content-between m-2">
+            <div><strong>Đơn vị:</strong></div>
+            <div><strong>Số viên trên mỗi đơn vị:</strong> </div>
+        </div>
+
+        {%for u in units%}
+        <div class="row d-flex justify-content-between m-2">
+            <div class="form-check" id="form-check">
+                <label class="form-check-label">
+                    {%if u in currentunits%}
+                    <input id="form-check-input-{{u.id}}" type="checkbox" class="form-check-input" value="{{u.id}}" onclick="displayQInput({{u.id}})" checked>{{u.name}}
+                    {%else%}
+                    <input id="form-check-input-{{u.id}}" type="checkbox" class="form-check-input" value="{{u.id}}" onclick="displayQInput({{u.id}})">{{u.name}}
+                    {%endif%}
+                </label>
+            </div>
+
+            <div id="input-container-{{u.id}}" >
+                {%if current_med_units%}
+                    {%for cme in current_med_units%}
+                        {%if cme.unit_id == u.id%}
+                            <input type="number" required name="quantity-per-unit-{{u.id}}" value="{{cme.quantity}}">
+                        {%endif%}
+                    {%endfor%}
+                {%else%}
+
+                {%endif%}
+            </div>
+        </div>
+        {%endfor%}
+
+        <div class="form-floating mt-3 mb-3">
+            <button class="btn btn-success" type="submit">
+                {%if thuoc%}
                 Cập nhật lại thuốc
-            {%else%}
+                {%else%}
                 Thêm mới
-            {%endif%}
-        </button>
-    </div>
-</form>
+                {%endif%}
+            </button>
+        </div>
+    </form>
+
+    <script>
+        function displayQInput(id) {
+            var inputContainer = document.getElementById("input-container-" + id.toString());
+            while (inputContainer.hasChildNodes())
+                inputContainer.removeChild(inputContainer.childNodes[0])
+
+            if (document.getElementById("form-check-input-" + id.toString()).checked == true) {
+                var numInput = document.createElement("input");
+                numInput.setAttribute("type", "number");
+                numInput.setAttribute("required", "true");
+                numInput.setAttribute("name", "quantity-per-unit-" + id.toString());
+
+                if (!inputContainer.hasChildNodes())
+                    inputContainer.appendChild(numInput);
+
+            }
+        }
+    </script>
 {% endblock %}

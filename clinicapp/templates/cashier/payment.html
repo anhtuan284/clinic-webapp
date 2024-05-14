@@ -3,11 +3,13 @@
 {% block title %}Thanh Toán{% endblock %}
 
 {% block content %}
-<h1 class="text text-center text-primary">DANH SÁCH PHIẾU KHÁM THEO NGÀY</h1>
+<h1 class="text text-center text-primary">DANH SÁCH PHIẾU KHÁM</h1>
 <form class="d-flex" method="get" action="/payment">
     <input class="form-control ms-2" name="q" value="{{date}}" type="date" id="date" placeholder="Nhập ngày của danh sách">
     <button class="btn btn-primary me-2" type="submit">Tìm</button>
 </form>
+
+<a class="btn btn-outline-success m-2" href="/payment/all">Hiện Tất Cả</a>
 
 <table class="table ms-4">
     <tr class="table-row">
