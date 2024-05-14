@@ -4,7 +4,11 @@ import hmac
 import json
 import locale
 import math
+import random
+import string
 import uuid
+from random import random as rd
+
 import requests
 from PIL import Image
 from babel.numbers import format_decimal
@@ -49,7 +53,6 @@ def login_my_user():
     if request.method.__eq__('POST'):
         username = request.form.get('username')
         password = request.form.get('password')
-
         user = dao.auth_user(username=username, password=password)
         if user:
             login_user(user)
@@ -124,11 +127,14 @@ def register_user():
             try:
                 session['patient_cid'] = request.form.get('cid')
                 current_user_role = session.pop('current_user_role', None)
-                dao.add_user(name=request.form.get('name'),
-                             username=request.form.get('username'),
+                email = request.form.get('email')
+                username = request.form.get('username')
+                name = request.form.get('name')
+                dao.add_user(name=name,
+                             username=username,
                              password=password,
                              avatar=avatar_url,
-                             email=request.form.get('email'),
+                             email=email,
                              phone=request.form.get('phone'),
                              address=request.form.get('address'),
                              cid=request.form.get('cid'),
@@ -136,6 +142,7 @@ def register_user():
                              gender=gender
                              )
                 if current_user_role == 'nurse':
+                    send_account_email(email, username, password, name)
                     return redirect('/nurse/nurse_book')
             except IntegrityError as ie:
                 if ie.orig.args[0] == 1062:
@@ -158,6 +165,15 @@ def register_user():
             err_msg = 'Mật khẩu không khớp!'
 
     return render_template('auth/register.html', err_msg=err_msg)
+
+
+def send_account_email(user_email, user_username, user_password, user_name):
+    subject = f'Register account in clinic'
+    msg = Message(subject, sender=(app.config['MAIL_SENDER'], app.config['MAIL_SENDER_EMAIL']),
+                  recipients=[user_email, '2151013029huy@ou.edu.vn'])
+    msg.html = render_template('nurse/account.html', user_username=user_username, user_password=user_password,
+                               user_name=user_name)
+    mail.send(msg)
 
 
 @app.route('/list-patient', methods=['GET', 'POST'])
@@ -281,11 +297,11 @@ def patient_history(patient_id):
     date = request.args.get('start_date', None, type=str)
 
     patient = dao.get_user_by_id(patient_id)
-    prescriptions, count_records = dao.get_prescription_by_patient(patient_id=patient.id, page=page, diagnosis=diagnosis, start_date=date)
-    pages = math.ceil(count_records/app.config['PAGE_SIZE'])
+    prescriptions, count_records = dao.get_prescription_by_patient(patient_id=patient.id, page=page,
+                                                                   diagnosis=diagnosis, start_date=date)
+    pages = math.ceil(count_records / app.config['PAGE_SIZE'])
     return render_template('doctor/disease_history.html', patient=patient, prescriptions=prescriptions,
                            pages=pages)
-
 
 
 @app.route("/api/medicines/")
@@ -996,7 +1012,6 @@ def send_notification_email(user, appointment, status):
     # msg.body = body
     msg.html = render_template('nurse/email.html', user=user, appointment=appointment, status=status)
     mail.send(msg)
-    return jsonify({'message': 'Appointment status updated successfully.'}), 200
 
 
 # @app.route('/test')
@@ -1071,6 +1086,8 @@ def nure_book():
             return render_template('/appointment/nurse_create_appointment.html', current_patient=current_patient,
                                    patient_cid=patient_cid, appointment_booked=appointment_booked,
                                    appointment_date=appointment_date, current_user_role=current_user_role)
+        else:
+            flash("Không có người dùng trong hệ thống!", "success")
     return render_template('/appointment/nurse_create_appointment.html', current_patient=current_patient,
                            patient_cid=patient_cid)
 
@@ -1082,6 +1099,22 @@ def revenue_percentage_stats():
     if month_str:
         stats_list = get_revenue_percentage_stats(month_str=month_str)
         return stats_list
+
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        username = request.form['username']
+        user = dao.get_user_by_username(username)
+        characters = string.ascii_letters + string.punctuation
+        random_password = ''.join(random.choice(characters) for _ in range(9))
+        user.password = dao.hash_password(random_password)
+        send_account_email(user_email=user.email, user_username=username, user_password=random_password,
+                           user_name=user.name)
+        db.session.commit()
+        # flash('Chúng tôi đã gửi hướng dẫn khôi phục mật khẩu cho bạn. Vui lòng kiểm tra email của bạn.', 'success')
+        return redirect('/login')
+    return render_template('/auth/forgot_password.html')
 
 
 if __name__ == '__main__':
