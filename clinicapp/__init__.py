@@ -47,3 +47,4 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_SENDER'] = "PHÒNG KHÁM AN TÂM"
+app.config['MAIL_SENDER_EMAIL'] = "phongkhamantam@example.com"
