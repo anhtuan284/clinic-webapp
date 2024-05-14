@@ -1,6 +1,7 @@
 
-from sqlalchemy import func, desc, update, distinct, extract, select, join, and_
-
+from sqlalchemy import func, desc, update, distinct, extract, select, join, and_, asc
+import pytz
+from sqlalchemy.orm import sessionmaker, joinedload
 from clinicapp import TIENKHAM
 from clinicapp.models import *
 
@@ -9,6 +10,10 @@ from clinicapp.utils import hash_password, verify_password, datetime_now_vn
 
 def get_user_by_id(id):
     return User.query.get(id)
+
+
+def get_user_by_username(username):
+    return User.query.filter_by(username=username).first()
 
 
 def auth_user(username, password):
@@ -470,12 +475,27 @@ def get_approved_appointments_by_date(date):
                              .filter(Appointment.status)
                              .filter(Appointment.scheduled_date == date)
                              .filter(Appointment.prescription == None)
+                             .order_by(Appointment.scheduled_date, asc(Appointment.scheduled_hour))
                              .all())
     return approved_appointments
 
 
-def get_prescription_by_patient(patient_id):
-    return db.session.query(Prescription).filter_by(patient_id=patient_id).all()
+def get_prescription_by_patient(patient_id, page=None, start_date=None, diagnosis=None):
+    q = Prescription.query.filter_by(patient_id=patient_id)
+    if start_date:
+        q = q.filter(Prescription.date >= start_date)
+
+    if diagnosis:
+        q = q.filter(Prescription.diagnosis.contains(diagnosis))
+
+    count_record = q.count()
+
+    if page:
+        page_size = app.config['PAGE_SIZE']
+        start = (int(page) - 1) * page_size
+        q = q.slice(start, start + page_size)
+
+    return q.all(), count_record
 
 
 def get_patient_by_id(patient_id):
@@ -646,4 +666,11 @@ def get_revenue_percentage_stats(month_str):
             date_medicine_revenue_by_drug_assigned_prescription_list,
             date_revenue_by_drugless_prescription_list
     ]
+def count_prescription_by_patient(patient_id):
+    return Prescription.query.filter(Prescription.patient_id == patient_id).count()
+
+
+if __name__ == '__main__':
+    with app.app_context():
+        print(count_prescription_by_patient(patient_id=2))
 

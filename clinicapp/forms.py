@@ -4,7 +4,7 @@ from wtforms.fields.form import FormField
 from wtforms.fields.list import FieldList
 from wtforms.fields.numeric import IntegerField
 from wtforms.fields.simple import TextAreaField, HiddenField
-from wtforms.validators import InputRequired, Length, NumberRange, Regexp, DataRequired, EqualTo, Email
+from wtforms.validators import InputRequired, Length, NumberRange, Regexp, DataRequired, EqualTo, Email, ValidationError
 
 from clinicapp import dao
 from clinicapp.models import Gender, MedicineCategory
@@ -75,6 +75,17 @@ class ChangePasswordForm(FlaskForm):
     new_password = PasswordField('Mật khẩu mới', validators=[DataRequired()])
     confirm_password = PasswordField('Xác nhận mật khẩu mới', validators=[DataRequired(), EqualTo('new_password', message='Mật khẩu xác nhận không trùng khớp')])
     submit = SubmitField('Đổi mật khẩu')
+
+
+class ChangeUsernameForm(FlaskForm):
+    def validate_username(self, username):
+        user = dao.get_user_by_username(username.data)
+        if user is not None:
+            raise ValidationError('Username đã tồn tại. Vui lòng chọn một username khác.')
+
+    old_username = StringField('Username cũ:', validators=[DataRequired()])
+    new_username = StringField('Username mới:', validators=[DataRequired(), Length(min=6, max=15), validate_username])
+    submit = SubmitField('Đổi Username')
 
 
 class ChangeAvatarForm(FlaskForm):

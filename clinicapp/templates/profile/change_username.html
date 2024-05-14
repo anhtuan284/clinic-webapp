@@ -1,0 +1,44 @@
+{% extends 'layout/base.html' %}
+{% block title %}Đổi mật khẩu{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title">Đổi tên tài khoản</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    {{ form.old_username.label() }}
+                    {{ form.old_username(class="form-control", readonly=True) }}
+                </div>
+                <div class="form-group">
+                    {{ form.new_username.label() }}
+                    {{ form.new_username(class="form-control") }}
+                </div>
+
+                {% if form.errors %}
+                {% for field, errors in form.errors.items() %}
+                {% for error in errors %}
+                <h6 class="my-2 text-danger">{{ error }}</h6>
+                {% endfor %}
+                {% endfor %}
+                {% endif %}
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <h6 class="my-2 text-{{ category }}">{{ message }}</h6>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+                <a href="/profile" class="btn btn-secondary mt-2"> Huỷ </a>
+<!--                <button type="submit" class="btn btn-primary mt-2">Đổi Username</button>-->
+                {{ form.submit( class="btn btn-primary mt-2")}}
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

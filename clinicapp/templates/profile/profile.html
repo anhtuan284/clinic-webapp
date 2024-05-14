@@ -47,8 +47,9 @@
         <div class="card-footer">
             <a href="/profile/edit" class="btn btn-primary">Chỉnh sửa Hồ sơ</a>
             <a href="/profile/change_password" class="btn btn-outline-danger">Đổi mật khẩu</a>
+            <a href="/profile/change_username" class="btn btn-outline-danger">Đổi Username</a>
             <a href="#" id="show_cid_btn" class="btn btn-outline-secondary">
-                <i class="bi bi-eye"></i> Hiện CMND
+                <i class="bi bi-eye"></i> Xem CMND/CCCD
             </a>
             <form action="/profile/change_avatar" method="POST" enctype="multipart/form-data"
                   class="d-inline">
@@ -74,7 +75,7 @@
             document.getElementById('show_cid_btn').innerHTML = '<i class="bi bi-eye-slash"></i>  Ẩn CMND';
         } else {
             cidRow.style.display = 'none';
-            document.getElementById('show_cid_btn').innerHTML = '<i class="bi bi-eye-slash"></i>   Hiện CMND';
+            document.getElementById('show_cid_btn').innerHTML = '<i class="bi bi-eye-fill"></i>   Xem CMND/CCCD';
         }
     });
 
