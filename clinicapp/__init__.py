@@ -1,25 +1,23 @@
+import os
+import cloudinary
 from flask import Flask
-from urllib.parse import quote
-
-from flask_admin import Admin
+from dotenv import load_dotenv, dotenv_values
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_babel import Babel
 from flask_cors import CORS
 
-import cloudinary
+load_dotenv()
 
 app = Flask(__name__)
-app.config[
-    "SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://admin:%s@flask-db.cle2w2q6enml.ap-southeast-2.rds.amazonaws.com" \
-                                 "/clinicdb?charset=utf8mb4" % quote('httclinic')
-
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("SQLALCHEMY_DATABASE_URI")
 app.secret_key = '^%^&%^(*^^&&*^$%((^^&$$&^'
-
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
-app.config["PAGE_SIZE"] = 8
+app.config["PAGE_SIZE"] = 4
 
-cloudinary.config(cloud_name='dwvkjyixu', api_key='536683637118642', api_secret='FskS9miJ-HPA2-27m4vqpokOov4')
+cloudinary.config(cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+                  api_key=os.environ.get("CLOUDINARY_API_KEY"),
+                  api_secret=os.environ.get("CLOUDINARY_API_SECRET"))
 db = SQLAlchemy(app)
 login = LoginManager(app)
 Babel(app)
@@ -27,33 +25,26 @@ cors = CORS(app)
 
 
 # VNPAY CONFIG
-VNPAY_RETURN_URL = 'http://127.0.0.1:5000/payment_return_vnpay'  # get from config
-VNPAY_PAYMENT_URL = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'  # get from config
-VNPAY_API_URL = 'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction'
-VNPAY_TMN_CODE = 'F9GSCV1D'  # Website ID in VNPAY System, get from config
-VNPAY_HASH_SECRET_KEY = 'JUXOOOXYAUTGHZIWOZVOLQCICSTVEACX'  # Secret key for create checksum,get from config
+VNPAY_RETURN_URL = os.environ.get('VNPAY_RETURN_URL')
+VNPAY_PAYMENT_URL = os.environ.get('VNPAY_PAYMENT_URL')
+VNPAY_API_URL = os.environ.get('VNPAY_API_URL')
+VNPAY_TMN_CODE = os.environ.get('VNPAY_TMN_CODE')
+VNPAY_HASH_SECRET_KEY = os.environ.get('VNPAY_HASH_SECRET_KEY')
 
 # MOMO
-endpoint = "https://test-payment.momo.vn/v2/gateway/api/create"
-access_key = "F8BBA842ECF85"
-secret_key = "K951B6PE1waDMi640xX08PD3vg6EkVlz"
-redirect_url = "http://127.0.0.1:5000/payment_return_momo"
-ipn_url = "http://127.0.0.1:5000/"
+endpoint = os.environ.get('MOMO_ENDPOINT')
+access_key = os.environ.get('MOMO_ACCESS_KEY')
+secret_key = os.environ.get('MOMO_SECRET_KEY')
+redirect_url = os.environ.get('MOMO_REDIRECT_URL')
+ipn_url = os.environ.get('MOMO_IPN_URL')
 
 TIENKHAM = 2
 SOLUONGKHAM = 3
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'peteralwaysloveu@gmail.com'
-EMAIL_HOST_PASSWORD = "uvbc jfpm udxt apwv"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-MAIL_SENDER = f"PHÒNG KHÁM AN TÂM "
-MAIL_SENDER_EMAIL = "phongkhamantam@example.com"
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_USERNAME'] = 'peteralwaysloveu@gmail.com'
-app.config['MAIL_PASSWORD'] = "uvbc jfpm udxt apwv"
+app.config['MAIL_SERVER'] = "smtp.gmail.com"
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_PORT'] = 587
-app.config['MAIL_SENDER'] = MAIL_SENDER
+app.config['MAIL_SENDER'] = "PHÒNG KHÁM AN TÂM"
+app.config['MAIL_SENDER_EMAIL'] = "phongkhamantam@example.com"
