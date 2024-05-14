@@ -22,7 +22,7 @@ from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_h
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
     get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, \
     get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions, get_doctor_by_id, \
-    get_patient_by_id, get_all_patient, get_all_doctor
+    get_patient_by_id, get_all_patient, get_all_doctor, get_revenue_percentage_stats
 from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin, adminloggedin
 from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileForm, ChangeAvatarForm
 from clinicapp.models import UserRole, Gender, Appointment, AppointmentList
@@ -1037,6 +1037,15 @@ def nure_book():
                                    appointment_date=appointment_date, current_user_role=current_user_role)
     return render_template('/appointment/nurse_create_appointment.html', current_patient=current_patient,
                            patient_cid=patient_cid)
+
+
+@app.route('/api/revenue_percentage_stats/', methods=['POST'])
+def revenue_percentage_stats():
+    month_str = request.json.get('month')
+    print(month_str)
+    if month_str:
+        stats_list = get_revenue_percentage_stats(month_str=month_str)
+        return stats_list
 
 
 if __name__ == '__main__':
