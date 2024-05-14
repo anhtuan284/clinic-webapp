@@ -775,10 +775,10 @@ def do_bill(prescription_id):
                                prescription=current_prescription,
                                medicines=current_medicines,
                                patient=current_patient,
-                               medicine_price=format_decimal(medicine_price, locale='de_DE'),
-                               service_price=format_decimal(service_price, locale='de_DE'),
+                               medicine_price=medicine_price,
+                               service_price=service_price,
                                is_paid=is_paid,
-                               total=format_decimal(total, locale='de_DE'),
+                               total=total,
                                error=q_error,
                                created=q_created
                                )
