@@ -26,6 +26,10 @@ function hideOverlay() {
     clonedCards.forEach(card => {
         card.remove(); // Xóa các thẻ card đã sao chép
     });
+    const errorMessage = document.getElementById("error-message");
+    if (errorMessage) {
+        errorMessage.remove();
+    }
     document.getElementById("overlay").style.display = "none";
 }
 
@@ -72,6 +76,7 @@ function change_confirm(id, scheduled_date, scheduled_hour) {
         .then(response => {
             if (!response.ok) {
                 showOverlay();
+
                 const card = document.querySelector(`.card[data-appointment-id="${id}"]`);
                 if (card) {
                     const listNoConfirm = card.closest('.list_no_confirm');
@@ -79,7 +84,19 @@ function change_confirm(id, scheduled_date, scheduled_hour) {
                     // Sao chép thẻ card để hiển thị trên overlay
                     const clonedCard = card.cloneNode(true);
                     clonedCard.querySelector('.confirm-appointment-btn').remove();
+                    const h3 = document.createElement('h3');
+
                     overlay.appendChild(clonedCard);
+                    if (response.status === 400) {
+                        h3.textContent = "Đã có lịch hẹn trùng ngày giờ";
+                    } else if (response.status === 401) {
+                        h3.textContent = "Đã vượt quá số lượng khám trong ngày";
+                    }
+                    h3.style.color = "white";
+                    h3.id = "error-message"; // Gán id cho thẻ h3
+
+                    overlay.appendChild(h3);
+
                 } else {
                     console.error('Card not found.');
                 }

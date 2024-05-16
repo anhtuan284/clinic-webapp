@@ -16,7 +16,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy.exc import IntegrityError
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
-    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, db, utils, loaded_model
+    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, db, utils, loaded_model, admin
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
     get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
@@ -940,13 +940,16 @@ def change_confirm():
     appointment_id = data.get('id')
     scheduled_date = data.get('scheduled_date')
     scheduled_hour = data.get('scheduled_hour')
-
+    quantity_check = get_quantity_appointment_by_date(scheduled_date)
+    policy = int(get_value_policy(SOLUONGKHAM))
+    if quantity_check >= policy:
+        return 'Out of policy', 401
     if appointment_id is None or scheduled_date is None or scheduled_hour is None:
         return 'Invalid request. Missing required parameters.', 400
 
     flag = dao.conflict_appointment(scheduled_date, scheduled_hour)
     if flag:
-        return 'There is a conflicting appointment. Please choose another date and time.', 400
+        return 'Conflict appointment', 400
     else:
         dao.update_confirm_appointment(appointment_id)
         print(appointment_id)
