@@ -1,0 +1,88 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Dự đoán Giấc ngủ{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6 mb-5">
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">Dự đoán Giấc ngủ</h2>
+                    <form id="predictionForm">
+                        <!-- Đặc điểm tuổi -->
+                        <div class="mb-3">
+                            <label for="age" class="form-label">Tuổi</label>
+                            <input type="number" class="form-control" id="age" name="age" required>
+                        </div>
+                        <!-- Đặc điểm giới tính -->
+                        <div class="mb-3">
+                            <label for="gender" class="form-label">Giới tính</label>
+                            <select class="form-select" id="gender" name="gender" required>
+                                <option value="1">Nữ</option>
+                                <option value="0">Nam</option>
+                            </select>
+                        </div>
+                        <!-- Đặc điểm tỷ lệ giấc ngủ REM -->
+                        <div class="mb-3">
+                            <label for="rem_percentage" class="form-label">Tỷ lệ giấc ngủ REM (%)</label>
+                            <input type="number" class="form-control" id="rem_percentage" name="rem_percentage"
+                                   required>
+                        </div>
+                        <!-- Đặc điểm tỷ lệ giấc ngủ sâu -->
+                        <div class="mb-3">
+                            <label for="deep_percentage" class="form-label">Tỷ lệ giấc ngủ sâu (%)</label>
+                            <input type="number" class="form-control" id="deep_percentage" name="deep_percentage"
+                                   required>
+                        </div>
+                        <!-- Đặc điểm tỷ lệ giấc ngủ nhẹ -->
+                        <div class="mb-3">
+                            <label for="light_percentage" class="form-label">Tỷ lệ giấc ngủ nhẹ (%)</label>
+                            <input type="number" class="form-control" id="light_percentage" name="light_percentage"
+                                   required>
+                        </div>
+                        <!-- Đặc điểm số lần thức dậy -->
+                        <div class="mb-3">
+                            <label for="awakenings" class="form-label">Số lần thức dậy</label>
+                            <input type="number" class="form-control" id="awakenings" name="awakenings" required>
+                        </div>
+                        <!-- Nút dự đoán -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">Dự đoán</button>
+                        </div>
+                    </form>
+                    <div id="predictionResult" class="mt-4 text-center" style="display: none;">
+                        <h4>Kết quả dự đoán:</h4>
+                        <p id="predictionLabel"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('predictionForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+        var jsonData = {};
+        formData.forEach(function (value, key) {
+            jsonData[key] = value;
+        });
+        fetch('/predict', {
+            method: 'POST',
+            body: JSON.stringify(jsonData),
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('predictionLabel').innerText = data.prediction;
+                document.getElementById('predictionResult').style.display = 'block';
+            })
+            .catch(error => console.error('Error:', error));
+    });
+</script>
+{% endblock %}

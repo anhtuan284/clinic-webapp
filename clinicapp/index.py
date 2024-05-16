@@ -9,6 +9,7 @@ import string
 import uuid
 from random import random as rd
 
+import joblib
 import requests
 from PIL import Image
 from babel.numbers import format_decimal
@@ -458,6 +459,9 @@ def patient_book_appointment():
         gateway = request.form.get('way')
         if pay_method == 'direct':
             session['appointment_date'] = request.form.get('appointment_date')
+            print(request.form.get('appointment_time'))
+            print(request.form.get('appointment_time'))
+            print(request.form.get('appointment_time'))
             session['appointment_time'] = request.form.get('appointment_time')
             session['payment_method'] = pay_method
             session['way'] = gateway
@@ -489,7 +493,10 @@ def patient_book_appointment():
 
 def create_appoinment_done_payment():
     appointment_date = session.pop('appointment_date', None)
-    appointment_time = int(session.pop('appointment_time', None))
+    # appointment_time = int(session.pop('appointment_time', None))
+    appointment_time = session.pop('appointment_time', None)
+    appointment_time = int(appointment_time)
+
     scheduled_h = appointment_time // 60
     scheduled_m = appointment_time % 60
     dao.add_appointment(scheduled_date=appointment_date,
@@ -1000,12 +1007,7 @@ def send_notification_email(user, appointment, status):
     subject = f'Appointment Status Changed DateTime: {appointment.scheduled_date} - {appointment.scheduled_hour}'
     # body = f"Dear {new_user.name}, \nYour appointment status has been {
     # new_status} " \ #        f"from to " \ #        f"\nRegards,\nThe Private Clinic Team"
-    data = {
-        'user': user,
-        'appointment': appointment,
-        'status': "HUỶ"
-    }
-    print(data)
+
     # Gửi email
     msg = Message(subject, sender=(app.config["MAIL_SENDER"], app.config["MAIL_SENDER_EMAIL"]),
                   recipients=[user.email, '2151013029huy@ou.edu.vn'])
@@ -1115,6 +1117,52 @@ def forgot_password():
         # flash('Chúng tôi đã gửi hướng dẫn khôi phục mật khẩu cho bạn. Vui lòng kiểm tra email của bạn.', 'success')
         return redirect('/login')
     return render_template('/auth/forgot_password.html')
+
+
+loaded_model = joblib.load('models/gradient_boosting_model.joblib')
+import warnings
+
+# Suppress scikit-learn warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    if request.method == 'POST':
+        # Lấy dữ liệu từ request
+        data_js = request.json
+
+        # Kiểm tra xem dữ liệu có đầy đủ không
+        data = {
+            'Age': data_js.get('age'),
+            'Gender': data_js.get('gender'),
+            'REM sleep percentage': data_js.get('rem_percentage'),
+            'Deep sleep percentage': data_js.get('deep_percentage'),
+            'Light sleep percentage': data_js.get('light_percentage'),
+            'Awakenings': data_js.get('awakenings'),
+        }
+        print(data)
+
+        # Dự đoán với mô hình đã load
+        prediction = loaded_model.predict([list(data.values())])
+        print(prediction)
+        # Chuyển đổi kết quả dự đoán thành dạng text
+        if prediction >= 0.8:
+            predicted_label = 'Giấc ngủ tốt'
+            return jsonify({'prediction': predicted_label}), 200
+        elif prediction >= 0.7:
+            predicted_label = 'Giấc ngủ ổn có thể cải thiện thêm'
+            return jsonify({'prediction': predicted_label}), 200
+        else:
+            predicted_label = 'Giấc ngủ có vấn đề hãy đến gặp bác sĩ'
+            return jsonify({'prediction': predicted_label}), 200
+
+    # Trả về kết quả dưới dạng JSON
+
+
+@app.route('/patient/predict_sleep', methods=['GET'])
+def predict_sleep():
+    return render_template('/patient/sleep_efficiency.html')
 
 
 if __name__ == '__main__':
