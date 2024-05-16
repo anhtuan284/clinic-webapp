@@ -41,15 +41,7 @@ function hideOverlay() {
 //     })
 //         .then(response => {
 //             if (!response.ok) {
-//                 showOverlay();
-//                 const card = document.querySelector(`.card[data-id="${id}"]`);
-//                 const listNoConfirm = card.closest('.list_no_confirm');
-//                 const overlay = document.querySelector('.overlay');
-//                 // Sao chép thẻ card để hiển thị trên overlay
-//                 const clonedCard = card.cloneNode(true);
-//                 clonedCard.querySelector('.confirm-appointment-btn').remove();
 //
-//                 overlay.appendChild(clonedCard);
 //
 //                 throw new Error('Failed to confirm appointment.');
 //             }
@@ -79,6 +71,18 @@ function change_confirm(id, scheduled_date, scheduled_hour) {
     })
         .then(response => {
             if (!response.ok) {
+                showOverlay();
+                const card = document.querySelector(`.card[data-appointment-id="${id}"]`);
+                if (card) {
+                    const listNoConfirm = card.closest('.list_no_confirm');
+                    const overlay = document.querySelector('.overlay');
+                    // Sao chép thẻ card để hiển thị trên overlay
+                    const clonedCard = card.cloneNode(true);
+                    clonedCard.querySelector('.confirm-appointment-btn').remove();
+                    overlay.appendChild(clonedCard);
+                } else {
+                    console.error('Card not found.');
+                }
                 throw new Error('Failed to confirm appointment.');
             }
             // Tìm thẻ card được xác nhận bằng ID
@@ -107,11 +111,11 @@ function rejectAppointment(appointmentId, userId) {
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
         confirmButtonText: 'Đồng ý',
-        cancelButtonText: 'Hủy bỏ'
+        cancelButtonText: 'Hủy bỏ',
+
     }).then((result) => {
             if (result.isConfirmed) {
                 showLoadingIcon();
-
                 fetch("/api/update_appointment?appointment_id=" + appointmentId + "&user_id=" + userId + "&status=cancelled", {
                     method: "PATCH", headers: {
                         "Content-Type": "application/json"
@@ -125,8 +129,12 @@ function rejectAppointment(appointmentId, userId) {
                         document.getElementById('spin').style.display = 'none';
 
                         const card = document.querySelector(`.card[data-appointment-id="${appointmentId}"]`);
+                        const listNoConfirm = card.closest('.list_no_confirm');
+
                         if (card) {
                             card.remove();
+                            location.reload();
+
                         }
                     })
                     .catch(error => {

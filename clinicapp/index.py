@@ -604,7 +604,8 @@ def payment_return_momo():
             )
             return redirect('/payment')
     else:
-        return redirect('/')
+        flash("Đăng ký lịch hẹn khám đã bị gián đoạn!", "danger")
+        return redirect('/patient/book')
 
 
 @app.route('/check-appointment-date', methods=['GET'])
