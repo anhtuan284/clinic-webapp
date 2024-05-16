@@ -1119,7 +1119,7 @@ def forgot_password():
     return render_template('/auth/forgot_password.html')
 
 
-loaded_model = joblib.load('models/gradient_boosting_model.joblib')
+loaded_model = joblib.load('gradient_boosting_model.joblib')
 import warnings
 
 # Suppress scikit-learn warnings
