@@ -51,7 +51,5 @@ app.config['MAIL_SENDER'] = "PHÒNG KHÁM AN TÂM"
 app.config['MAIL_SENDER_EMAIL'] = "phongkhamantam@example.com"
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
-print(current_directory)
 model_file_path = os.path.join(current_directory, 'models', 'gradient_boosting_model.joblib')
 loaded_model = joblib.load(model_file_path)
-print(loaded_model)
