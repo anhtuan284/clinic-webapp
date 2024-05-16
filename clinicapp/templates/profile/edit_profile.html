@@ -1,7 +1,7 @@
 {% extends 'layout/base.html' %}
 {% block title %}Chỉnh sửa Hồ sơ{% endblock %}
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-5 col-5">
     <div class="card">
         <div class="card-header bg-primary text-white">
             <h5 class="card-title">Chỉnh sửa Hồ sơ</h5>
@@ -9,33 +9,55 @@
         <div class="card-body">
             <form method="POST">
                 {{ form.hidden_tag() }}
-                <div class="form-group">
+
+                <div class="form-group my-3">
                     {{ form.name.label() }}
                     {{ form.name(class="form-control") }}
+                    {% for error in form.name.errors %}
+                        <div class="text-danger fw-bold">{{ error }}</div>
+                    {% endfor %}
                 </div>
-                <div class="form-group">
+                <div class="form-group my-3">
                     {{ form.cid.label() }}
                     {{ form.cid(class="form-control") }}
+                    {% for error in form.cid.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
                 </div>
-                <div class="form-group">
+                <div class="form-group my-3">
                     {{ form.dob.label() }}
                     {{ form.dob(class="form-control") }}
+                    {% for error in form.dob.errors %}
+                        <div class="text-danger fw-bold">{{ error }}</div>
+                    {% endfor %}
                 </div>
-                <div class="form-group">
+                <div class="form-group my-3">
                     {{ form.phone.label() }}
                     {{ form.phone(class="form-control") }}
+                    {% for error in form.phone.errors %}
+                        <div class="text-danger fw-bold">{{ error }}</div>
+                    {% endfor %}
                 </div>
-                <div class="form-group">
+                <div class="form-group my-3">
                     {{ form.email.label() }}
                     {{ form.email(class="form-control") }}
+                    {% for error in form.email.errors %}
+                        <div class="text-danger fw-bold">{{ error }}</div>
+                    {% endfor %}
                 </div>
-                <div class="form-group">
+                <div class="form-group my-3">
                     {{ form.gender.label() }}
                     {{ form.gender(class="form-control") }}
+                    {% for error in form.gender.errors %}
+                        <div class="text-danger fw-bold">{{ error }}</div>
+                    {% endfor %}
                 </div>
-                <div class="form-group">
+                <div class="form-group my-3">
                     {{ form.address.label() }}
                     {{ form.address(class="form-control") }}
+                    {% for error in form.address.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
                 </div>
                 <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
             </form>

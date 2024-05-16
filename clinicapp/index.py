@@ -2,28 +2,30 @@ import datetime
 import hashlib
 import hmac
 import json
-import locale
 import math
+import random
+import string
 import uuid
+
 import requests
 from PIL import Image
 from babel.numbers import format_decimal
 from flask import request, redirect, render_template, jsonify, url_for, session, flash
 from flask_cors import cross_origin
 from flask_login import login_user, logout_user, login_required, current_user
-from sqlalchemy.exc import NoResultFound, IntegrityError
+from sqlalchemy.exc import IntegrityError
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
-    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, admin, db, utils
+    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, db, utils, loaded_model, admin
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
-    get_prescriptions_by_scheduled_date, get_prescription_by_id, \
+    get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
     get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, \
     get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions, get_doctor_by_id, \
     get_patient_by_id, get_all_patient, get_all_doctor, get_revenue_percentage_stats
-from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin, adminloggedin, resources_owner
+from clinicapp.decorators import roles_required, cashiernotloggedin, adminloggedin, resources_owner
 from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileForm, ChangeAvatarForm, ChangeUsernameForm
-from clinicapp.models import UserRole, Gender, Appointment, AppointmentList
+from clinicapp.models import UserRole, Gender, AppointmentList
 from clinicapp.vnpay import vnpay
 from flask_mail import Mail, Message
 
@@ -49,7 +51,6 @@ def login_my_user():
     if request.method.__eq__('POST'):
         username = request.form.get('username')
         password = request.form.get('password')
-
         user = dao.auth_user(username=username, password=password)
         if user:
             login_user(user)
@@ -124,11 +125,14 @@ def register_user():
             try:
                 session['patient_cid'] = request.form.get('cid')
                 current_user_role = session.pop('current_user_role', None)
-                dao.add_user(name=request.form.get('name'),
-                             username=request.form.get('username'),
+                email = request.form.get('email')
+                username = request.form.get('username')
+                name = request.form.get('name')
+                dao.add_user(name=name,
+                             username=username,
                              password=password,
                              avatar=avatar_url,
-                             email=request.form.get('email'),
+                             email=email,
                              phone=request.form.get('phone'),
                              address=request.form.get('address'),
                              cid=request.form.get('cid'),
@@ -136,6 +140,7 @@ def register_user():
                              gender=gender
                              )
                 if current_user_role == 'nurse':
+                    send_account_email(email, username, password, name)
                     return redirect('/nurse/nurse_book')
             except IntegrityError as ie:
                 if ie.orig.args[0] == 1062:
@@ -158,6 +163,15 @@ def register_user():
             err_msg = 'Mật khẩu không khớp!'
 
     return render_template('auth/register.html', err_msg=err_msg)
+
+
+def send_account_email(user_email, user_username, user_password, user_name):
+    subject = f'Register account in clinic'
+    msg = Message(subject, sender=(app.config['MAIL_SENDER'], app.config['MAIL_SENDER_EMAIL']),
+                  recipients=[user_email, '2151013029huy@ou.edu.vn'])
+    msg.html = render_template('nurse/account.html', user_username=user_username, user_password=user_password,
+                               user_name=user_name)
+    mail.send(msg)
 
 
 @app.route('/list-patient', methods=['GET', 'POST'])
@@ -271,6 +285,18 @@ def get_units_by_medicine(medicine_id):
     return jsonify(units_json)
 
 
+@app.route("/medicines/list")
+def view_medicine():
+    keyword = request.args.get("keyword")
+    cate_id = request.args.get('cate_id')
+    page = request.args.get('page', 1)
+    category = dao.get_categories()
+    medicine = dao.get_list_medicine(keyword=keyword, cate_id=cate_id, page=int(page))
+    count = dao.count_medicine()
+    return render_template('doctor/medicine_list.html', category=category, medicine=medicine,
+                           page=math.ceil(count / app.config['PAGE_SIZE']), cate_id=cate_id)
+
+
 @app.route("/patient/<int:patient_id>/history/")
 @login_required
 @roles_required([UserRole.DOCTOR, UserRole.PATIENT])
@@ -281,11 +307,11 @@ def patient_history(patient_id):
     date = request.args.get('start_date', None, type=str)
 
     patient = dao.get_user_by_id(patient_id)
-    prescriptions, count_records = dao.get_prescription_by_patient(patient_id=patient.id, page=page, diagnosis=diagnosis, start_date=date)
-    pages = math.ceil(count_records/app.config['PAGE_SIZE'])
+    prescriptions, count_records = dao.get_prescription_by_patient(patient_id=patient.id, page=page,
+                                                                   diagnosis=diagnosis, start_date=date)
+    pages = math.ceil(count_records / app.config['PAGE_SIZE'])
     return render_template('doctor/disease_history.html', patient=patient, prescriptions=prescriptions,
                            pages=pages)
-
 
 
 @app.route("/api/medicines/")
@@ -293,13 +319,15 @@ def patient_history(patient_id):
 @roles_required([UserRole.DOCTOR])
 def get_medicines():
     kw = request.args.get('name')
-    medicines = dao.get_medicines(name=kw)
+    cate_id = request.args.get('cate_id')
+    medicines = dao.get_medicines(name=kw, category_id=cate_id)
     medicine_list = []
     for medicine in medicines:
         medicine_list.append({
             'id': medicine.id,
             'name': medicine.name,
-            'usage': medicine.usage
+            'usage': medicine.usage,
+            'price': medicine.price
         })
 
     return jsonify(medicine_list)
@@ -442,6 +470,9 @@ def patient_book_appointment():
         gateway = request.form.get('way')
         if pay_method == 'direct':
             session['appointment_date'] = request.form.get('appointment_date')
+            print(request.form.get('appointment_time'))
+            print(request.form.get('appointment_time'))
+            print(request.form.get('appointment_time'))
             session['appointment_time'] = request.form.get('appointment_time')
             session['payment_method'] = pay_method
             session['way'] = gateway
@@ -473,7 +504,10 @@ def patient_book_appointment():
 
 def create_appoinment_done_payment():
     appointment_date = session.pop('appointment_date', None)
-    appointment_time = int(session.pop('appointment_time', None))
+    # appointment_time = int(session.pop('appointment_time', None))
+    appointment_time = session.pop('appointment_time', None)
+    appointment_time = int(appointment_time)
+
     scheduled_h = appointment_time // 60
     scheduled_m = appointment_time % 60
     dao.add_appointment(scheduled_date=appointment_date,
@@ -570,7 +604,8 @@ def payment_return_momo():
             )
             return redirect('/payment')
     else:
-        return redirect('/')
+        flash("Đăng ký lịch hẹn khám đã bị gián đoạn!", "danger")
+        return redirect('/patient/book')
 
 
 @app.route('/check-appointment-date', methods=['GET'])
@@ -795,7 +830,7 @@ def profile():
 
 @app.route('/profile/edit', methods=['GET', 'POST'])
 def profile_edit():
-    form = EditProfileForm()
+    form = EditProfileForm(user_id=current_user.id, obj=current_user)
     if form.validate_on_submit():
         current_user.name = form.name.data
         current_user.cid = form.cid.data
@@ -905,13 +940,16 @@ def change_confirm():
     appointment_id = data.get('id')
     scheduled_date = data.get('scheduled_date')
     scheduled_hour = data.get('scheduled_hour')
-
+    quantity_check = get_quantity_appointment_by_date(scheduled_date)
+    policy = int(get_value_policy(SOLUONGKHAM))
+    if quantity_check >= policy:
+        return 'Out of policy', 401
     if appointment_id is None or scheduled_date is None or scheduled_hour is None:
         return 'Invalid request. Missing required parameters.', 400
 
     flag = dao.conflict_appointment(scheduled_date, scheduled_hour)
     if flag:
-        return 'There is a conflicting appointment. Please choose another date and time.', 400
+        return 'Conflict appointment', 400
     else:
         dao.update_confirm_appointment(appointment_id)
         print(appointment_id)
@@ -984,19 +1022,13 @@ def send_notification_email(user, appointment, status):
     subject = f'Appointment Status Changed DateTime: {appointment.scheduled_date} - {appointment.scheduled_hour}'
     # body = f"Dear {new_user.name}, \nYour appointment status has been {
     # new_status} " \ #        f"from to " \ #        f"\nRegards,\nThe Private Clinic Team"
-    data = {
-        'user': user,
-        'appointment': appointment,
-        'status': "HUỶ"
-    }
-    print(data)
+
     # Gửi email
     msg = Message(subject, sender=(app.config["MAIL_SENDER"], app.config["MAIL_SENDER_EMAIL"]),
                   recipients=[user.email, '2151013029huy@ou.edu.vn'])
     # msg.body = body
     msg.html = render_template('nurse/email.html', user=user, appointment=appointment, status=status)
     mail.send(msg)
-    return jsonify({'message': 'Appointment status updated successfully.'}), 200
 
 
 # @app.route('/test')
@@ -1071,6 +1103,8 @@ def nure_book():
             return render_template('/appointment/nurse_create_appointment.html', current_patient=current_patient,
                                    patient_cid=patient_cid, appointment_booked=appointment_booked,
                                    appointment_date=appointment_date, current_user_role=current_user_role)
+        else:
+            flash("Không có người dùng trong hệ thống!", "success")
     return render_template('/appointment/nurse_create_appointment.html', current_patient=current_patient,
                            patient_cid=patient_cid)
 
@@ -1082,6 +1116,67 @@ def revenue_percentage_stats():
     if month_str:
         stats_list = get_revenue_percentage_stats(month_str=month_str)
         return stats_list
+
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        username = request.form['username']
+        user = dao.get_user_by_username(username)
+        characters = string.ascii_letters + string.punctuation
+        random_password = ''.join(random.choice(characters) for _ in range(9))
+        user.password = dao.hash_password(random_password)
+        send_account_email(user_email=user.email, user_username=username, user_password=random_password,
+                           user_name=user.name)
+        db.session.commit()
+        # flash('Chúng tôi đã gửi hướng dẫn khôi phục mật khẩu cho bạn. Vui lòng kiểm tra email của bạn.', 'success')
+        return redirect('/login')
+    return render_template('/auth/forgot_password.html')
+
+
+import warnings
+
+# Suppress scikit-learn warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    if request.method == 'POST':
+        # Lấy dữ liệu từ request
+        data_js = request.json
+
+        # Kiểm tra xem dữ liệu có đầy đủ không
+        data = {
+            'Age': data_js.get('age'),
+            'Gender': data_js.get('gender'),
+            'REM sleep percentage': data_js.get('rem_percentage'),
+            'Deep sleep percentage': data_js.get('deep_percentage'),
+            'Light sleep percentage': data_js.get('light_percentage'),
+            'Awakenings': data_js.get('awakenings'),
+        }
+        print(data)
+
+        # Dự đoán với mô hình đã load
+        prediction = loaded_model.predict([list(data.values())])
+        print(prediction)
+        # Chuyển đổi kết quả dự đoán thành dạng text
+        if prediction >= 0.8:
+            predicted_label = 'Giấc ngủ tốt'
+            return jsonify({'prediction': predicted_label}), 200
+        elif prediction >= 0.7:
+            predicted_label = 'Giấc ngủ ổn có thể cải thiện thêm'
+            return jsonify({'prediction': predicted_label}), 200
+        else:
+            predicted_label = 'Giấc ngủ có vấn đề hãy đến gặp bác sĩ'
+            return jsonify({'prediction': predicted_label}), 200
+
+    # Trả về kết quả dưới dạng JSON
+
+
+@app.route('/patient/predict_sleep', methods=['GET'])
+def predict_sleep():
+    return render_template('/patient/sleep_efficiency.html')
 
 
 if __name__ == '__main__':

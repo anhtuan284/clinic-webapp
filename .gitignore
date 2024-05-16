@@ -120,7 +120,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+clinicapp/.env
 .venv
 env/
 venv/

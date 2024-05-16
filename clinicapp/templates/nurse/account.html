@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông Báo Tài Khoản Đã Đăng Ký</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            display: block;
+            margin: 0 auto;
+            width: 100px;
+            height: 100px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            display: block;
+            width: 200px;
+            margin: 0 auto;
+            padding: 10px;
+            text-align: center;
+            text-decoration: none;
+            color: #ffffff;
+            background-color: #007bff;
+            border-radius: 5px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <img src="https://res.cloudinary.com/dwvkjyixu/image/upload/v1715020043/logo-benh-vien_ewr9oe.jpg" alt="Logo"
+            class="logo">
+        <h2>Chào mừng, {{ user_name }}</h2>
+        <p>Bạn đã đăng ký tài khoản thành công tại Phòng Khám An Tâm.</p>
+        <p>Dưới đây là thông tin đăng nhập của bạn:</p>
+        <p><strong>Username:</strong> {{ user_username }}</p>
+        <p><strong>Password:</strong> {{ user_password }}</p>
+        <p>Hãy nhấn vào nút dưới đây để đăng nhập:</p>
+        <a href="https://clinic-flask.onrender.com/login" class="btn">Đăng Nhập</a>
+        <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.</p>
+        <p>Chúc bạn một ngày tốt lành!</p>
+        <p>Nhơn Đức - Nhà Bè- TP HCM | Số điện thoại: 0905952379</p>
+    </div>
+</body>
+
+</html>

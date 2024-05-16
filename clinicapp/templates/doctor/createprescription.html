@@ -178,11 +178,11 @@
 
         function searchMedicines() {
             var searchQuery = document.getElementById("medicineSearchInput").value;
-
+            var cate_id = document.getElementById("selected-medicine_type").value;
             $.ajax({
                 url: "/api/medicines/",
                 method: "GET",
-                data: {name: searchQuery},
+                data: {name: searchQuery, cate_id: cate_id},
                 success: function (data) {
                     // Gọi hàm để hiển thị kết quả
                     addMedicineResultsToDropdown(data);
@@ -198,7 +198,7 @@
                 const listItem = document.createElement("li");
                 listItem.className = "list-group-item";
                 listItem.value = medicine.id
-                listItem.textContent = medicine.name;
+                listItem.innerHTML = `<strong>${medicine.name}</strong> --- <i>${medicine.usage}</i> --- ${medicine.price} VNĐ`
                 listItem.style.height = 5;
                 listItem.onclick = function () {
                     document.getElementById("medicineSearchInput").value = medicine.name; // Dán tên thuốc vào ô tìm kiếm

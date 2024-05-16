@@ -1,3 +1,5 @@
+import re
+
 from wtforms.fields import StringField, SubmitField, PasswordField, SelectField, DateField, FileField, EmailField
 from flask_wtf import FlaskForm
 from wtforms.fields.form import FormField
@@ -7,7 +9,22 @@ from wtforms.fields.simple import TextAreaField, HiddenField
 from wtforms.validators import InputRequired, Length, NumberRange, Regexp, DataRequired, EqualTo, Email, ValidationError
 
 from clinicapp import dao
-from clinicapp.models import Gender, MedicineCategory
+from clinicapp.models import Gender, MedicineCategory, User
+
+
+def unique_email(form, field):
+    if User.query.filter(User.email == field.data, User.id != form.user_id.data).first():
+        raise ValidationError('Email đã dược sử dụng')
+
+
+def unique_cid(form, field):
+    if User.query.filter(User.cid == field.data, User.id != form.user_id.data).first():
+        raise ValidationError('Căn cước đã được sử dụng')
+
+
+def unique_phone(form, field):
+    if User.query.filter(User.phone == field.data, User.id != form.user_id.data).first():
+        raise ValidationError('SĐT đã dược sử dụng')
 
 
 class LoginForm(FlaskForm):
@@ -60,11 +77,12 @@ class PrescriptionForm(FlaskForm):
 
 
 class EditProfileForm(FlaskForm):
+    user_id = StringField()
     name = StringField('Họ tên', validators=[DataRequired()])
-    cid = StringField('CMND', validators=[Length(min=9, max=12)])
+    cid = StringField('CMND', validators=[Length(min=9, max=12), unique_cid])
     dob = DateField('Ngày sinh', validators=[DataRequired()])
-    phone = StringField('Điện thoại', validators=[DataRequired()])
-    email = StringField('Email', validators=[Email()])
+    phone = StringField('Điện thoại', validators=[DataRequired(), unique_phone])
+    email = StringField('Email', validators=[Email(), unique_email])
     gender = SelectField('Giới tính', choices=[(gender.name, gender.value) for gender in Gender])
     address = StringField('Địa chỉ')
     submit = SubmitField('Lưu thay đổi')
@@ -75,6 +93,19 @@ class ChangePasswordForm(FlaskForm):
     new_password = PasswordField('Mật khẩu mới', validators=[DataRequired()])
     confirm_password = PasswordField('Xác nhận mật khẩu mới', validators=[DataRequired(), EqualTo('new_password', message='Mật khẩu xác nhận không trùng khớp')])
     submit = SubmitField('Đổi mật khẩu')
+
+    def validate_new_password(self, field):
+        password = field.data
+        if len(password) < 8:
+            raise ValidationError('Mật khẩu mới phải chứa ít nhất 8 ký tự.')
+        if not re.search(r'[A-Z]', password):
+            raise ValidationError('Mật khẩu mới phải chứa ít nhất một chữ cái viết hoa.')
+        if not re.search(r'[a-z]', password):
+            raise ValidationError('Mật khẩu mới phải chứa ít nhất một chữ cái thường.')
+        if not re.search(r'[0-9]', password):
+            raise ValidationError('Mật khẩu mới phải chứa ít nhất một chữ số.')
+        if not re.search(r'[\W_]', password):  # \W matches any non-alphanumeric character
+            raise ValidationError('Mật khẩu mới phải chứa ít nhất một ký tự đặc biệt.')
 
 
 class ChangeUsernameForm(FlaskForm):
@@ -91,4 +122,3 @@ class ChangeUsernameForm(FlaskForm):
 class ChangeAvatarForm(FlaskForm):
     avatar = FileField('Chọn hình ảnh', validators=[DataRequired()])
     submit = SubmitField('Đổi avatar')
-
