@@ -829,7 +829,7 @@ def profile():
 
 @app.route('/profile/edit', methods=['GET', 'POST'])
 def profile_edit():
-    form = EditProfileForm()
+    form = EditProfileForm(user_id=current_user.id, obj=current_user)
     if form.validate_on_submit():
         current_user.name = form.name.data
         current_user.cid = form.cid.data

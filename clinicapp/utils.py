@@ -1,7 +1,7 @@
 import datetime
 
 import bcrypt
-import cloudinary
+import cloudinary.uploader
 from io import BytesIO
 
 import pytz
