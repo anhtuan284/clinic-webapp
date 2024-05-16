@@ -15,6 +15,7 @@
 
 
 <style>
+
     .list-container {
         float: left;
         width: 45vw;
@@ -80,7 +81,7 @@
 
     .overlay {
         position: fixed;
-        z-index: 99999;
+        z-index: 2;
         top: 0;
         left: 0;
         width: 100%;
@@ -98,7 +99,7 @@
 
     .create-list-btn {
         position: absolute; /* Đặt vị trí cố định */
-        z-index: 9999; /* Đảm bảo nút hiển thị trên tất cả các phần khác */
+        z-index: 1; /* Đảm bảo nút hiển thị trên tất cả các phần khác */
     }
 
     .spin {
@@ -148,6 +149,11 @@
             stroke-dashoffset: -124;
         }
     }
+
+    .title {
+        position: absolute;
+        margin-top: -35px;
+    }
 </style>
 <div class="spin" id="spin" style="display: none;">
     <svg id="loadingIcon" class="spinner" viewBox="0 0 50 50">
@@ -160,6 +166,9 @@
 </div>
 
 <div class="list-container">
+    <div class="title">
+        <h4>Lịch hẹn đặt trực tuyến</h4>
+    </div>
     <div class="list_no_confirm">
         <!-- Danh sách chưa xác nhận -->
         {% for appointment, user in appointments_no_confirm %}
@@ -176,7 +185,7 @@
                             onclick="rejectAppointment('{{ appointment.id }}', '{{ user.id }}')">Từ chối
                     </button>
 
-                    <button onClick="change_confirm('{{appointment.id}}','{{appointment.scheduled_date}}','{{appointment.scheduled_hour}}')"
+                    <button onclick="change_confirm('{{appointment.id}}','{{appointment.scheduled_date}}','{{appointment.scheduled_hour}}')"
                             class="btn btn-success confirm-appointment-btn">
                         Xác nhận
                     </button>
@@ -190,6 +199,9 @@
 
 
 <div class="list-container">
+    <div class="title">
+        <h4>Lịch hẹn đã được xác nhận</h4>
+    </div>
     <div class="list_confirm">
         <button class="btn btn-primary create-list-btn" onclick="create_list_for_date()">Lập danh sách cho tất cả
         </button>
