@@ -287,6 +287,18 @@ def get_units_by_medicine(medicine_id):
     return jsonify(units_json)
 
 
+@app.route("/medicines/list")
+def view_medicine():
+    keyword = request.args.get("keyword")
+    cate_id = request.args.get('cate_id')
+    page = request.args.get('page', 1)
+    category = dao.get_categories()
+    medicine = dao.get_list_medicine(keyword=keyword, cate_id=cate_id, page=int(page))
+    count = dao.count_medicine()
+    return render_template('doctor/medicine_list.html', category=category, medicine=medicine,
+                           page=math.ceil(count / app.config['PAGE_SIZE']), cate_id=cate_id)
+
+
 @app.route("/patient/<int:patient_id>/history/")
 @login_required
 @roles_required([UserRole.DOCTOR, UserRole.PATIENT])
@@ -309,13 +321,15 @@ def patient_history(patient_id):
 @roles_required([UserRole.DOCTOR])
 def get_medicines():
     kw = request.args.get('name')
-    medicines = dao.get_medicines(name=kw)
+    cate_id = request.args.get('cate_id')
+    medicines = dao.get_medicines(name=kw, category_id=cate_id)
     medicine_list = []
     for medicine in medicines:
         medicine_list.append({
             'id': medicine.id,
             'name': medicine.name,
-            'usage': medicine.usage
+            'usage': medicine.usage,
+            'price': medicine.price
         })
 
     return jsonify(medicine_list)

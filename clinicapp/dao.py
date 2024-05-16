@@ -72,13 +72,28 @@ def add_appointment(scheduled_date, scheduled_hour, is_confirm, is_paid, status,
                              is_paid=is_paid, status=status, patient_id=patient_id)
     db.session.add(appoinment)
     db.session.commit()
+    
+
+def get_list_medicine(keyword, cate_id, page=1):
+    medicines = Medicine.query
+
+    if keyword:
+        medicines = medicines.filter(Medicine.name.contains(keyword))
+    if cate_id:
+        medicines = medicines.join(Medicine.medicine_category).filter_by(category_id=cate_id)
+
+    page_size = 6
+    start = (page - 1) * page_size
+    end = start + page_size
+
+    return medicines.slice(start, end).all()
 
 
 def get_medicines(price_bat_dau=None, price_ket_thuc=None, han_dung_bat_dau=None, han_dung_ket_thuc=None, name=None,
                   category_id=None):
     medicines = Medicine.query
 
-    if category_id:
+    if category_id and category_id != '0':
         medicines = medicines.join(Medicine.medicine_category).filter_by(category_id=category_id)
 
     if price_bat_dau:
@@ -674,6 +689,10 @@ def get_revenue_percentage_stats(month_str):
 
 def count_prescription_by_patient(patient_id):
     return Prescription.query.filter(Prescription.patient_id == patient_id).count()
+
+
+def count_medicine():
+    return Medicine.query.count()
 
 
 if __name__ == '__main__':
