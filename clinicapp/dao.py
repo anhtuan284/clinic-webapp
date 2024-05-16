@@ -1,5 +1,3 @@
-
-
 from sqlalchemy import func, desc, update, distinct, extract, select, join, and_, asc
 import pytz
 from sqlalchemy.orm import sessionmaker, joinedload
@@ -72,7 +70,7 @@ def add_appointment(scheduled_date, scheduled_hour, is_confirm, is_paid, status,
                              is_paid=is_paid, status=status, patient_id=patient_id)
     db.session.add(appoinment)
     db.session.commit()
-    
+
 
 def get_list_medicine(keyword, cate_id, page=1):
     medicines = Medicine.query
@@ -687,6 +685,7 @@ def get_revenue_percentage_stats(month_str):
         date_revenue_by_drugless_prescription_list
     ]
 
+
 def count_prescription_by_patient(patient_id):
     return Prescription.query.filter(Prescription.patient_id == patient_id).count()
 
@@ -695,8 +694,33 @@ def count_medicine():
     return Medicine.query.count()
 
 
+def get_category_medicine_by_both_ids(category_id, medicine_id):
+    return MedicineCategory.query.filter_by(category_id=category_id, medicine_id=medicine_id).first()
+
+
+def get_unit_medicine_by_both_ids(unit_id, medicine_id):
+    found = MedicineUnit.query.filter_by(unit_id=unit_id, medicine_id=medicine_id).first()
+    return found
+
+
+def delete_medicine_unit_by_both_ids(unit_id, medicine_id):
+    query = MedicineUnit.query.filter_by(unit_id=unit_id, medicine_id=medicine_id)
+    if query.all():
+        query.delete()
+        db.session.commit()
+
+
+def delete_medicine_category_by_both_ids(category_id, medicine_id):
+    query = MedicineCategory.query.filter_by(category_id=category_id, medicine_id=medicine_id)
+    if query.all():
+        query.delete()
+        db.session.commit()
+
+
+def get_medicine_unit_by_unit_id(unit_id):
+    return MedicineUnit.query.get(unit_id)
+
+
 if __name__ == '__main__':
     with app.app_context():
         print(count_prescription_by_patient(patient_id=2))
-
-

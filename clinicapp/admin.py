@@ -14,7 +14,9 @@ from clinicapp.dao import get_medicines, get_categories, get_category_medicines,
     delete_all_category_medicine_by_medicine_id, add_category_medicine, get_medicine_by_id, delete_medicine_by_id, \
     get_categories_by_medicine_id, get_units, delete_all_medicine_unit_by_medicine_id, add_medicine_unit, \
     get_medicine_unit_by_medicine_id, get_medicine_unit, get_unit_by_medicine_id, get_unit_name_and_quantity, \
-    delete_admin_by_id, delete_doctor_by_id, delete_patient_by_id, delete_nurse_by_id, delete_cashier_by_id
+    delete_admin_by_id, delete_doctor_by_id, delete_patient_by_id, delete_nurse_by_id, delete_cashier_by_id, \
+    get_category_medicine_by_both_ids, get_unit_medicine_by_both_ids, get_medicine_unit_by_unit_id, \
+    delete_medicine_unit_by_both_ids, delete_medicine_category_by_both_ids
 from clinicapp.models import UserRole, User, Doctor, Nurse, Patient, Policy, Medicine, Unit, Category, MedicineUnit
 
 
@@ -303,6 +305,7 @@ class ThuocView(AuthenticatedBaseView):
     def update_thuoc(self, id):
         thuoc = get_medicine_by_id(id)
         units = get_units()
+        cates = get_categories()
 
         if request.method.__eq__('POST'):
             id = request.form.get('id')
@@ -321,6 +324,9 @@ class ThuocView(AuthenticatedBaseView):
             for u in units:
                 dict_quantity_per_unit[u.id] = request.form.get(f"quantity-per-unit-{u.id}")
 
+            print(thuoc)
+            print(dict_quantity_per_unit)
+
             thuocMoiId = add_or_update_medicine(
                 id=id,
                 price=gia,
@@ -330,17 +336,32 @@ class ThuocView(AuthenticatedBaseView):
                 dict_quantity_per_unit=dict_quantity_per_unit
             )
 
-            delete_all_category_medicine_by_medicine_id(thuocMoiId)
-            delete_all_medicine_unit_by_medicine_id(thuocMoiId)
-            for dm in ds_danh_muc:
-                add_category_medicine(category_id=int(dm), medicine_id=thuocMoiId)
-            for key in dict_quantity_per_unit.keys():
-                if dict_quantity_per_unit[key]:
-                    add_medicine_unit(unit_id=key, medicine_id=thuocMoiId, quantity=dict_quantity_per_unit[key])
+            try:
+                print(ds_danh_muc)
+                for c in cates:
+                    if c.id not in ds_danh_muc:
+                        delete_medicine_category_by_both_ids(category_id=c.id, medicine_id=thuocMoiId)
 
-            return redirect(url_for('thuocview.index', success_msg='Sửa thuốc thành công!!!'))
+                for dm in ds_danh_muc:
+                    if not get_category_medicine_by_both_ids(category_id=int(dm), medicine_id=thuocMoiId):
+                        add_category_medicine(category_id=int(dm), medicine_id=thuocMoiId)
 
-        print(get_medicine_unit_by_medicine_id(id))
+                for key in dict_quantity_per_unit.keys():
+                    if not dict_quantity_per_unit[key]:
+                        delete_medicine_unit_by_both_ids(unit_id=key, medicine_id=thuocMoiId)
+
+                    elif not get_unit_medicine_by_both_ids(unit_id=key, medicine_id=thuocMoiId):
+                        if dict_quantity_per_unit[key]:
+                            add_medicine_unit(unit_id=key, medicine_id=thuocMoiId, quantity=dict_quantity_per_unit[key])
+
+                return redirect(url_for('thuocview.index', success_msg='Sửa thuốc thành công!!!'))
+            except IntegrityError as ie:
+                if ie.orig.args[0] == 1451:
+                    return redirect(url_for('thuocview.index',
+                                        err_msg=f'Mã lỗi: 149; Lỗi: Cặp thuốc - đơn vị được xài trong phiếu khám nào đó rồi, nên không xoá được!!!'))
+            except Exception as e:
+                return redirect(url_for('thuocview.index', err_msg=str(e)))
+
         return self.render(
             'admin/them_thuoc.html',
             cates=get_categories(),
