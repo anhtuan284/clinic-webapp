@@ -37,7 +37,7 @@
                     <a class="nav-link active" href="/patient/{{current_user.id}}/history">Lịch sử khám của tôi</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" href="#">Dự đoán bệnh</a>
+                    <a class="nav-link active" href="/patient/predict_sleep">Dự đoán bệnh</a>
                 </li>
                 {% elif current_user.role.value == 'cashier' %}
                 <li class="nav-item">
