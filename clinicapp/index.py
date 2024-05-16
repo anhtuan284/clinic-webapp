@@ -2,33 +2,30 @@ import datetime
 import hashlib
 import hmac
 import json
-import locale
 import math
 import random
 import string
 import uuid
-from random import random as rd
 
-import joblib
 import requests
 from PIL import Image
 from babel.numbers import format_decimal
 from flask import request, redirect, render_template, jsonify, url_for, session, flash
 from flask_cors import cross_origin
 from flask_login import login_user, logout_user, login_required, current_user
-from sqlalchemy.exc import NoResultFound, IntegrityError
+from sqlalchemy.exc import IntegrityError
 
 from clinicapp import app, dao, login, VNPAY_RETURN_URL, VNPAY_PAYMENT_URL, VNPAY_HASH_SECRET_KEY, VNPAY_TMN_CODE, \
-    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, admin, db, utils
+    TIENKHAM, SOLUONGKHAM, access_key, ipn_url, redirect_url, secret_key, endpoint, db, utils, loaded_model
 from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_hours_by_date_no_confirm, \
-    get_prescriptions_by_scheduled_date, get_prescription_by_id, \
+    get_prescription_by_id, \
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
     get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, \
     get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions, get_doctor_by_id, \
     get_patient_by_id, get_all_patient, get_all_doctor, get_revenue_percentage_stats
-from clinicapp.decorators import loggedin, roles_required, cashiernotloggedin, adminloggedin, resources_owner
+from clinicapp.decorators import roles_required, cashiernotloggedin, adminloggedin, resources_owner
 from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileForm, ChangeAvatarForm, ChangeUsernameForm
-from clinicapp.models import UserRole, Gender, Appointment, AppointmentList
+from clinicapp.models import UserRole, Gender, AppointmentList
 from clinicapp.vnpay import vnpay
 from flask_mail import Mail, Message
 
@@ -1133,7 +1130,6 @@ def forgot_password():
     return render_template('/auth/forgot_password.html')
 
 
-loaded_model = joblib.load('/gradient_boosting_model.joblib')
 import warnings
 
 # Suppress scikit-learn warnings
