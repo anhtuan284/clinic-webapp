@@ -5,6 +5,17 @@ var percentChart;
 var medQuantityChart;
 var medCountChart;
 
+function reloadPageWithFilteredList(selectInput) {
+    fetch(`/admin/thuocview/?danhmuc_id=${selectInput.value}`)
+    .then(data => data.text())
+    .then(html => {
+        document.body.innerHTML = html
+    })
+    .catch(function (error) {
+        console.log('request failed', error)
+    });
+}
+
 function make_stats(monthInput) {
     get_revenue_percentage_by_month(monthInput);
     get_medicine_usage_stats_by_month(monthInput);
@@ -97,6 +108,22 @@ function get_revenue_percentage_by_month(monthInput) {
             revenueTable.appendChild(tr);
         }
 
+        var table_thang = document.getElementById('table-thang');
+        table_thang.innerHTML = '<strong>Tháng</strong>: ' + monthInput.value;
+
+        var tr = document.createElement('tr');
+        var td_total_revenue = document.createElement('td');
+        td_total_revenue.setAttribute('colspan', '4')
+        td_total_revenue.innerHTML = '0';
+        for (let i = 0; i < revenueTable.rows.length; i++) {
+            td_total_revenue.innerHTML = (parseFloat(td_total_revenue.innerHTML) + 
+        parseFloat(revenueTable.rows[i].cells[2].innerHTML)).toString();
+            
+        }
+        td_total_revenue.innerHTML = "<strong>Tổng Doanh Thu</strong>: " + td_total_revenue.innerHTML;
+        tr.appendChild(td_total_revenue);
+        revenueTable.appendChild(tr);
+
         countChartCtx = document.getElementById("countChart");
         if (countChart) countChart.destroy()
 
@@ -120,6 +147,7 @@ function get_revenue_percentage_by_month(monthInput) {
             tintColors=['gold'],
             legendPos='right'
         );
+
 
         percentChartCtx = document.getElementById("percentChart");
         if (percentChart) percentChart.destroy();
@@ -176,6 +204,8 @@ function get_medicine_usage_stats_by_month(monthInput) {
         dataCount = [];
         var dataQuantity = [];
 
+        console.log(medicine_stats);
+
         //add data to table
         for (let i = 0; i < medicine_stats.length; i++)
         {
@@ -202,6 +232,9 @@ function get_medicine_usage_stats_by_month(monthInput) {
             medicineTable.appendChild(tr);
         }
 
+        var medicine_table_thang = document.getElementById('medicine-table-thang');
+        medicine_table_thang.innerHTML = '<strong>Tháng</strong>: ' + monthInput.value;
+
         medQuantityChartCtx = document.getElementById("quantityChart");
 
         if (medQuantityChart) medQuantityChart.destroy()
@@ -211,12 +244,12 @@ function get_medicine_usage_stats_by_month(monthInput) {
                 legendLabel=['Số Lượng Thuốc'],
                 title="Số Lượng Thuốc",
                 tintColors=['#5499C7'],
-                legendPos='right'
+                legendPos='bottom'
             );
 
         medCountChartCtx = document.getElementById("medCountChart");
 
-        if (medCountChart) medCountChartCtx.destroy();
+        if (medCountChart) medCountChart.destroy();
 
         medCountChart = drawBarChart(medCountChartCtx,
                 labels=labels,
@@ -224,8 +257,8 @@ function get_medicine_usage_stats_by_month(monthInput) {
                 legendLabel=['Số Lần Sử Dụng'],
                 title="Số Lần Sử Dụng",
                 tintColors=['#A569BD'],
-                legendPos='right'
             );
+
     })
 }
 
@@ -262,15 +295,16 @@ function drawBarChart(ctx, labels, data, legendLabel, title, tintColors, legendP
                 title: {
                     display: true,
                     text: title,
-                    position: 'bottom'
+                    position: 'top'
                 },
                 "legend": {
                     display: true,
-                    position: legendPos
+                    position: 'bottom'
                 }
             },
+            maintainAspectRatio: 'false'
         },
-
+        
     });
 }
 
@@ -291,12 +325,16 @@ function drawDonutChart(ctx, labels, data, legendLabel, title, tintColors, legen
         type: 'doughnut',
         data: chart_data,
         options: {
-            radius: '80%',
             "plugins": {
                 "legend": {
                     position: legendPos
+                },
+                title: {
+                    display: true,
+                    text: title
                 }
             },
+            maintainAspectRatio: 'false'
         }
       });
 }

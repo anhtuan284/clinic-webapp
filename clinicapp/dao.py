@@ -753,6 +753,13 @@ def get_medicine_unit_by_unit_id(unit_id):
     return MedicineUnit.query.get(unit_id)
 
 
+def count_categories():
+    print(Category.query.count())
+    return Category.query.count()
+
+
 if __name__ == '__main__':
     with app.app_context():
         print(count_prescription_by_patient(patient_id=2))
+
+

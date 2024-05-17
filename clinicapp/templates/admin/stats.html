@@ -1,14 +1,20 @@
 {% extends 'admin/master.html' %}
 
 {% block body %}
-<h1 class="text-center text-primary mt-1">THỐNG KÊ BÁO CÁO</h1>
+<h1 class="text-center text-white mt-1 bg-danger">THỐNG KÊ BÁO CÁO</h1>
 <div class="form-floating mb-3 mt-3">
-    <label for="month">Tháng cần thống kê: </label>
+    <label for="month"><strong>Tháng cần thống kê: </strong></label>
     <input type="month" class="form-control" id="month" placeholder="Nhap thang can thong ke" name="month" onchange="make_stats(this)">
 </div>
-<h3 class="text-primary mt-1">Doanh Thu Và Tỉ Lệ </h3>
+<h2 class="text-white mt-1 bg-danger">DOANH THU VÀ TỈ LỆ: </h2>
 <table class="table table-dark table-hover">
     <thead>
+        <tr>
+            <td colspan="4" class="text-center"><h4 class="text-primary">BÁO CÁO DOANH THU THEO THÁNG</h4></td>
+        </tr>
+        <tr>
+            <td id="table-thang" colspan="4" class="text-center"></td>
+        </tr>
         <tr>
             <td><strong>Ngày</strong></td>
             <td><strong>Số Bệnh Nhân</strong></td>
@@ -19,13 +25,30 @@
     <tbody id="revenue-table">
     </tbody>
 </table>
-<canvas id="countChart"></canvas>
-<canvas id="revenueChart"></canvas>
-<canvas id="percentChart"></canvas>
+<div class="container">
+    <div class="row">
+        <div class="col-7">
+            <canvas id="countChart"></canvas>
+        </div>
+        <div class="col-5">
+            <canvas id="percentChart"></canvas>
+        </div>
+        <div class="col-7">
+            <canvas id="revenueChart"></canvas>
+        </div>
 
-<h3 class="text-primary mt-1">Báo Cáo Sử Dụng Thuốc</h3>
+    </div>
+</div>
+
+<h2 class="text-white mt-1 bg-danger">BÁO CÁO VỀ THUỐC: </h2>
 <table class="table table-dark table-hover">
     <thead>
+        <tr>
+            <td colspan="4" class="text-center"><h4 class="text-primary">BÁO CÁO SỬ DỤNG THUỐC</h4></td>
+        </tr>
+        <tr>
+            <td id="medicine-table-thang" colspan="4" class="text-center"></td>
+        </tr>
         <tr>
             <td><strong>Thuốc</strong></td>
             <td><strong>Đơn Vị Tính</strong></td>
