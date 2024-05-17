@@ -31,18 +31,28 @@
             <input class="form-control me-2" id="ten" name="name" type="text" placeholder="Nhập tên thuốc">
         </div>
     </div>
-    <nav class="navbar navbar-expand-md bg-light navbar-light mb-2">
-        <!-- Navbar links -->
-        <div class="collapse navbar-collapse" id="collapsibleNavbar">
-            <ul class="navbar-nav container flex-row justify-content-between">
-                {%for dm in danhmucs%}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/thuocview/?danhmuc_id={{dm.id}}"><b>{{dm.name}}</b></a>
-                    </li>
-                {%endfor%}
-            </ul>
-        </div>
+    <nav class="navbar navbar-expand-sm bg-primary navbar-dark">
+      <!-- Brand -->
+      <a class="navbar-brand" href="#">Lọc theo danh mục: </a>
+
+      <!-- Links -->
+      <ul class="navbar-nav">
+        <!-- Dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+            Chọn:
+          </a>
+          <div class="dropdown-menu menu-scroll" style="overflow-y: scroll; max-height: 310px;">
+              <a class="dropdown-item" href="/admin/thuocview/">All</a>
+            {%for dm in danhmucs%}
+              <a class="dropdown-item" href="/admin/thuocview/?danhmuc_id={{dm.id}}">{{dm.name}}</a>
+            {%endfor%}
+          </div>
+        </li>
+      </ul>
     </nav>
+
+
 
     <div class="d-flex container flex-row justify-content-between mt-3">
         <a class="btn btn-success" href="/admin/thuocview/thuocs/">Thêm thuốc</a>
@@ -95,4 +105,6 @@
         </tr>
     {%endfor%}
 </table>
+
+<script src="{{url_for('static', filename='js/admin.js')}}"></script>
 {% endblock %}
