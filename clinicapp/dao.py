@@ -1,5 +1,3 @@
-
-
 from sqlalchemy import func, desc, update, distinct, extract, select, join, and_, asc
 import pytz
 from sqlalchemy.orm import sessionmaker, joinedload
@@ -72,7 +70,7 @@ def add_appointment(scheduled_date, scheduled_hour, is_confirm, is_paid, status,
                              is_paid=is_paid, status=status, patient_id=patient_id)
     db.session.add(appoinment)
     db.session.commit()
-    
+
 
 def get_list_medicine(keyword, cate_id, page=1):
     medicines = Medicine.query
@@ -593,6 +591,44 @@ def delete_cashier_by_id(cashier_id):
     db.session.commit()
 
 
+def get_medicine_usage_stats(month_str):
+    # Chuyển chuỗi thành đối tượng datetime
+    date_object = datetime.datetime.strptime(month_str, "%Y-%m")
+
+    # Lấy năm và tháng từ đối tượng datetime
+    year = date_object.year
+    month = date_object.month
+
+    query = db.session.query(Medicine.id, Medicine.name, Unit.name, MedicineUnit.quantity,
+                             func.sum(MedicineDetail.quantity * MedicineUnit.quantity).label('quantity'),
+                             func.count(distinct(Prescription.id)).label('use_count')) \
+        .filter(MedicineDetail.medicine_id == Medicine.id) \
+        .filter(MedicineDetail.prescription_id == Prescription.id) \
+        .filter(MedicineDetail.medicine_unit_id == MedicineUnit.id) \
+        .filter(MedicineUnit.unit_id == Unit.id) \
+        .filter(extract('month', Prescription.date) == month) \
+        .filter(extract('year', Prescription.date) == year) \
+        .group_by(Medicine.id) \
+        .group_by(Medicine.name) \
+        .group_by(Unit.name) \
+        .group_by(MedicineUnit.quantity)
+
+    print(query.all())
+
+    medicine_usage_stats_list = []
+    for row in query.all():
+        medicine_usage_stats_list.append({
+            'medicine_id': row[0],
+            'medicine_name': row[1],
+            'unit_name': row[2],
+            'medicine_unit_quantity': row[3],
+            "quantity": row[4],
+            "use_count": row[5]
+        })
+
+    return medicine_usage_stats_list
+
+
 def get_revenue_percentage_stats(month_str):
     # Chuyển chuỗi thành đối tượng datetime
     date_object = datetime.datetime.strptime(month_str, "%Y-%m")
@@ -626,14 +662,12 @@ def get_revenue_percentage_stats(month_str):
         Prescription.id.notin_(db.session.query(MedicineDetail.prescription_id))
     ).filter(extract('month', Prescription.date) == month) \
         .filter(extract('year', Prescription.date) == year).all()
-    print(drugless_prescription_by_month_count)
 
     # tong-tien-kham cac-prescription-ko-thuoc theo thang
     month_revenue_by_drugless_prescription = drugless_prescription_by_month_count[0][0] * 100000
 
     # tong-tien theo thang
     month_revenue = month_revenue_by_drugless_prescription + month_revenue_by_drug_assigned_prescription
-    print(month_revenue)
 
     # danh sach tong tien thuoc cac prescription-co-thuoc theo ngay
     date_medicine_revenue_by_drug_assigned_prescription = \
@@ -649,7 +683,6 @@ def get_revenue_percentage_stats(month_str):
             .filter(extract('month', Prescription.date) == month) \
             .filter(extract('year', Prescription.date) == year) \
             .group_by(Prescription.date).all()
-    print(date_medicine_revenue_by_drug_assigned_prescription)
 
     # danh sach tong tien kham  cac prescription theo ngay
     date_revenue_by_drugless_prescription = \
@@ -661,7 +694,6 @@ def get_revenue_percentage_stats(month_str):
             .filter(extract('year', Prescription.date) == year) \
             .group_by(Prescription.date).all()
 
-    print(date_revenue_by_drugless_prescription[0])
 
     date_medicine_revenue_by_drug_assigned_prescription_list = []
     for row in date_medicine_revenue_by_drug_assigned_prescription:
@@ -671,7 +703,6 @@ def get_revenue_percentage_stats(month_str):
             "total_date_medicine_revenue": row.total_date_medicine_revenue,
             "percentage": row.percentage
         })
-    print(date_medicine_revenue_by_drug_assigned_prescription_list)
 
     date_revenue_by_drugless_prescription_list = []
     for row in date_revenue_by_drugless_prescription:
@@ -680,12 +711,12 @@ def get_revenue_percentage_stats(month_str):
             'total_date_revenue': row.total_date_revenue,
             "percentage": row.percentage
         })
-    print(date_revenue_by_drugless_prescription_list)
 
     return [
         date_medicine_revenue_by_drug_assigned_prescription_list,
         date_revenue_by_drugless_prescription_list
     ]
+
 
 def count_prescription_by_patient(patient_id):
     return Prescription.query.filter(Prescription.patient_id == patient_id).count()
@@ -695,8 +726,33 @@ def count_medicine():
     return Medicine.query.count()
 
 
+def get_category_medicine_by_both_ids(category_id, medicine_id):
+    return MedicineCategory.query.filter_by(category_id=category_id, medicine_id=medicine_id).first()
+
+
+def get_unit_medicine_by_both_ids(unit_id, medicine_id):
+    found = MedicineUnit.query.filter_by(unit_id=unit_id, medicine_id=medicine_id).first()
+    return found
+
+
+def delete_medicine_unit_by_both_ids(unit_id, medicine_id):
+    query = MedicineUnit.query.filter_by(unit_id=unit_id, medicine_id=medicine_id)
+    if query.all():
+        query.delete()
+        db.session.commit()
+
+
+def delete_medicine_category_by_both_ids(category_id, medicine_id):
+    query = MedicineCategory.query.filter_by(category_id=category_id, medicine_id=medicine_id)
+    if query.all():
+        query.delete()
+        db.session.commit()
+
+
+def get_medicine_unit_by_unit_id(unit_id):
+    return MedicineUnit.query.get(unit_id)
+
+
 if __name__ == '__main__':
     with app.app_context():
         print(count_prescription_by_patient(patient_id=2))
-
-

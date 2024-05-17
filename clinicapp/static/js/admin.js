@@ -2,6 +2,14 @@ var countChart;
 var revenueChart;
 var percentChart; 
 
+var medQuantityChart;
+var medCountChart;
+
+function make_stats(monthInput) {
+    get_revenue_percentage_by_month(monthInput);
+    get_medicine_usage_stats_by_month(monthInput);
+}
+
 function get_revenue_percentage_by_month(monthInput) {
     fetch(`/api/revenue_percentage_stats/`, {
         method: 'POST',
@@ -90,57 +98,206 @@ function get_revenue_percentage_by_month(monthInput) {
         }
 
         countChartCtx = document.getElementById("countChart");
-        revenueChartCtx = document.getElementById("revenueChart");
-        percentChartCtx = document.getElementById("percentChart");
-
         if (countChart) countChart.destroy()
-        if (revenueChart) revenueChart.destroy()
-        if (percentChart) percentChart.destroy()
 
-        countChart = drawChart(countChartCtx, labels=labels, data=dataCount, "Số Bệnh Nhân", type="bar", legendPos='right');
-        revenueChart = drawChart(revenueChartCtx, labels=labels, data=dataRevenue, "Doanh Thu", type="bar", legendPos='right');
-        percentChart = drawChart(percentChartCtx, labels=labels, data=dataPercent, "Tỉ Lệ", type="pie", radius = "50%");
+        countChart = drawBarChart(countChartCtx,
+            labels=labels,
+            data=[dataCount],
+            legendLabel=['Số Bệnh Nhân'],
+            title="Số Bệnh Nhân",
+            tintColors=['green'],
+            legendPos='right'
+        );
+
+        revenueChartCtx = document.getElementById("revenueChart");
+        if (revenueChart) revenueChart.destroy();
+
+        revenueChart = drawBarChart(revenueChartCtx,
+            labels=labels,
+            data=[dataRevenue],
+            legendLabel=['Doanh Thu'],
+            title="Doanh Thu",
+            tintColors=['gold'],
+            legendPos='right'
+        );
+
+        percentChartCtx = document.getElementById("percentChart");
+        if (percentChart) percentChart.destroy();
+
+        percentChart = drawDonutChart(percentChartCtx,
+            labels=labels,
+            data=dataPercent,
+            legendLabel=['Tỉ Lệ'],
+            title="Tỉ Lệ",
+            tintColors=['red', 'blue', 'gold', 'green', 'diamond'],
+            legendPos='right'
+        );
 
     })
-
 }
 
-function drawChart(ctx, labels, data, title, type, radius, legendPos) {
+function get_medicine_usage_stats_by_month(monthInput) {
+    fetch(`/api/medicine_usage_stats/`, {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+            'month': monthInput.value
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Không thể thống kê được!!!');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // [
+        //     //medicine_stats
+        //     [
+        //         {
+                    //     'medicine_id': row[0],
+                    //     'medicine_name': row[1],
+                    //     'unit_name': row[2],
+                    //     'medicine_unit_quantity': row[3],
+                    //     "quantity": row[4],
+                    //     "use_count": row[5]
+                    // }
+        //         ...
+        //     ],
+
+        medicine_stats = data;
+        var medicineTable = document.getElementById("medicine-table");
+        while (medicineTable.hasChildNodes())
+            medicineTable.removeChild(medicineTable.childNodes[0])
+
+        labels = [];
+        dataCount = [];
+        var dataQuantity = [];
+
+        //add data to table
+        for (let i = 0; i < medicine_stats.length; i++)
+        {
+            var td_medicine = document.createElement("td");
+            td_medicine.innerHTML = medicine_stats[i]["medicine_name"];
+
+            var td_unit = document.createElement("td");
+            td_unit.innerHTML = medicine_stats[i]['medicine_unit_quantity'] + ' (viên, ml, gram) trên 1 ' + medicine_stats[i]["unit_name"];
+            labels.push(td_medicine.innerHTML + '; ' +  td_unit.innerHTML);
+
+            var td_quantity = document.createElement("td");
+            td_quantity.innerHTML = medicine_stats[i]['quantity']
+            dataQuantity.push(td_quantity.innerHTML);
+
+            var td_use_count = document.createElement("td");
+            td_use_count.innerHTML = medicine_stats[i]['use_count']
+            dataCount.push(td_use_count.innerHTML);
+
+            var tr = document.createElement('tr');
+            tr.appendChild(td_medicine);
+            tr.appendChild(td_unit);
+            tr.appendChild(td_quantity);
+            tr.appendChild(td_use_count);
+            medicineTable.appendChild(tr);
+        }
+
+        medQuantityChartCtx = document.getElementById("quantityChart");
+
+        if (medQuantityChart) medQuantityChart.destroy()
+            medQuantityChart = drawBarChart(medQuantityChartCtx,
+                labels=labels,
+                data=[dataQuantity],
+                legendLabel=['Số Lượng Thuốc'],
+                title="Số Lượng Thuốc",
+                tintColors=['#5499C7'],
+                legendPos='right'
+            );
+
+        medCountChartCtx = document.getElementById("medCountChart");
+
+        if (medCountChart) medCountChartCtx.destroy();
+
+        medCountChart = drawBarChart(medCountChartCtx,
+                labels=labels,
+                data=[dataCount],
+                legendLabel=['Số Lần Sử Dụng'],
+                title="Số Lần Sử Dụng",
+                tintColors=['#A569BD'],
+                legendPos='right'
+            );
+    })
+}
+
+function drawBarChart(ctx, labels, data, legendLabel, title, tintColors, legendPos) {
+
+    let datasets = [];
+    for (let i = 0; i < legendLabel.length; i++) {
+        datasets.push({
+            label: legendLabel[i],
+            data: data[i],
+            borderWidth: 1,
+            backgroundColor: tintColors[i]
+        });
+    }
+
     return new Chart(ctx, {
-        type: type,
+        type: 'bar',
         data: {
             labels: labels,
-            datasets: [{
-                    label: labels,
-                    data: data,
-                    borderWidth: 1,
-                    backgroundColor: ['red', 'green', 'blue', 'gold', 'brown'],
-                    radius: radius,
-                }],
-            },
-            options: {
-                scales: {
-                    x: {
-                        beginAtZero: true
-                      },
-                    y: {
-                        beginAtZero: true
-                    }
-                    
-                },
-                barThickness: 46,
-                "plugins": {
-                    title: {
-                        display: true,
-                        text: title,
-                        position: 'bottom'
+            datasets: datasets
+        },
+        options: {
+            scales: {
+                x: {
+                    beginAtZero: true
                     },
-                    "legend": {
-                        display: true,
-                        position: 'right'
-                    }
-                },
+                y: {
+                    beginAtZero: true
+                }
+                
             },
+            barThickness: 46,
+            "plugins": {
+                title: {
+                    display: true,
+                    text: title,
+                    position: 'bottom'
+                },
+                "legend": {
+                    display: true,
+                    position: legendPos
+                }
+            },
+        },
 
     });
 }
+
+function drawDonutChart(ctx, labels, data, legendLabel, title, tintColors, legendPos) {
+
+    let datasets = [{
+        data: data,
+        backgroundColor: tintColors,
+        hoverOffset: 4
+    }];
+
+    const chart_data = {
+        labels: labels,
+        datasets: datasets
+    };
+
+    return new Chart(ctx, {
+        type: 'doughnut',
+        data: chart_data,
+        options: {
+            radius: '80%',
+            "plugins": {
+                "legend": {
+                    position: legendPos
+                }
+            },
+        }
+      });
+}
+

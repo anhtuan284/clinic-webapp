@@ -22,7 +22,7 @@ from clinicapp.dao import get_quantity_appointment_by_date, get_list_scheduled_h
     get_medicines_by_prescription_id, get_patient_by_prescription_id, get_medicine_price_by_prescription_id, \
     get_is_paid_by_prescription_id, create_bill, get_bill_by_prescription_id, get_list_scheduled_hours_by_date_confirm, \
     get_value_policy, get_policy_value_by_name, get_unpaid_prescriptions, get_doctor_by_id, \
-    get_patient_by_id, get_all_patient, get_all_doctor, get_revenue_percentage_stats
+    get_patient_by_id, get_all_patient, get_all_doctor, get_revenue_percentage_stats, get_medicine_usage_stats
 from clinicapp.decorators import roles_required, cashiernotloggedin, adminloggedin, resources_owner
 from clinicapp.forms import PrescriptionForm, ChangePasswordForm, EditProfileForm, ChangeAvatarForm, ChangeUsernameForm
 from clinicapp.models import UserRole, Gender, AppointmentList
@@ -1112,9 +1112,17 @@ def nure_book():
 @app.route('/api/revenue_percentage_stats/', methods=['POST'])
 def revenue_percentage_stats():
     month_str = request.json.get('month')
-    print(month_str)
     if month_str:
         stats_list = get_revenue_percentage_stats(month_str=month_str)
+        return stats_list
+
+
+@app.route('/api/medicine_usage_stats/', methods=['POST'])
+def medicine_usage_stats():
+    month_str = request.json.get('month')
+    if month_str:
+        stats_list = get_medicine_usage_stats(month_str=month_str)
+        print(stats_list)
         return stats_list
 
 

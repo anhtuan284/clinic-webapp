@@ -2,11 +2,11 @@
 
 {% block body %}
 <h1 class="text-center text-primary mt-1">THỐNG KÊ BÁO CÁO</h1>
-<h3 class="text-primary mt-1">Doanh Thu Và Tỉ Lệ </h3>
 <div class="form-floating mb-3 mt-3">
     <label for="month">Tháng cần thống kê: </label>
-    <input type="month" class="form-control" id="month" placeholder="Nhap thang can thong ke" name="month" onchange="get_revenue_percentage_by_month(this)">
+    <input type="month" class="form-control" id="month" placeholder="Nhap thang can thong ke" name="month" onchange="make_stats(this)">
 </div>
+<h3 class="text-primary mt-1">Doanh Thu Và Tỉ Lệ </h3>
 <table class="table table-dark table-hover">
     <thead>
         <tr>
@@ -23,6 +23,22 @@
 <canvas id="revenueChart"></canvas>
 <canvas id="percentChart"></canvas>
 
+<h3 class="text-primary mt-1">Báo Cáo Sử Dụng Thuốc</h3>
+<table class="table table-dark table-hover">
+    <thead>
+        <tr>
+            <td><strong>Thuốc</strong></td>
+            <td><strong>Đơn Vị Tính</strong></td>
+            <td><strong>Số Lượng</strong></td>
+            <td><strong>Số Lần Dùng</strong></td>
+        </tr>
+    </thead>
+    <tbody id="medicine-table">
+    </tbody>
+</table>
+<canvas id="quantityChart"></canvas>
+<canvas id="medCountChart"></canvas>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{url_for('static', filename='js/admin.js')}}"></script>
 <script>
@@ -35,6 +51,6 @@
     // Đặt giá trị vào trường input
     document.getElementById('month').value = formattedMonth;
 
-    get_revenue_percentage_by_month(document.getElementById('month'))
+    make_stats(document.getElementById('month'))
 </script>
 {% endblock %}
