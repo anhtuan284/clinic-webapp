@@ -20,7 +20,7 @@
         <div class="col-5">
             <div class="input-group my-4 col-5">
                 <label class="input-group-text" for="datePicker">Chọn ngày:</label>
-                <input type="date" class="form-control" id="datePicker" name="date" readonly value="{{current_date}}">
+                <input type="date" class="form-control" id="datePicker" name="date" value="{{current_date}}">
                 <button class="btn btn-primary btn-sm" id="confirmBtn">Xác nhận</button>
             </div>
         </div>
@@ -50,7 +50,8 @@
 <script>
     document.getElementById('datePicker').valueAsDate = new Date();
     $(document).ready(function () {
-        $('#confirmBtn').on('click', function () {
+        // Function to fetch appointments
+        function fetchAppointments() {
             var selectedDate = $('#datePicker').val();
 
             $.ajax({
@@ -68,8 +69,8 @@
                             '<td class="align-middle">' + appointment.phone + '</td>' +
                             '<td class="align-middle">' + appointment.scheduled_date + '</td>' +
                             '<td class="align-middle">' + appointment.scheduled_hour + '</td>' +
-                            '<td class="align-middle"><button class="btn btn-success btn-sm createReceiptBtn" data-appointment=\'' + JSON.stringify(appointment) + '\'>Tạo phiếu khám</button></td>'
-                        '</tr>';
+                            '<td class="align-middle"><button class="btn btn-success btn-sm createReceiptBtn" data-appointment=\'' + JSON.stringify(appointment) + '\'>Tạo phiếu khám</button></td>' +
+                            '</tr>';
                         $('#appointmentsTableBody').append(row);
                     });
                 },
@@ -77,8 +78,17 @@
                     console.error(error);
                 }
             });
+        }
+
+        // Fetch appointments when the page loads
+        fetchAppointments();
+
+        // Fetch appointments when the confirm button is clicked
+        $('#confirmBtn').on('click', function () {
+            fetchAppointments();
         });
     });
+
 
     $(document).on('click', '.createReceiptBtn', function () {
         var appointmentData = $(this).data('appointment');
