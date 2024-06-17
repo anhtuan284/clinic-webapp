@@ -1187,6 +1187,21 @@ def predict_sleep():
     return render_template('/patient/sleep_efficiency.html')
 
 
+from underthesea import sentiment
+
+
+@app.route('/predict_comment', methods=['POST'])
+def predict_comment():
+    data = request.get_json()
+    if 'comment' not in data:
+        return jsonify({'error': 'Comment is missing'}), 400
+
+    comment = data['comment']
+    sentiment_result = sentiment(comment)
+
+    return jsonify({'sentiment': sentiment_result})
+
+
 if __name__ == '__main__':
     with app.app_context():
         app.run(debug=True)
