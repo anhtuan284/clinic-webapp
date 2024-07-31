@@ -16,7 +16,7 @@
 
 This app is an IT solution for personal clinic management system. It provides a range of functionalities that automatate a clinic's day-to-day work and lessens the burden of repetitive, manual activities, as a result, facilitate the operation of the clinic and boost both its service speed and clients' satisfaction.
 
-This app is the product of a major assignement executed by a team of 3, including [Võ Quốc Huy](https://github.com/quochuy2k3), [Trương Bùi Anh Tuấn](https://github.com/anhtuan284), [Trần Lưu Quốc Tuấn](https://github.com/coDEnAmeTurner). The project execution progresses for over 2 months, and the score from the assignment serves as a Software Technology course's end-of-term exam's score.
+This app is the product of a major assignement executed by a team of 3, including [Võ Quốc Huy](https://github.com/quochuy2k3), [Trương Bùi Anh Tuấn](https://github.com/anhtuan284), [Trần Lưu Quốc Tuấn](https://github.com/coDEnAmeTurner). The project execution progresses for over 2 months, and the score from the assignment serves as a uni's Software Technology course's end-of-term exam's score.
 
 # Functionalities
 - Register
