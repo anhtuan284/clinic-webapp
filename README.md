@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/e5e18b2a-229c-4439-b061-3e7f7e80c900"/>
+  <img src="https://github.com/user-attachments/assets/017fc577-18b6-454b-9b4a-17e7696a7898"/>
 </div>
 
-# Clinic Web App
+# THT Clinic
 
 ![Flask](https://github.com/user-attachments/assets/6cfb9590-3f7f-4d37-a3ee-d4c3c3536362)
 ![image](https://github.com/user-attachments/assets/05e7ae84-31b1-4cba-9bb7-3c81dfa313b1)
